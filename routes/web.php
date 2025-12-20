@@ -11,23 +11,17 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-
-Route::get('add-program', [App\Http\Controllers\AddProgramController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('addProgram');
-
-Route::post('add-program', [App\Http\Controllers\AddProgramController::class, 'store'])
-    ->middleware(['auth', 'verified'])
-    ->name('addProgram.store');
-
-Route::get('add-program/status', [App\Http\Controllers\AddProgramController::class, 'status'])
-    ->middleware(['auth', 'verified'])
-    ->name('addProgram.status');
 
 Route::middleware(['auth'])->group(function () {
+
+    Route::get('add-program/status', [App\Http\Controllers\AddProgramController::class, 'status'])->name('addProgram.status');
+
+    Route::view('dashboard', 'dashboard')->name('dashboard');
+
+    Route::get('add-program', [App\Http\Controllers\AddProgramController::class, 'index'])->name('addProgram');
+
+    Route::post('add-program', [App\Http\Controllers\AddProgramController::class, 'store'])->name('addProgram.store');
+
     Route::redirect('settings', 'settings/profile');
 
     Route::get('settings/profile', Profile::class)->name('profile.edit');
