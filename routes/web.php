@@ -15,6 +15,10 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+Route::get('add-program', [App\Http\Controllers\AddProgramController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('addProgram');
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
