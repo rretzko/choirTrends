@@ -11,7 +11,6 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-
 Route::middleware(['auth'])->group(function () {
 
     Route::get('add-program/status', [App\Http\Controllers\AddProgramController::class, 'status'])->name('addProgram.status');

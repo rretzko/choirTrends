@@ -10,8 +10,7 @@ class ProgramContentExtractor
 {
     public function __construct(
         private PdfParser $pdfParser
-    ) {
-    }
+    ) {}
 
     public function extract(?UploadedFile $file, ?string $uris): string
     {
@@ -34,7 +33,7 @@ class ProgramContentExtractor
             'pdf' => $this->extractFromPdf($file->getRealPath()),
             'txt' => $this->extractFromText($file->getRealPath()),
             'png', 'jpg', 'jpeg', 'gif', 'webp' => $this->extractFromImage($file->getRealPath()),
-            default => throw new \Exception('Unsupported file type: ' . $extension),
+            default => throw new \Exception('Unsupported file type: '.$extension),
         };
     }
 
@@ -50,7 +49,7 @@ class ProgramContentExtractor
 
             return $text;
         } catch (\Exception $e) {
-            throw new \Exception('Failed to extract text from PDF: ' . $e->getMessage());
+            throw new \Exception('Failed to extract text from PDF: '.$e->getMessage());
         }
     }
 
@@ -96,10 +95,10 @@ class ProgramContentExtractor
                 $response = Http::timeout(30)->get($url);
 
                 if ($response->successful()) {
-                    $contents[] = "Content from {$url}:\n" . strip_tags($response->body());
+                    $contents[] = "Content from {$url}:\n".strip_tags($response->body());
                 }
             } catch (\Exception $e) {
-                $contents[] = "Failed to fetch {$url}: " . $e->getMessage();
+                $contents[] = "Failed to fetch {$url}: ".$e->getMessage();
             }
         }
 

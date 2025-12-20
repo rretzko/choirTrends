@@ -1,0 +1,20 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+
+    # Level 0 is the loosest and level 9 is the strictest
+    # Lowered to 4 for better Laravel compatibility
+    level: 4
+
+    # Ignore errors in these paths
+    excludePaths:
+        - bootstrap/cache/*
+        - storage/*
+        - vendor/*
+
+    # Laravel-friendly settings
+    treatPhpDocTypesAsCertain: false
+    checkMissingCallableSignature: false

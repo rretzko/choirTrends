@@ -37,7 +37,7 @@ class ClaudeAnalysisService
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            throw new \Exception('Failed to analyze program: ' . $e->getMessage());
+            throw new \Exception('Failed to analyze program: '.$e->getMessage());
         }
     }
 
@@ -58,7 +58,7 @@ class ClaudeAnalysisService
         return [
             [
                 'role' => 'user',
-                'content' => $prompt . "\n\nHere is the concert program content:\n\n" . $content,
+                'content' => $prompt."\n\nHere is the concert program content:\n\n".$content,
             ],
         ];
     }
@@ -179,7 +179,7 @@ PROMPT;
         ]);
 
         if (! $response->successful()) {
-            throw new \Exception('Claude API request failed: ' . $response->body());
+            throw new \Exception('Claude API request failed: '.$response->body());
         }
 
         return $response->json();
@@ -205,7 +205,7 @@ PROMPT;
         $data = json_decode($jsonString, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \Exception('Failed to parse JSON from API response: ' . json_last_error_msg());
+            throw new \Exception('Failed to parse JSON from API response: '.json_last_error_msg());
         }
 
         // Validate required keys
@@ -230,6 +230,7 @@ PROMPT;
                     'name' => (string) $ensemble,
                     'songs' => [],
                 ];
+
                 continue;
             }
 
@@ -251,6 +252,7 @@ PROMPT;
                         'arranger' => null,
                         'notes' => null,
                     ];
+
                     continue;
                 }
 

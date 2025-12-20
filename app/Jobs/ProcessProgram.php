@@ -24,8 +24,7 @@ class ProcessProgram implements ShouldQueue
         public int $userId,
         public string $filePath,
         public ?string $uris = null
-    ) {
-    }
+    ) {}
 
     /**
      * Execute the job.
@@ -60,7 +59,7 @@ class ProcessProgram implements ShouldQueue
                     'original_length' => strlen($content),
                     'truncated_length' => $maxChars,
                 ]);
-                $content = substr($content, 0, $maxChars) . "\n\n[Content truncated due to length...]";
+                $content = substr($content, 0, $maxChars)."\n\n[Content truncated due to length...]";
             }
 
             // Analyze with Claude
