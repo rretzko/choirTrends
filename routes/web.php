@@ -19,6 +19,14 @@ Route::get('add-program', [App\Http\Controllers\AddProgramController::class, 'in
     ->middleware(['auth', 'verified'])
     ->name('addProgram');
 
+Route::post('add-program', [App\Http\Controllers\AddProgramController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('addProgram.store');
+
+Route::get('add-program/status', [App\Http\Controllers\AddProgramController::class, 'status'])
+    ->middleware(['auth', 'verified'])
+    ->name('addProgram.status');
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 

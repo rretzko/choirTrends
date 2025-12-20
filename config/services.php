@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+        'api_version' => env('ANTHROPIC_API_VERSION', '2023-06-01'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-3-haiku-20240307'),
+    ],
+
 ];

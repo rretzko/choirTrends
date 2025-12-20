@@ -2,6 +2,24 @@
     <div class="flex h-full w-full flex-1 flex-col gap-6">
         <flux:heading size="xl">{{ __('Add Program') }}</flux:heading>
 
+        {{-- Display Success Message --}}
+        @if(session('success'))
+            <div class="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4">
+                <p class="text-sm text-green-800 dark:text-green-200">{{ session('success') }}</p>
+            </div>
+        @endif
+
+        {{-- Display Validation Errors --}}
+        @if($errors->any())
+            <div class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+                <ul class="list-disc list-inside text-sm text-red-800 dark:text-red-200 space-y-1">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         {{-- Section 1: Upload Concert Program --}}
         <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6">
             <flux:heading size="lg" class="mb-4">{{ __('Upload Concert Program') }}</flux:heading>
@@ -9,7 +27,7 @@
                 {{ __('Upload a concert program file (PDF, image, or text) or provide URLs to concert program pages.') }}
             </p>
 
-            <form action="{{ route('addProgram') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form action="{{ route('addProgram.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf
 
                 {{-- File Upload Option --}}
@@ -22,7 +40,7 @@
                             accept=".pdf,.txt,.png,.jpg,.jpeg,.gif,.webp"
                         />
                         <flux:text class="text-xs">
-                            {{ __('Accepted formats: PDF, TXT, PNG, JPG, JPEG, GIF, WEBP') }}
+                            {{ __('Accepted formats: PDF, TXT, PNG, JPG, JPEG, GIF, WEBP (Max: 100MB)') }}
                         </flux:text>
                     </flux:field>
                 </div>
@@ -63,23 +81,379 @@
             </form>
         </div>
 
-        {{-- Section 2: Confirmation Dialog (Placeholder) --}}
+        {{-- Section 2: Confirmation Dialog --}}
         <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6">
             <flux:heading size="lg" class="mb-4">{{ __('Confirm Program Contents') }}</flux:heading>
             <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
                 {{ __('Review and confirm the information extracted from the concert program.') }}
             </p>
 
-            {{-- Dialog Area - To be implemented --}}
-            <div class="min-h-[300px] rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center">
-                <div class="text-center text-zinc-500 dark:text-zinc-400">
-                    <svg class="mx-auto h-12 w-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                    </svg>
-                    <p class="text-sm font-medium">{{ __('Confirmation dialog will appear here') }}</p>
-                    <p class="text-xs mt-1">{{ __('After processing, you\'ll review the extracted information') }}</p>
+            @if(isset($analysis['status']) && $analysis['status'] === 'processing')
+                {{-- Processing State --}}
+                <div class="min-h-[300px] rounded-lg border border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center">
+                    <div class="text-center text-zinc-500 dark:text-zinc-400">
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-zinc-300 dark:border-zinc-600 border-t-zinc-600 dark:border-t-zinc-300 mb-3"></div>
+                        <p class="text-sm font-medium">{{ __('Processing your program...') }}</p>
+                        <p class="text-xs mt-1">{{ __('This may take a minute for larger files') }}</p>
+                    </div>
                 </div>
-            </div>
+            @elseif(isset($analysis['status']) && $analysis['status'] === 'failed')
+                {{-- Failed State --}}
+                <div class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-6">
+                    <p class="text-sm text-red-800 dark:text-red-200 font-medium mb-2">{{ __('Processing Failed') }}</p>
+                    <p class="text-sm text-red-700 dark:text-red-300">{{ $analysis['error'] ?? __('An unknown error occurred') }}</p>
+                    <flux:button variant="ghost" href="{{ route('addProgram') }}" class="mt-4">
+                        {{ __('Try Again') }}
+                    </flux:button>
+                </div>
+            @elseif(isset($analysis['status']) && $analysis['status'] === 'completed' && isset($analysis['data']))
+                {{-- Display Extracted Data --}}
+                <div class="space-y-4">
+                    @php
+                        $data = $analysis['data'];
+                    @endphp
+
+                    <flux:field>
+                        <flux:label>{{ __('Event Name') }}</flux:label>
+                        <flux:input
+                            type="text"
+                            name="event_name"
+                            value="{{ $data['event_name'] ?? '' }}"
+                            placeholder="{{ __('No event name found') }}"
+                        />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('Event Date') }}</flux:label>
+                        <flux:input
+                            type="date"
+                            name="event_date"
+                            value="{{ $data['event_date'] ?? '' }}"
+                            placeholder="{{ __('No date found') }}"
+                        />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('School Name') }}</flux:label>
+                        <flux:input
+                            type="text"
+                            name="school_name"
+                            value="{{ $data['school_name'] ?? '' }}"
+                            placeholder="{{ __('No school name found') }}"
+                        />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('Director Name') }}</flux:label>
+                        <flux:input
+                            type="text"
+                            name="director_name"
+                            value="{{ $data['director_name'] ?? '' }}"
+                            placeholder="{{ __('No director name found') }}"
+                        />
+                    </flux:field>
+
+                    {{-- Ensembles and Songs Section --}}
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between">
+                            <flux:heading size="md">{{ __('Ensembles & Repertoire') }}</flux:heading>
+                            <flux:button
+                                variant="ghost"
+                                type="button"
+                                onclick="addEnsemble()"
+                            >
+                                {{ __('+ Add Ensemble') }}
+                            </flux:button>
+                        </div>
+
+                        <div id="ensembles-container" class="space-y-6">
+                            @forelse($data['ensembles'] ?? [] as $ensembleIndex => $ensemble)
+                                <div class="ensemble-group rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 space-y-4" data-ensemble-index="{{ $ensembleIndex }}">
+                                    {{-- Ensemble Header --}}
+                                    <div class="flex gap-3 items-start">
+                                        <div class="flex-1">
+                                            <flux:field>
+                                                <flux:label>{{ __('Ensemble Name') }}</flux:label>
+                                                <flux:input
+                                                    type="text"
+                                                    name="ensembles[{{ $ensembleIndex }}][name]"
+                                                    value="{{ $ensemble['name'] ?? '' }}"
+                                                    placeholder="{{ __('Enter ensemble name') }}"
+                                                />
+                                            </flux:field>
+                                        </div>
+                                        <flux:button
+                                            variant="ghost"
+                                            type="button"
+                                            onclick="this.closest('.ensemble-group').remove()"
+                                            class="mt-7"
+                                        >
+                                            {{ __('Remove Ensemble') }}
+                                        </flux:button>
+                                    </div>
+
+                                    {{-- Songs for this Ensemble --}}
+                                    <div class="ml-4 space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <flux:text class="text-sm font-medium">{{ __('Songs') }}</flux:text>
+                                            <flux:button
+                                                variant="ghost"
+                                                size="sm"
+                                                type="button"
+                                                onclick="addSong(this.closest('.ensemble-group'))"
+                                            >
+                                                {{ __('+ Add Song') }}
+                                            </flux:button>
+                                        </div>
+
+                                        <div class="songs-container space-y-3">
+                                            @forelse($ensemble['songs'] ?? [] as $songIndex => $song)
+                                                <div class="song-item rounded border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 p-3 space-y-2">
+                                                    <div class="flex gap-2">
+                                                        <div class="flex-1 grid grid-cols-2 gap-2">
+                                                            <flux:field>
+                                                                <flux:label class="text-xs">{{ __('Title') }}</flux:label>
+                                                                <flux:input
+                                                                    type="text"
+                                                                    name="ensembles[{{ $ensembleIndex }}][songs][{{ $songIndex }}][title]"
+                                                                    value="{{ $song['title'] ?? '' }}"
+                                                                    placeholder="{{ __('Song title') }}"
+                                                                />
+                                                            </flux:field>
+                                                            <flux:field>
+                                                                <flux:label class="text-xs">{{ __('Composer') }}</flux:label>
+                                                                <flux:input
+                                                                    type="text"
+                                                                    name="ensembles[{{ $ensembleIndex }}][songs][{{ $songIndex }}][composer]"
+                                                                    value="{{ $song['composer'] ?? '' }}"
+                                                                    placeholder="{{ __('Composer name') }}"
+                                                                />
+                                                            </flux:field>
+                                                        </div>
+                                                        <flux:button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            type="button"
+                                                            onclick="this.closest('.song-item').remove()"
+                                                            class="shrink-0 mt-5"
+                                                        >
+                                                            {{ __('Remove') }}
+                                                        </flux:button>
+                                                    </div>
+                                                    <div class="grid grid-cols-2 gap-2">
+                                                        <flux:field>
+                                                            <flux:label class="text-xs">{{ __('Arranger') }}</flux:label>
+                                                            <flux:input
+                                                                type="text"
+                                                                name="ensembles[{{ $ensembleIndex }}][songs][{{ $songIndex }}][arranger]"
+                                                                value="{{ $song['arranger'] ?? '' }}"
+                                                                placeholder="{{ __('Arranger name (optional)') }}"
+                                                            />
+                                                        </flux:field>
+                                                        <flux:field>
+                                                            <flux:label class="text-xs">{{ __('Program Notes') }}</flux:label>
+                                                            <flux:input
+                                                                type="text"
+                                                                name="ensembles[{{ $ensembleIndex }}][songs][{{ $songIndex }}][notes]"
+                                                                value="{{ $song['notes'] ?? '' }}"
+                                                                placeholder="{{ __('Notes (optional)') }}"
+                                                            />
+                                                        </flux:field>
+                                                    </div>
+                                                </div>
+                                            @empty
+                                                <p class="text-xs text-zinc-500 dark:text-zinc-400 italic">{{ __('No songs found for this ensemble') }}</p>
+                                            @endforelse
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400 text-center py-8">{{ __('No ensembles found') }}</p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4">
+                        <flux:button variant="ghost" href="{{ route('addProgram') }}">
+                            {{ __('Start Over') }}
+                        </flux:button>
+                        <flux:button variant="primary" type="button">
+                            {{ __('Confirm & Save') }}
+                        </flux:button>
+                    </div>
+                </div>
+            @else
+                {{-- Placeholder when no data --}}
+                <div class="min-h-[300px] rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center">
+                    <div class="text-center text-zinc-500 dark:text-zinc-400">
+                        <svg class="mx-auto h-12 w-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                        </svg>
+                        <p class="text-sm font-medium">{{ __('Confirmation dialog will appear here') }}</p>
+                        <p class="text-xs mt-1">{{ __('After processing, you\'ll review the extracted information') }}</p>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
+
+    @if(isset($analysis['status']) && $analysis['status'] === 'processing')
+        <script>
+            // Poll for status updates every 3 seconds when processing
+            const pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('{{ route("addProgram.status") }}');
+                    const data = await response.json();
+
+                    if (data.status === 'completed' || data.status === 'failed') {
+                        // Reload the page to show results
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error polling status:', error);
+                }
+            }, 3000);
+
+            // Clean up interval when leaving page
+            window.addEventListener('beforeunload', () => {
+                clearInterval(pollInterval);
+            });
+        </script>
+    @endif
+
+    <script>
+        function addEnsemble() {
+            const container = document.getElementById('ensembles-container');
+
+            // Remove "No ensembles found" message if it exists
+            const emptyMessage = container.querySelector('p.text-sm');
+            if (emptyMessage) {
+                emptyMessage.remove();
+            }
+
+            // Get the next ensemble index
+            const ensembleIndex = container.querySelectorAll('.ensemble-group').length;
+
+            // Create new ensemble group
+            const newEnsemble = document.createElement('div');
+            newEnsemble.className = 'ensemble-group rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 space-y-4';
+            newEnsemble.setAttribute('data-ensemble-index', ensembleIndex);
+            newEnsemble.innerHTML = `
+                <div class="flex gap-3 items-start">
+                    <div class="flex-1">
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">{{ __('Ensemble Name') }}</label>
+                            <input
+                                type="text"
+                                name="ensembles[${ensembleIndex}][name]"
+                                placeholder="{{ __('Enter ensemble name') }}"
+                                class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onclick="this.closest('.ensemble-group').remove()"
+                        class="mt-7 rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                    >
+                        {{ __('Remove Ensemble') }}
+                    </button>
+                </div>
+                <div class="ml-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('Songs') }}</span>
+                        <button
+                            type="button"
+                            onclick="addSong(this.closest('.ensemble-group'))"
+                            class="rounded-lg px-2 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                        >
+                            {{ __('+ Add Song') }}
+                        </button>
+                    </div>
+                    <div class="songs-container space-y-3">
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 italic">{{ __('No songs found for this ensemble') }}</p>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(newEnsemble);
+
+            // Focus the ensemble name input
+            newEnsemble.querySelector('input[type="text"]').focus();
+        }
+
+        function addSong(ensembleElement) {
+            const songsContainer = ensembleElement.querySelector('.songs-container');
+            const ensembleIndex = ensembleElement.getAttribute('data-ensemble-index');
+
+            // Remove "No songs found" message if it exists
+            const emptyMessage = songsContainer.querySelector('p.text-xs');
+            if (emptyMessage) {
+                emptyMessage.remove();
+            }
+
+            // Get the next song index for this ensemble
+            const songIndex = songsContainer.querySelectorAll('.song-item').length;
+
+            // Create new song item
+            const newSong = document.createElement('div');
+            newSong.className = 'song-item rounded border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 p-3 space-y-2';
+            newSong.innerHTML = `
+                <div class="flex gap-2">
+                    <div class="flex-1 grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-900 dark:text-zinc-100 mb-1">{{ __('Title') }}</label>
+                            <input
+                                type="text"
+                                name="ensembles[${ensembleIndex}][songs][${songIndex}][title]"
+                                placeholder="{{ __('Song title') }}"
+                                class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-900 dark:text-zinc-100 mb-1">{{ __('Composer') }}</label>
+                            <input
+                                type="text"
+                                name="ensembles[${ensembleIndex}][songs][${songIndex}][composer]"
+                                placeholder="{{ __('Composer name') }}"
+                                class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onclick="this.closest('.song-item').remove()"
+                        class="shrink-0 mt-5 rounded-lg px-2 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                    >
+                        {{ __('Remove') }}
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-900 dark:text-zinc-100 mb-1">{{ __('Arranger') }}</label>
+                        <input
+                            type="text"
+                            name="ensembles[${ensembleIndex}][songs][${songIndex}][arranger]"
+                            placeholder="{{ __('Arranger name (optional)') }}"
+                            class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-900 dark:text-zinc-100 mb-1">{{ __('Program Notes') }}</label>
+                        <input
+                            type="text"
+                            name="ensembles[${ensembleIndex}][songs][${songIndex}][notes]"
+                            placeholder="{{ __('Notes (optional)') }}"
+                            class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                </div>
+            `;
+
+            songsContainer.appendChild(newSong);
+
+            // Focus the title input
+            newSong.querySelector('input[type="text"]').focus();
+        }
+    </script>
 </x-layouts.app>
