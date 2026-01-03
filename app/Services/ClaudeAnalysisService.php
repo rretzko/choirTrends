@@ -27,6 +27,11 @@ class ClaudeAnalysisService
     public function analyzeProgram(string $content): array
     {
         try {
+            // Use appropriate model based on content type
+            // Sonnet 4 for PDFs (native document support)
+            // Haiku for images (better vision performance and lower cost)
+            $this->selectModelForContent($content);
+
             $messages = $this->buildMessages($content);
             $response = $this->sendToClaudeAPI($messages);
 
@@ -41,8 +46,26 @@ class ClaudeAnalysisService
         }
     }
 
+    private function selectModelForContent(string $content): void
+    {
+        // Check content type and select appropriate model
+        if (str_starts_with($content, 'PDF_DATA|||')) {
+            // Use Sonnet 4 for PDFs - has native document support
+            $this->model = 'claude-sonnet-4-20250514';
+        } elseif (str_starts_with($content, 'IMAGE_DATA|||')) {
+            // Use Haiku for images - better vision performance
+            $this->model = 'claude-3-haiku-20240307';
+        }
+        // For text content, use the configured default model
+    }
+
     private function buildMessages(string $content): array
     {
+        // Check if this is PDF data
+        if (str_starts_with($content, 'PDF_DATA:')) {
+            return $this->buildDocumentMessages($content);
+        }
+
         // Check if this is image data
         if (str_starts_with($content, 'IMAGE_DATA:')) {
             return $this->buildImageMessages($content);
@@ -63,13 +86,13 @@ class ClaudeAnalysisService
         ];
     }
 
-    private function buildImageMessages(string $imageData): array
+    private function buildDocumentMessages(string $documentData): array
     {
-        // Parse IMAGE_DATA:mime_type:base64_data
-        $parts = explode(':', $imageData, 3);
+        // Parse PDF_DATA|||mime_type|||base64_data
+        $parts = explode('|||', $documentData, 3);
 
         if (count($parts) !== 3) {
-            throw new \Exception('Invalid image data format');
+            throw new \Exception('Invalid document data format');
         }
 
         [, $mimeType, $base64Data] = $parts;
@@ -81,7 +104,7 @@ class ClaudeAnalysisService
                 'role' => 'user',
                 'content' => [
                     [
-                        'type' => 'image',
+                        'type' => 'document',
                         'source' => [
                             'type' => 'base64',
                             'media_type' => $mimeType,
@@ -97,56 +120,133 @@ class ClaudeAnalysisService
         ];
     }
 
+    private function buildImageMessages(string $imageData): array
+    {
+        // Handle multi-page PDFs (multiple images separated by |NEXT_PAGE|)
+        $pages = explode('|NEXT_PAGE|', $imageData);
+        $contentBlocks = [];
+
+        foreach ($pages as $page) {
+            // Parse IMAGE_DATA|||mime_type|||base64_data
+            $parts = explode('|||', $page, 3);
+
+            if (count($parts) !== 3) {
+                continue; // Skip invalid pages
+            }
+
+            [, $mimeType, $base64Data] = $parts;
+
+            $contentBlocks[] = [
+                'type' => 'image',
+                'source' => [
+                    'type' => 'base64',
+                    'media_type' => $mimeType,
+                    'data' => $base64Data,
+                ],
+            ];
+        }
+
+        if (empty($contentBlocks)) {
+            throw new \Exception('No valid image data found');
+        }
+
+        // Add the prompt as text after all images
+        $contentBlocks[] = [
+            'type' => 'text',
+            'text' => $this->buildPrompt(),
+        ];
+
+        return [
+            [
+                'role' => 'user',
+                'content' => $contentBlocks,
+            ],
+        ];
+    }
+
     private function buildPrompt(): string
     {
         return <<<'PROMPT'
-You are analyzing a concert program document. Please extract the following information and return it as a JSON object:
+You are analyzing a concert program document that may have text extracted in an unusual order due to PDF layout issues.
 
+IMPORTANT: The text extraction may list ALL song titles first, followed by ALL ensemble names later in the document. You need to intelligently match songs to ensembles based on context clues.
+
+Your task is to extract information using a TWO-STEP PROCESS:
+
+STEP 1: IDENTIFY ALL ENSEMBLE HEADERS FIRST
+Concert programs are structured with ensemble names as SECTION HEADERS (bold, larger text, or standalone lines) that divide the program into sections. Each section contains the songs that specific ensemble will perform.
+
+Examples of ensemble headers:
+- "Concert Choir"
+- "Women's Ensemble"
+- "Chamber Singers"
+- "Varsity Treble Choir"
+
+First, scan the entire document and identify ALL ensemble/group names that serve as section headers.
+
+STEP 2: FOR EACH ENSEMBLE, EXTRACT ONLY ITS SONGS
+Once you have identified all ensemble headers, go through each ensemble one-by-one. For each ensemble:
+- Extract ONLY the songs that appear AFTER that ensemble's header
+- STOP when you reach the NEXT ensemble header
+- Do NOT include songs from other ensembles
+
+EXAMPLE STRUCTURE:
+
+Concert Choir
+Ave Maria - Franz Biebl
+Lux Aurumque - Eric Whitacre
+
+Women's Ensemble
+The Seal Lullaby - Eric Whitacre
+Sure on This Shining Night - Morten Lauridsen
+
+Varsity Choir
+O Magnum Mysterium - Morten Lauridsen
+
+CORRECT EXTRACTION:
+- Ensemble 1: "Concert Choir" with songs: ["Ave Maria", "Lux Aurumque"]
+- Ensemble 2: "Women's Ensemble" with songs: ["The Seal Lullaby", "Sure on This Shining Night"]
+- Ensemble 3: "Varsity Choir" with songs: ["O Magnum Mysterium"]
+
+WRONG - DO NOT DO THIS:
+- Putting all songs under the first ensemble
+- Mixing songs from different ensembles together
+
+ADDITIONAL INFORMATION TO EXTRACT:
 1. Event name: The name/title of the concert or performance
-2. Event date: The date when the event took place or will take place
+2. Event date: The date when the event took place or will take place (format as YYYY-MM-DD if possible)
 3. School name: The name of the school, organization, or institution presenting the concert
 4. Director name: The name of the musical director, conductor, or choir director
-5. Ensembles and their songs:
 
-   IMPORTANT: Concert programs are typically structured with ensemble names as SECTION HEADERS followed by the songs that ensemble will perform.
+For each song, extract:
+- Title: The name of the song/piece
+- Composer: The composer of the piece
+- Arranger: The arranger (if mentioned, often shown as "arr. Name")
+- Notes: Any program notes that immediately follow the song (performance notes, dedications, historical context, etc.)
 
-   For example:
-
-   Concert Choir
-   Ave Maria - Franz Biebl
-   Lux Aurumque - Eric Whitacre
-
-   Women's Ensemble
-   The Seal Lullaby - Eric Whitacre
-   Sure on This Shining Night - Morten Lauridsen
-
-   In this structure:
-   - "Concert Choir" is the first ensemble
-   - "Ave Maria" and "Lux Aurumque" belong to Concert Choir
-   - "Women's Ensemble" is the second ensemble
-   - "The Seal Lullaby" and "Sure on This Shining Night" belong to Women's Ensemble
-
-   For each performing group/ensemble, extract:
-   - Ensemble name (e.g., "Concert Choir", "Women's Ensemble", "Chamber Singers")
-   - ALL songs that appear AFTER that ensemble name and BEFORE the next ensemble name
-   - For each song include:
-     * Title: The name of the song/piece
-     * Composer: The composer of the piece
-     * Arranger: The arranger (if mentioned, often shown as "arr. Name")
-     * Notes: Any program notes that immediately follow the song (performance notes, dedications, historical context, etc.)
-
-Please return ONLY a valid JSON object with these exact keys:
+Return ONLY a valid JSON object with this exact structure:
 {
   "event_name": "string or null",
-  "event_date": "string or null (in YYYY-MM-DD format if possible)",
+  "event_date": "string or null (YYYY-MM-DD format)",
   "school_name": "string or null",
   "director_name": "string or null",
   "ensembles": [
     {
-      "name": "Ensemble Name",
+      "name": "First Ensemble Name",
       "songs": [
         {
           "title": "Song Title",
+          "composer": "Composer Name or null",
+          "arranger": "Arranger Name or null",
+          "notes": "Program notes or null"
+        }
+      ]
+    },
+    {
+      "name": "Second Ensemble Name",
+      "songs": [
+        {
+          "title": "Another Song Title",
           "composer": "Composer Name or null",
           "arranger": "Arranger Name or null",
           "notes": "Program notes or null"
@@ -156,33 +256,60 @@ Please return ONLY a valid JSON object with these exact keys:
   ]
 }
 
-Important notes:
-- Pay careful attention to which songs belong to which ensemble based on their position in the document
-- Each ensemble must have at least one song
-- Songs belong to the ensemble header that precedes them, not the one that follows
+CRITICAL RULES:
+- Use the TWO-STEP process: First find ALL ensembles, then extract songs for EACH ensemble separately
+- Songs belong to the ensemble header that PRECEDES them, not the one that follows
+- Each ensemble's songs end when you encounter the next ensemble header
 - If you cannot find a particular piece of information, use null for that field
 - If no ensembles are found, return an empty array
-- Do not include any explanation or additional text, just the JSON object
+- Do not include any explanation or additional text, ONLY the JSON object
 PROMPT;
     }
 
     private function sendToClaudeAPI(array $messages): array
     {
-        $response = Http::withHeaders([
-            'x-api-key' => $this->apiKey,
-            'anthropic-version' => $this->apiVersion,
-            'content-type' => 'application/json',
-        ])->timeout(60)->post('https://api.anthropic.com/v1/messages', [
-            'model' => $this->model,
-            'max_tokens' => 1024,
-            'messages' => $messages,
-        ]);
+        $maxRetries = 3;
+        $baseDelay = 2; // seconds
 
-        if (! $response->successful()) {
-            throw new \Exception('Claude API request failed: '.$response->body());
+        for ($attempt = 0; $attempt <= $maxRetries; $attempt++) {
+            $response = Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'anthropic-version' => $this->apiVersion,
+                'content-type' => 'application/json',
+            ])->timeout(60)->post('https://api.anthropic.com/v1/messages', [
+                'model' => $this->model,
+                'max_tokens' => 4096,
+                'messages' => $messages,
+            ]);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            // Check if it's a rate limit error
+            $error = $response->json()['error'] ?? null;
+            $isRateLimit = $error && ($error['type'] ?? '') === 'rate_limit_error';
+
+            // If it's the last attempt or not a rate limit error, throw exception
+            if ($attempt === $maxRetries || ! $isRateLimit) {
+                throw new \Exception('Claude API request failed: '.$response->body());
+            }
+
+            // Calculate exponential backoff delay
+            $delay = $baseDelay * pow(2, $attempt);
+
+            Log::info('Rate limit hit, retrying', [
+                'attempt' => $attempt + 1,
+                'max_retries' => $maxRetries,
+                'delay_seconds' => $delay,
+            ]);
+
+            // Wait before retrying
+            sleep($delay);
         }
 
-        return $response->json();
+        // This should never be reached, but just in case
+        throw new \Exception('Claude API request failed after '.$maxRetries.' retries');
     }
 
     private function parseResponse(array $response): array

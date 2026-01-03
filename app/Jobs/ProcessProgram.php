@@ -2,11 +2,15 @@
 
 namespace App\Jobs;
 
+use App\Mail\ProgramProcessed;
+use App\Models\User;
 use App\Services\ClaudeAnalysisService;
 use App\Services\ProgramContentExtractor;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Middleware\RateLimited;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class ProcessProgram implements ShouldQueue
@@ -25,6 +29,16 @@ class ProcessProgram implements ShouldQueue
         public string $filePath,
         public ?string $uris = null
     ) {}
+
+    /**
+     * Get the middleware the job should pass through.
+     */
+    public function middleware(): array
+    {
+        // Limit to 2 jobs per minute to avoid hitting Claude API rate limits
+        // This is conservative to stay well under the 30K tokens/minute limit
+        return [new RateLimited('program-processing')];
+    }
 
     /**
      * Execute the job.
@@ -76,6 +90,17 @@ class ProcessProgram implements ShouldQueue
                 now()->addHours(2)
             );
 
+            // Send success email notification
+            $user = User::find($this->userId);
+            if ($user) {
+                Mail::to($user->email)->send(
+                    new ProgramProcessed(
+                        programData: $extractedData,
+                        success: true
+                    )
+                );
+            }
+
             // Clean up the temporary file
             if ($this->filePath && Storage::exists($this->filePath)) {
                 Storage::delete($this->filePath);
@@ -96,6 +121,18 @@ class ProcessProgram implements ShouldQueue
                 ],
                 now()->addHours(2)
             );
+
+            // Send failure email notification
+            $user = User::find($this->userId);
+            if ($user) {
+                Mail::to($user->email)->send(
+                    new ProgramProcessed(
+                        programData: [],
+                        success: false,
+                        errorMessage: $e->getMessage()
+                    )
+                );
+            }
 
             throw $e;
         }

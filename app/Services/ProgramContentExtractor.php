@@ -39,15 +39,52 @@ class ProgramContentExtractor
 
     private function extractFromPdf(string $path): string
     {
+        // Claude's API supports PDFs directly, which preserves the visual layout
+        // and structure much better than text extraction.
+        // We'll send the PDF as a base64-encoded document.
+
+        try {
+            $pdfData = file_get_contents($path);
+
+            if ($pdfData === false) {
+                throw new \Exception('Failed to read PDF file');
+            }
+
+            // Encode as base64 and ensure no whitespace/newlines
+            $base64 = str_replace(["\n", "\r", ' '], '', base64_encode($pdfData));
+
+            // Return a special marker that indicates this is PDF data
+            // Format: PDF_DATA|||application/pdf|||base64_data
+            // Using ||| as delimiter to avoid conflicts with base64 characters
+            return "PDF_DATA|||application/pdf|||{$base64}";
+
+        } catch (\Exception $e) {
+            // Fallback to text extraction if PDF reading fails
+            return $this->extractPdfAsText($path);
+        }
+    }
+
+    private function extractPdfAsText(string $path): string
+    {
         try {
             $pdf = $this->pdfParser->parseFile($path);
-            $text = $pdf->getText();
+            $pages = $pdf->getPages();
+            $formattedText = [];
 
-            if (empty(trim($text))) {
+            // Extract text page by page to preserve some structure
+            foreach ($pages as $pageNumber => $page) {
+                $pageText = $page->getText();
+
+                if (! empty(trim($pageText))) {
+                    $formattedText[] = '=== PAGE '.($pageNumber + 1)." ===\n".$pageText;
+                }
+            }
+
+            if (empty($formattedText)) {
                 throw new \Exception('No text could be extracted from the PDF');
             }
 
-            return $text;
+            return implode("\n\n", $formattedText);
         } catch (\Exception $e) {
             throw new \Exception('Failed to extract text from PDF: '.$e->getMessage());
         }
@@ -66,19 +103,95 @@ class ProgramContentExtractor
 
     private function extractFromImage(string $path): string
     {
-        // For now, we'll encode the image as base64 and let Claude process it directly
-        // This is actually better than OCR as Claude can understand images natively
-        $imageData = file_get_contents($path);
+        // Claude can understand images natively, but we need to resize large images
+        // to stay within token limits (typically ~200K tokens input limit)
+
+        // Resize image if needed to reduce token usage
+        $resizedPath = $this->resizeImageIfNeeded($path);
+
+        $imageData = file_get_contents($resizedPath);
 
         if ($imageData === false) {
             throw new \Exception('Failed to read image file');
         }
 
-        $base64 = base64_encode($imageData);
-        $mimeType = mime_content_type($path);
+        // Encode as base64 and ensure no whitespace/newlines
+        $base64 = str_replace(["\n", "\r", ' '], '', base64_encode($imageData));
+        $mimeType = mime_content_type($resizedPath);
+
+        // Clean up temporary resized file if it was created
+        if ($resizedPath !== $path && file_exists($resizedPath)) {
+            @unlink($resizedPath);
+        }
 
         // Return a special marker that indicates this is image data
-        return "IMAGE_DATA:{$mimeType}:{$base64}";
+        // Using ||| as delimiter to avoid conflicts with base64 characters
+        return "IMAGE_DATA|||{$mimeType}|||{$base64}";
+    }
+
+    private function resizeImageIfNeeded(string $path): string
+    {
+        // Max dimensions to stay within token limits
+        // JPEG compression makes images much smaller than PNG
+        // 1000x1000 JPEG should be readable and stay under token limits
+        $maxWidth = 1000;
+        $maxHeight = 1000;
+
+        $imageInfo = getimagesize($path);
+
+        if ($imageInfo === false) {
+            return $path; // Can't get image info, return original
+        }
+
+        [$width, $height] = $imageInfo;
+
+        // If image is already small enough, return original
+        if ($width <= $maxWidth && $height <= $maxHeight) {
+            return $path;
+        }
+
+        // Calculate new dimensions maintaining aspect ratio
+        $ratio = min($maxWidth / $width, $maxHeight / $height);
+        $newWidth = (int) ($width * $ratio);
+        $newHeight = (int) ($height * $ratio);
+
+        // Create image resource based on type
+        $sourceImage = match ($imageInfo[2]) {
+            IMAGETYPE_JPEG => imagecreatefromjpeg($path),
+            IMAGETYPE_PNG => imagecreatefrompng($path),
+            IMAGETYPE_GIF => imagecreatefromgif($path),
+            IMAGETYPE_WEBP => imagecreatefromwebp($path),
+            default => false,
+        };
+
+        if ($sourceImage === false) {
+            return $path; // Can't create image resource, return original
+        }
+
+        // Create new resized image
+        $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
+
+        // Preserve transparency for PNG and GIF
+        if ($imageInfo[2] === IMAGETYPE_PNG || $imageInfo[2] === IMAGETYPE_GIF) {
+            imagealphablending($resizedImage, false);
+            imagesavealpha($resizedImage, true);
+            $transparent = imagecolorallocatealpha($resizedImage, 255, 255, 255, 127);
+            imagefilledrectangle($resizedImage, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+
+        // Resize the image
+        imagecopyresampled($resizedImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+        // Save to temporary file as JPEG with good quality
+        // JPEG is much smaller than PNG for photos/scanned documents
+        $tempPath = sys_get_temp_dir().'/resized_'.uniqid().'.jpg';
+        imagejpeg($resizedImage, $tempPath, 85); // Quality 85 (good quality, reasonable size)
+
+        // Clean up
+        imagedestroy($sourceImage);
+        imagedestroy($resizedImage);
+
+        return $tempPath;
     }
 
     private function extractFromUris(string $uris): string

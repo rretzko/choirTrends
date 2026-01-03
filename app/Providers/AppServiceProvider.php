@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Configure queue rate limiter for program processing
+        // Limit to 2 jobs per minute to stay under Claude API's 30K tokens/minute limit
+        RateLimiter::for('program-processing', function (object $job) {
+            return Limit::perMinute(2);
+        });
     }
 }
