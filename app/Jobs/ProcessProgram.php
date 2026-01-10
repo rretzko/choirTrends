@@ -66,27 +66,42 @@ class ProcessProgram implements ShouldQueue
 
             $content = $contentExtractor->extract($uploadedFile, $this->uris);
 
-            // Limit content size for Claude API (max ~100K characters to stay under token limits)
-            $maxChars = 100000;
-            if (strlen($content) > $maxChars) {
-                Log::info('Content truncated', [
-                    'original_length' => strlen($content),
-                    'truncated_length' => $maxChars,
-                ]);
-                $content = substr($content, 0, $maxChars)."\n\n[Content truncated due to length...]";
+            // For base64-encoded PDFs and images, we cannot truncate the content
+            // as it would corrupt the base64 data. Only truncate plain text content.
+            $isPdfOrImage = str_starts_with($content, 'PDF_DATA|||') ||
+                           str_starts_with($content, 'IMAGE_DATA|||');
+
+            if (! $isPdfOrImage) {
+                // Limit text content size for Claude API (max ~100K characters to stay under token limits)
+                $maxChars = 100000;
+                if (strlen($content) > $maxChars) {
+                    Log::info('Content truncated', [
+                        'original_length' => strlen($content),
+                        'truncated_length' => $maxChars,
+                    ]);
+                    $content = substr($content, 0, $maxChars)."\n\n[Content truncated due to length...]";
+                }
             }
 
             // Analyze with Claude
             $extractedData = $analysisService->analyzeProgram($content);
 
             // Store results in cache with user-specific key
+            // Note: We don't store the raw content for PDFs/images as it can be very large (20+ MB)
+            // and exceed MySQL's max_allowed_packet limit. The extracted data is all we need.
+            $cacheData = [
+                'status' => 'completed',
+                'data' => $extractedData,
+            ];
+
+            // Only include content for plain text (not PDF or image data)
+            if (! $isPdfOrImage) {
+                $cacheData['content'] = $content;
+            }
+
             cache()->put(
                 "program_analysis_{$this->userId}",
-                [
-                    'status' => 'completed',
-                    'data' => $extractedData,
-                    'content' => $content,
-                ],
+                $cacheData,
                 now()->addHours(2)
             );
 

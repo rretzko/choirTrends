@@ -21,6 +21,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('add-program', [App\Http\Controllers\AddProgramController::class, 'store'])->name('addProgram.store');
 
+    Route::post('add-program/confirm', [App\Http\Controllers\AddProgramController::class, 'confirm'])->name('addProgram.confirm');
+
     Route::redirect('settings', 'settings/profile');
 
     Route::get('settings/profile', Profile::class)->name('profile.edit');

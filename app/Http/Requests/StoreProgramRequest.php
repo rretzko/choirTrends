@@ -22,7 +22,7 @@ class StoreProgramRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'program_file' => 'required_without:program_uris|file|mimes:pdf,txt,png,jpg,jpeg,gif,webp|max:102400',
+            'program_file' => 'required_without:program_uris|nullable|file|mimes:pdf,txt,png,jpg,jpeg,gif,webp|max:102400',
             'program_uris' => 'required_without:program_file|nullable|string',
         ];
     }

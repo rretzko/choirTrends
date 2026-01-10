@@ -3,7 +3,21 @@
     "allow": [
       "Bash(php artisan make:mail:*)",
       "mcp__laravel-boost__read-log-entries",
-      "mcp__laravel-boost__last-error"
+      "mcp__laravel-boost__last-error",
+      "Bash(vendor/bin/pint:*)",
+      "mcp__laravel-boost__database-query",
+      "Bash(php artisan make:test:*)",
+      "Bash(php artisan test:*)",
+      "mcp__laravel-boost__tinker",
+      "mcp__laravel-boost__get-config",
+      "mcp__laravel-boost__list-available-env-vars",
+      "Bash(php artisan config:clear:*)",
+      "Bash(php artisan:*)",
+      "mcp__laravel-boost__database-schema",
+      "Bash(composer dump-autoload:*)",
+      "mcp__laravel-boost__search-docs",
+      "WebSearch",
+      "Bash(vendor/bin/phpstan analyze:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

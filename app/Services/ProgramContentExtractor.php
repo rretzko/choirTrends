@@ -44,14 +44,37 @@ class ProgramContentExtractor
         // We'll send the PDF as a base64-encoded document.
 
         try {
-            $pdfData = file_get_contents($path);
-
-            if ($pdfData === false) {
-                throw new \Exception('Failed to read PDF file');
+            // Verify file exists and is readable
+            if (! file_exists($path) || ! is_readable($path)) {
+                throw new \Exception('PDF file does not exist or is not readable');
             }
 
-            // Encode as base64 and ensure no whitespace/newlines
-            $base64 = str_replace(["\n", "\r", ' '], '', base64_encode($pdfData));
+            $pdfData = file_get_contents($path);
+
+            if ($pdfData === false || empty($pdfData)) {
+                throw new \Exception('Failed to read PDF file or file is empty');
+            }
+
+            // Check file size (Claude API limit is 32MB)
+            $sizeInBytes = strlen($pdfData);
+            $sizeInMB = $sizeInBytes / (1024 * 1024);
+
+            if ($sizeInMB > 32) {
+                throw new \Exception("PDF file is too large ({$sizeInMB}MB). Maximum size is 32MB.");
+            }
+
+            // Encode as base64 - base64_encode() doesn't add whitespace in PHP
+            $base64 = base64_encode($pdfData);
+
+            // Verify the base64 encoding is valid
+            if (empty($base64)) {
+                throw new \Exception('Failed to encode PDF as base64');
+            }
+
+            // Ensure the base64 string only contains valid base64 characters
+            if (! preg_match('/^[A-Za-z0-9+\/]*={0,2}$/', $base64)) {
+                throw new \Exception('Invalid base64 encoding generated');
+            }
 
             // Return a special marker that indicates this is PDF data
             // Format: PDF_DATA|||application/pdf|||base64_data

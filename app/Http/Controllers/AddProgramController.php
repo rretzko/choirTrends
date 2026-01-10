@@ -1,9 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ConfirmProgramRequest;
 use App\Http\Requests\StoreProgramRequest;
 use App\Jobs\ProcessProgram;
+use App\Models\Artist;
+use App\Models\Ensemble;
+use App\Models\Program;
+use App\Models\School;
+use App\Models\SongTitle;
+use App\Services\ArtistNameParser;
 use Illuminate\Http\Request;
 
 class AddProgramController extends Controller
@@ -63,5 +72,111 @@ class AddProgramController extends Controller
         $analysis = cache()->get("program_analysis_{$request->user()->id}");
 
         return response()->json($analysis ?? ['status' => 'not_found']);
+    }
+
+    public function confirm(ConfirmProgramRequest $request)
+    {
+        $validated = $request->validated();
+
+        try {
+            // Check if a program with the same user_id, event_name, and event_date already exists
+            $exists = Program::where('user_id', $request->user()->id)
+                ->where('event_name', $validated['event_name'])
+                ->where('event_date', $validated['event_date'])
+                ->exists();
+
+            if ($exists) {
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->withErrors([
+                        'event_name' => 'A program for this event already exists. Please use a different event name or date.',
+                    ]);
+            }
+
+            // Find or create the school
+            $school = School::firstOrCreate(['school_name' => $validated['school_name']]);
+
+            // Associate the school with the user (if not already associated)
+            $request->user()->schools()->syncWithoutDetaching([$school->id]);
+
+            // Get ensembles from the analysis cache and create them
+            $analysis = cache()->get("program_analysis_{$request->user()->id}");
+            if ($analysis && isset($analysis['data']['ensembles'])) {
+                $artistNameParser = new ArtistNameParser;
+
+                foreach ($analysis['data']['ensembles'] as $ensembleData) {
+                    if (! empty($ensembleData['name'])) {
+                        Ensemble::firstOrCreate([
+                            'school_id' => $school->id,
+                            'ensemble_name' => $ensembleData['name'],
+                        ]);
+                    }
+
+                    // Process songs for this ensemble
+                    if (isset($ensembleData['songs']) && is_array($ensembleData['songs'])) {
+                        foreach ($ensembleData['songs'] as $song) {
+                            // Create song title if it exists
+                            if (! empty($song['title'])) {
+                                SongTitle::firstOrCreate([
+                                    'song_title' => $song['title'],
+                                ]);
+                            }
+
+                            // Create composer if it exists
+                            if (! empty($song['composer'])) {
+                                $composerData = $artistNameParser->parse($song['composer']);
+                                Artist::firstOrCreate(
+                                    ['artist_name' => $composerData['artist_name']],
+                                    $composerData
+                                );
+                            }
+
+                            // Create arranger if it exists
+                            if (! empty($song['arranger'])) {
+                                $arrangerData = $artistNameParser->parse($song['arranger']);
+                                Artist::firstOrCreate(
+                                    ['artist_name' => $arrangerData['artist_name']],
+                                    $arrangerData
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Create the program
+            Program::create([
+                'user_id' => $request->user()->id,
+                'event_name' => $validated['event_name'],
+                'event_date' => $validated['event_date'],
+                'school_id' => $school->id,
+                'director_name' => $validated['director_name'],
+            ]);
+
+            // Clear the analysis cache
+            cache()->forget("program_analysis_{$request->user()->id}");
+
+            return redirect()
+                ->route('dashboard')
+                ->with('success', 'Program saved successfully!');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle unique constraint violation
+            if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'UNIQUE constraint failed')) {
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->withErrors([
+                        'event_name' => 'A program for this event already exists. Please use a different event name or date.',
+                    ]);
+            }
+
+            throw $e;
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to save program: '.$e->getMessage()]);
+        }
     }
 }

@@ -62,12 +62,12 @@ class ClaudeAnalysisService
     private function buildMessages(string $content): array
     {
         // Check if this is PDF data
-        if (str_starts_with($content, 'PDF_DATA:')) {
+        if (str_starts_with($content, 'PDF_DATA|||')) {
             return $this->buildDocumentMessages($content);
         }
 
         // Check if this is image data
-        if (str_starts_with($content, 'IMAGE_DATA:')) {
+        if (str_starts_with($content, 'IMAGE_DATA|||')) {
             return $this->buildImageMessages($content);
         }
 
@@ -96,6 +96,35 @@ class ClaudeAnalysisService
         }
 
         [, $mimeType, $base64Data] = $parts;
+
+        // Trim any whitespace that might have been introduced
+        $base64Data = trim($base64Data);
+        $mimeType = trim($mimeType);
+
+        // Validate base64 data
+        if (empty($base64Data)) {
+            throw new \Exception('Empty base64 data received');
+        }
+
+        // Remove any whitespace characters from base64 string
+        $base64Data = preg_replace('/\s+/', '', $base64Data);
+
+        // Verify it's valid base64
+        if (! preg_match('/^[A-Za-z0-9+\/]*={0,2}$/', $base64Data)) {
+            throw new \Exception('Invalid base64 format detected in document data');
+        }
+
+        // Test decode to verify it's valid
+        $decoded = base64_decode($base64Data, true);
+        if ($decoded === false) {
+            throw new \Exception('Base64 data cannot be decoded');
+        }
+
+        Log::info('Sending PDF to Claude', [
+            'mime_type' => $mimeType,
+            'base64_length' => strlen($base64Data),
+            'decoded_size_bytes' => strlen($decoded),
+        ]);
 
         $prompt = $this->buildPrompt();
 
