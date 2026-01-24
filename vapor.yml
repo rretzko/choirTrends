@@ -1,0 +1,29 @@
+id: 74449
+name: choirTrends
+environments:
+  # production:
+  #  memory: 1024
+  #  cli-memory: 512
+  #  runtime: 'php-8.4:al2'
+  #  build:
+  #    - 'composer install --no-dev'
+  #    - 'php artisan event:cache'
+  #    # - 'npm ci && npm run build && rm -rf node_modules'
+  staging:
+    memory: 1024
+    cli-memory: 1024
+    cli-timeout: 900
+    runtime: 'php-8.4:al2'
+    database: choirTrendsStaging
+    storage: choirtrends
+    deploy-timeout: 300
+    build:
+      - 'composer install --no-dev --no-ansi --no-interaction --prefer-dist --optimize-autoloader'
+      - 'php artisan event:cache'
+      - 'npm ci && npm run build && rm -rf node_modules'
+      - 'rm -rf tests'
+      - 'rm -rf .git'
+      - 'find vendor -type d -name "test" -o -name "tests" -o -name "Test" -o -name "Tests" | xargs rm -rf'
+      - 'find vendor -type f -name "*.md" -o -name "*.txt" -o -name "LICENSE*" -o -name "CHANGELOG*" | xargs rm -f'
+    deploy:
+      - 'php artisan migrate:fresh --seed --force'
