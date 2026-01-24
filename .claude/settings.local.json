@@ -22,7 +22,10 @@
       "mcp__laravel-boost__list-routes",
       "Bash(vendor/bin/phpstan analyse:*)",
       "Bash(vendorbinpint --dirty)",
-      "Bash(php vendor/bin/pint:*)"
+      "Bash(php vendor/bin/pint:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

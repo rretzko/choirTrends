@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - dev        # Deploy to staging
-      - master     # Deploy to production
+  #    - master     # Deploy to production
       - main       # Deploy to production (if using main instead of master)
 
 jobs:
