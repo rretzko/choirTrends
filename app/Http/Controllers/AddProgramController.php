@@ -100,8 +100,19 @@ class AddProgramController extends Controller
             // Associate the school with the user (if not already associated)
             $request->user()->schools()->syncWithoutDetaching([$school->id]);
 
+            // Create the program first
+            $program = Program::create([
+                'user_id' => $request->user()->id,
+                'event_name' => $validated['event_name'],
+                'event_date' => $validated['event_date'],
+                'school_id' => $school->id,
+                'director_name' => $validated['director_name'],
+            ]);
+
             // Get ensembles from the analysis cache and create them
             $analysis = cache()->get("program_analysis_{$request->user()->id}");
+            $songTitleIds = [];
+
             if ($analysis && isset($analysis['data']['ensembles'])) {
                 $artistNameParser = new ArtistNameParser;
 
@@ -116,43 +127,50 @@ class AddProgramController extends Controller
                     // Process songs for this ensemble
                     if (isset($ensembleData['songs']) && is_array($ensembleData['songs'])) {
                         foreach ($ensembleData['songs'] as $song) {
-                            // Create song title if it exists
-                            if (! empty($song['title'])) {
-                                SongTitle::firstOrCreate([
-                                    'song_title' => $song['title'],
-                                ]);
+                            if (empty($song['title'])) {
+                                continue;
                             }
+
+                            $composerId = null;
+                            $arrangerId = null;
 
                             // Create composer if it exists
                             if (! empty($song['composer'])) {
                                 $composerData = $artistNameParser->parse($song['composer']);
-                                Artist::firstOrCreate(
+                                $composer = Artist::firstOrCreate(
                                     ['artist_name' => $composerData['artist_name']],
                                     $composerData
                                 );
+                                $composerId = $composer->id;
                             }
 
                             // Create arranger if it exists
                             if (! empty($song['arranger'])) {
                                 $arrangerData = $artistNameParser->parse($song['arranger']);
-                                Artist::firstOrCreate(
+                                $arranger = Artist::firstOrCreate(
                                     ['artist_name' => $arrangerData['artist_name']],
                                     $arrangerData
                                 );
+                                $arrangerId = $arranger->id;
                             }
+
+                            // Create song title with composer and arranger (composite unique key)
+                            $songTitle = SongTitle::firstOrCreate([
+                                'song_title' => $song['title'],
+                                'composer_id' => $composerId,
+                                'arranger_id' => $arrangerId,
+                            ]);
+
+                            $songTitleIds[] = $songTitle->id;
                         }
                     }
                 }
             }
 
-            // Create the program
-            Program::create([
-                'user_id' => $request->user()->id,
-                'event_name' => $validated['event_name'],
-                'event_date' => $validated['event_date'],
-                'school_id' => $school->id,
-                'director_name' => $validated['director_name'],
-            ]);
+            // Attach song titles to the program
+            if (! empty($songTitleIds)) {
+                $program->songTitles()->attach(array_unique($songTitleIds));
+            }
 
             // Clear the analysis cache
             cache()->forget("program_analysis_{$request->user()->id}");

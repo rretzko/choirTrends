@@ -3,6 +3,7 @@
 namespace App\Livewire\Settings;
 
 use App\Models\User;
+use App\Models\UserPrivacy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
@@ -14,13 +15,30 @@ class Profile extends Component
 
     public string $email = '';
 
+    public bool $privacyName = false;
+
+    public bool $privacySchool = false;
+
+    public bool $privacyEnsembleName = false;
+
     /**
      * Mount the component.
      */
     public function mount(): void
     {
-        $this->name = Auth::user()->name;
-        $this->email = Auth::user()->email;
+        /** @var User $user */
+        $user = Auth::user();
+
+        $this->name = $user->name;
+        $this->email = $user->email;
+
+        /** @var UserPrivacy|null $privacy */
+        $privacy = $user->privacy;
+        if ($privacy) {
+            $this->privacyName = $privacy->name;
+            $this->privacySchool = $privacy->school;
+            $this->privacyEnsembleName = $privacy->ensemble_name;
+        }
     }
 
     /**
@@ -70,5 +88,24 @@ class Profile extends Component
         $user->sendEmailVerificationNotification();
 
         Session::flash('status', 'verification-link-sent');
+    }
+
+    /**
+     * Update the privacy settings for the currently authenticated user.
+     */
+    public function updatePrivacySettings(): void
+    {
+        $user = Auth::user();
+
+        UserPrivacy::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'name' => $this->privacyName,
+                'school' => $this->privacySchool,
+                'ensemble_name' => $this->privacyEnsembleName,
+            ]
+        );
+
+        $this->dispatch('privacy-updated');
     }
 }

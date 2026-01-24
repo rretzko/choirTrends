@@ -17,7 +17,12 @@
       "Bash(composer dump-autoload:*)",
       "mcp__laravel-boost__search-docs",
       "WebSearch",
-      "Bash(vendor/bin/phpstan analyze:*)"
+      "Bash(vendor/bin/phpstan analyze:*)",
+      "mcp__laravel-boost__application-info",
+      "mcp__laravel-boost__list-routes",
+      "Bash(vendor/bin/phpstan analyse:*)",
+      "Bash(vendorbinpint --dirty)",
+      "Bash(php vendor/bin/pint:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

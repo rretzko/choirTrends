@@ -38,6 +38,31 @@
             </div>
         </form>
 
+        <flux:separator class="my-6" />
+
+        <div>
+            <flux:heading size="lg">{{ __('Privacy') }}</flux:heading>
+            <flux:text class="mt-1">{{ __('Control what information is visible to other users.') }}</flux:text>
+        </div>
+
+        <form wire:submit="updatePrivacySettings" class="my-6 w-full space-y-6">
+            <div class="space-y-4">
+                <flux:checkbox wire:model="privacyName" :label="__('Do not display my name to other users.')" />
+                <flux:checkbox wire:model="privacySchool" :label="__('Do not display my school to other users.')" />
+                <flux:checkbox wire:model="privacyEnsembleName" :label="__('Do not display my ensemble names to other users.')" />
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="flex items-center justify-end">
+                    <flux:button variant="primary" type="submit" class="w-full">{{ __('Save') }}</flux:button>
+                </div>
+
+                <x-action-message class="me-3" on="privacy-updated">
+                    {{ __('Saved.') }}
+                </x-action-message>
+            </div>
+        </form>
+
         <livewire:settings.delete-user-form />
     </x-settings.layout>
 </section>

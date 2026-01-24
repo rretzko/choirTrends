@@ -84,8 +84,14 @@
         {{-- Section 2: Confirmation Dialog --}}
         <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6">
             <flux:heading size="lg" class="mb-4">{{ __('Confirm Program Contents') }}</flux:heading>
-            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-2">
                 {{ __('Review and confirm the information extracted from the concert program.') }}
+            </p>
+            @php
+                $privacyLink = '<a href="/settings/profile" class="underline hover:no-underline">'.__('privacy settings').'</a>';
+            @endphp
+            <p class="text-sm text-red-600 dark:text-yellow-400 mb-6 ">
+                {!! __('Update your :link if you do not want your name, school name or ensemble names to be displayed to other users.', ['link' => $privacyLink]) !!}
             </p>
 
             @if(isset($analysis['status']) && $analysis['status'] === 'processing')

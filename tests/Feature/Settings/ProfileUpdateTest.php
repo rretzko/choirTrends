@@ -2,6 +2,7 @@
 
 use App\Livewire\Settings\Profile;
 use App\Models\User;
+use App\Models\UserPrivacy;
 use Livewire\Livewire;
 
 test('profile page is displayed', function () {
@@ -73,4 +74,53 @@ test('correct password must be provided to delete account', function () {
     $response->assertHasErrors(['password']);
 
     expect($user->fresh())->not->toBeNull();
+});
+
+test('user can update privacy settings', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->set('privacyName', true)
+        ->set('privacySchool', true)
+        ->set('privacyEnsembleName', true)
+        ->call('updatePrivacySettings')
+        ->assertHasNoErrors()
+        ->assertDispatched('privacy-updated');
+
+    $privacy = $user->fresh()->privacy;
+
+    expect($privacy)->not->toBeNull();
+    expect($privacy->name)->toBeTrue();
+    expect($privacy->school)->toBeTrue();
+    expect($privacy->ensemble_name)->toBeTrue();
+});
+
+test('privacy settings are loaded on mount', function () {
+    $user = User::factory()->create();
+    UserPrivacy::factory()->create([
+        'user_id' => $user->id,
+        'name' => true,
+        'school' => false,
+        'ensemble_name' => true,
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->assertSet('privacyName', true)
+        ->assertSet('privacySchool', false)
+        ->assertSet('privacyEnsembleName', true);
+});
+
+test('privacy settings default to false when not set', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->assertSet('privacyName', false)
+        ->assertSet('privacySchool', false)
+        ->assertSet('privacyEnsembleName', false);
 });

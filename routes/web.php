@@ -17,6 +17,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::view('dashboard', 'dashboard')->name('dashboard');
 
+    Route::get('artists', App\Livewire\Artists\Index::class)->name('artists.index');
+    Route::get('ensembles', App\Livewire\Ensembles\Index::class)->name('ensembles.index');
+    Route::get('programs', App\Livewire\Programs\Index::class)->name('programs.index');
+    Route::get('schools', App\Livewire\Schools\Index::class)->name('schools.index');
+    Route::get('song-titles', App\Livewire\SongTitles\Index::class)->name('song-titles.index');
+
     Route::get('add-program', [App\Http\Controllers\AddProgramController::class, 'index'])->name('addProgram');
 
     Route::post('add-program', [App\Http\Controllers\AddProgramController::class, 'store'])->name('addProgram.store');
