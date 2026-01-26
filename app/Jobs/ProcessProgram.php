@@ -55,6 +55,14 @@ class ProcessProgram implements ShouldQueue
             $uploadedFile = null;
             $tempFilePath = null;
 
+            Log::info('ProcessProgram starting', [
+                'user_id' => $this->userId,
+                'file_path' => $this->filePath,
+                'uris' => $this->uris,
+                'file_exists' => $this->filePath ? Storage::exists($this->filePath) : false,
+                'storage_disk' => config('filesystems.default'),
+            ]);
+
             if ($this->filePath && Storage::exists($this->filePath)) {
                 // For S3 storage (Vapor), we need to download the file to a temp location
                 // because Storage::path() only works for local filesystem

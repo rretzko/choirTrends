@@ -40,13 +40,26 @@ class AddProgramController extends Controller
                 $vaporKey = $request->input('vapor_file_key');
                 $fileName = $request->input('vapor_file_name', 'uploaded_file');
 
+                // Verify the temporary file exists in S3
+                if (! Storage::exists($vaporKey)) {
+                    throw new \Exception("Uploaded file not found in storage: {$vaporKey}");
+                }
+
                 // Generate a unique filename with original extension
                 $extension = pathinfo($fileName, PATHINFO_EXTENSION);
                 $uniqueName = Str::uuid().'.'.$extension;
 
                 // Move file from tmp/ to concert-programs/ in S3
                 $permanentPath = 'concert-programs/'.$uniqueName;
-                Storage::copy($vaporKey, $permanentPath);
+
+                if (! Storage::copy($vaporKey, $permanentPath)) {
+                    throw new \Exception("Failed to copy file from {$vaporKey} to {$permanentPath}");
+                }
+
+                // Verify the copy succeeded
+                if (! Storage::exists($permanentPath)) {
+                    throw new \Exception("File copy verification failed: {$permanentPath} does not exist");
+                }
 
                 // Delete the temporary file
                 Storage::delete($vaporKey);
