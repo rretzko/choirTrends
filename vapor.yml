@@ -26,6 +26,10 @@ environments:
     runtime: 'php-8.4:al2'
     database: choirTrendsStaging
     storage: choirtrends
+    queues:
+      - default
+    queue-memory: 1024
+    queue-timeout: 300
     deploy-timeout: 300
     build:
       - 'composer install --no-dev --no-ansi --no-interaction --prefer-dist --optimize-autoloader'

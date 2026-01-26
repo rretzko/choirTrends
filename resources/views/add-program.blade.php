@@ -108,9 +108,10 @@
                 const statusText = document.getElementById('upload-status-text');
                 const submitButton = document.getElementById('submit-button');
 
-                form.addEventListener('submit', async (e) => {
-                    e.preventDefault();
+                // Only use Vapor.store() when running on Vapor (S3 filesystem)
+                const useVaporUpload = {{ config('filesystems.default') === 's3' ? 'true' : 'false' }};
 
+                form.addEventListener('submit', async (e) => {
                     // Check if there's a file to upload
                     if (fileInput.files.length > 0) {
                         const file = fileInput.files[0];
@@ -118,51 +119,56 @@
                         // Validate file size (100MB max)
                         const maxSize = 100 * 1024 * 1024; // 100MB in bytes
                         if (file.size > maxSize) {
+                            e.preventDefault();
                             alert('{{ __("The file size must not exceed 100MB.") }}');
                             return;
                         }
 
-                        // Show progress bar and disable submit
-                        progressContainer.classList.remove('hidden');
-                        submitButton.disabled = true;
-                        submitButton.textContent = '{{ __("Uploading...") }}';
-                        statusText.textContent = '{{ __("Uploading file to cloud storage...") }}';
+                        // Only use Vapor direct upload when on Vapor with S3
+                        if (useVaporUpload && window.Vapor) {
+                            e.preventDefault();
 
-                        try {
-                            // Upload directly to S3 using Vapor.store
-                            const response = await window.Vapor.store(file, {
-                                progress: progress => {
-                                    const percent = Math.round(progress * 100);
-                                    progressBar.style.width = percent + '%';
-                                    progressText.textContent = percent + '%';
-                                }
-                            });
+                            // Show progress bar and disable submit
+                            progressContainer.classList.remove('hidden');
+                            submitButton.disabled = true;
+                            submitButton.textContent = '{{ __("Uploading...") }}';
+                            statusText.textContent = '{{ __("Uploading file to cloud storage...") }}';
 
-                            // Store the S3 key and file info in hidden inputs
-                            vaporKeyInput.value = response.key;
-                            vaporNameInput.value = file.name;
-                            vaporTypeInput.value = file.type;
+                            try {
+                                // Upload directly to S3 using Vapor.store
+                                const response = await window.Vapor.store(file, {
+                                    progress: progress => {
+                                        const percent = Math.round(progress * 100);
+                                        progressBar.style.width = percent + '%';
+                                        progressText.textContent = percent + '%';
+                                    }
+                                });
 
-                            // Clear the file input so it doesn't try to upload again via form
-                            fileInput.value = '';
+                                // Store the S3 key and file info in hidden inputs
+                                vaporKeyInput.value = response.key;
+                                vaporNameInput.value = file.name;
+                                vaporTypeInput.value = file.type;
 
-                            // Update status
-                            statusText.textContent = '{{ __("Upload complete! Processing...") }}';
-                            submitButton.textContent = '{{ __("Processing...") }}';
+                                // Clear the file input so it doesn't try to upload again via form
+                                fileInput.value = '';
 
-                            // Submit the form with the S3 key
-                            form.submit();
-                        } catch (error) {
-                            console.error('Vapor upload error:', error);
-                            progressContainer.classList.add('hidden');
-                            submitButton.disabled = false;
-                            submitButton.textContent = '{{ __("Process Program") }}';
-                            alert('{{ __("Failed to upload file. Please try again.") }}\n\n' + (error.message || error));
+                                // Update status
+                                statusText.textContent = '{{ __("Upload complete! Processing...") }}';
+                                submitButton.textContent = '{{ __("Processing...") }}';
+
+                                // Submit the form with the S3 key
+                                form.submit();
+                            } catch (error) {
+                                console.error('Vapor upload error:', error);
+                                progressContainer.classList.add('hidden');
+                                submitButton.disabled = false;
+                                submitButton.textContent = '{{ __("Process Program") }}';
+                                alert('{{ __("Failed to upload file. Please try again.") }}\n\n' + (error.message || error));
+                            }
                         }
-                    } else {
-                        // No file selected, just submit normally (for URL input)
-                        form.submit();
+                        // On local development, let the form submit normally with traditional upload
                     }
+                    // No file selected with URLs, or local file upload - let form submit normally
                 });
             </script>
         </div>
