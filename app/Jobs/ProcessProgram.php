@@ -53,10 +53,20 @@ class ProcessProgram implements ShouldQueue
 
             // Extract content from file
             $uploadedFile = null;
+            $tempFilePath = null;
+
             if ($this->filePath && Storage::exists($this->filePath)) {
-                $fullPath = Storage::path($this->filePath);
+                // For S3 storage (Vapor), we need to download the file to a temp location
+                // because Storage::path() only works for local filesystem
+                $extension = pathinfo($this->filePath, PATHINFO_EXTENSION);
+                $tempFilePath = sys_get_temp_dir().'/program_'.uniqid().'.'.$extension;
+
+                // Download file from storage (works for both local and S3)
+                $fileContents = Storage::get($this->filePath);
+                file_put_contents($tempFilePath, $fileContents);
+
                 $uploadedFile = new \Illuminate\Http\UploadedFile(
-                    $fullPath,
+                    $tempFilePath,
                     basename($this->filePath),
                     Storage::mimeType($this->filePath),
                     null,
@@ -116,7 +126,12 @@ class ProcessProgram implements ShouldQueue
                 );
             }
 
-            // Clean up the temporary file
+            // Clean up the temporary local file
+            if ($tempFilePath && file_exists($tempFilePath)) {
+                @unlink($tempFilePath);
+            }
+
+            // Clean up the file from storage (S3 or local)
             if ($this->filePath && Storage::exists($this->filePath)) {
                 Storage::delete($this->filePath);
             }
