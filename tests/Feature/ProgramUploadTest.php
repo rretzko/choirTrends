@@ -107,7 +107,7 @@ test('status endpoint returns not found when no analysis exists', function () {
     $response->assertJson(['status' => 'not_found']);
 });
 
-test('file is stored temporarily when uploaded', function () {
+test('file is stored in concert-programs directory when uploaded', function () {
     Queue::fake();
 
     $user = User::factory()->withoutTwoFactor()->create();
@@ -117,7 +117,10 @@ test('file is stored temporarily when uploaded', function () {
         'program_file' => $file,
     ]);
 
-    Storage::assertExists('temp_programs/'.$file->hashName());
+    // File is stored in concert-programs/ directory (path varies by upload method)
+    $files = Storage::files('concert-programs');
+    expect($files)->toHaveCount(1)
+        ->and($files[0])->toStartWith('concert-programs/');
 });
 
 test('validation fails when neither file nor URIs are provided', function () {
@@ -126,4 +129,36 @@ test('validation fails when neither file nor URIs are provided', function () {
     $response = $this->actingAs($user)->post(route('addProgram.store'), []);
 
     $response->assertSessionHasErrors();
+});
+
+test('user can submit via vapor file key', function () {
+    Queue::fake();
+
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    // Simulate a file already uploaded to S3 via Vapor.store()
+    $vaporKey = 'tmp/'.fake()->uuid().'.pdf';
+    Storage::put($vaporKey, 'fake pdf content');
+
+    $response = $this->actingAs($user)->post(route('addProgram.store'), [
+        'vapor_file_key' => $vaporKey,
+        'vapor_file_name' => 'test-program.pdf',
+        'vapor_file_type' => 'application/pdf',
+    ]);
+
+    $response->assertRedirect(route('addProgram'));
+    $response->assertSessionHas('success');
+
+    // File should be moved from tmp/ to concert-programs/
+    Storage::assertMissing($vaporKey);
+
+    $files = Storage::files('concert-programs');
+    expect($files)->toHaveCount(1)
+        ->and($files[0])->toEndWith('.pdf');
+
+    Queue::assertPushed(\App\Jobs\ProcessProgram::class, function ($job) use ($user) {
+        return $job->userId === $user->id
+            && str_starts_with($job->filePath, 'concert-programs/')
+            && $job->uris === null;
+    });
 });

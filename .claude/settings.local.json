@@ -25,7 +25,8 @@
       "Bash(php vendor/bin/pint:*)",
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(composer update:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

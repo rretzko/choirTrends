@@ -22,8 +22,14 @@ class StoreProgramRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'program_file' => 'required_without:program_uris|nullable|file|mimes:pdf,txt,png,jpg,jpeg,gif,webp|max:102400',
-            'program_uris' => 'required_without:program_file|nullable|string',
+            // Traditional file upload (for local development)
+            'program_file' => 'required_without_all:program_uris,vapor_file_key|nullable|file|mimes:pdf,txt,png,jpg,jpeg,gif,webp|max:102400',
+            // Vapor S3 direct upload key (for production on Vapor)
+            'vapor_file_key' => 'required_without_all:program_uris,program_file|nullable|string',
+            'vapor_file_name' => 'nullable|string',
+            'vapor_file_type' => 'nullable|string',
+            // URL input option
+            'program_uris' => 'required_without_all:program_file,vapor_file_key|nullable|string',
         ];
     }
 
@@ -35,10 +41,11 @@ class StoreProgramRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'program_file.required_without' => 'Please upload a file or provide URLs.',
+            'program_file.required_without_all' => 'Please upload a file or provide URLs.',
             'program_file.mimes' => 'The file must be a PDF, text file, or image (PNG, JPG, JPEG, GIF, WEBP).',
             'program_file.max' => 'The file size must not exceed 100MB.',
-            'program_uris.required_without' => 'Please provide URLs or upload a file.',
+            'vapor_file_key.required_without_all' => 'Please upload a file or provide URLs.',
+            'program_uris.required_without_all' => 'Please provide URLs or upload a file.',
         ];
     }
 }

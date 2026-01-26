@@ -27,8 +27,11 @@
                 {{ __('Upload a concert program file (PDF, image, or text) or provide URLs to concert program pages.') }}
             </p>
 
-            <form action="{{ route('addProgram.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form id="program-upload-form" action="{{ route('addProgram.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf
+                <input type="hidden" name="vapor_file_key" id="vapor-file-key" value="">
+                <input type="hidden" name="vapor_file_name" id="vapor-file-name" value="">
+                <input type="hidden" name="vapor_file_type" id="vapor-file-type" value="">
 
                 {{-- File Upload Option --}}
                 <div>
@@ -36,6 +39,7 @@
                         <flux:label>{{ __('Upload File') }}</flux:label>
                         <flux:input
                             type="file"
+                            id="program-file-input"
                             name="program_file"
                             accept=".pdf,.txt,.png,.jpg,.jpeg,.gif,.webp"
                         />
@@ -43,6 +47,17 @@
                             {{ __('Accepted formats: PDF, TXT, PNG, JPG, JPEG, GIF, WEBP (Max: 100MB)') }}
                         </flux:text>
                     </flux:field>
+
+                    {{-- Upload Progress Bar --}}
+                    <div id="upload-progress-container" class="hidden mt-3">
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1 bg-zinc-200 dark:bg-zinc-700 rounded-full h-2.5">
+                                <div id="upload-progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <span id="upload-progress-text" class="text-sm text-zinc-600 dark:text-zinc-400 min-w-[3rem]">0%</span>
+                        </div>
+                        <p id="upload-status-text" class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{{ __('Uploading file...') }}</p>
+                    </div>
                 </div>
 
                 <flux:separator />
@@ -74,11 +89,82 @@
                     <flux:button variant="ghost" href="{{ route('dashboard') }}">
                         {{ __('Cancel') }}
                     </flux:button>
-                    <flux:button type="submit" variant="primary">
+                    <flux:button type="submit" variant="primary" id="submit-button">
                         {{ __('Process Program') }}
                     </flux:button>
                 </div>
             </form>
+
+            {{-- Vapor Upload Script --}}
+            <script type="module">
+                const form = document.getElementById('program-upload-form');
+                const fileInput = document.getElementById('program-file-input');
+                const vaporKeyInput = document.getElementById('vapor-file-key');
+                const vaporNameInput = document.getElementById('vapor-file-name');
+                const vaporTypeInput = document.getElementById('vapor-file-type');
+                const progressContainer = document.getElementById('upload-progress-container');
+                const progressBar = document.getElementById('upload-progress-bar');
+                const progressText = document.getElementById('upload-progress-text');
+                const statusText = document.getElementById('upload-status-text');
+                const submitButton = document.getElementById('submit-button');
+
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    // Check if there's a file to upload
+                    if (fileInput.files.length > 0) {
+                        const file = fileInput.files[0];
+
+                        // Validate file size (100MB max)
+                        const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+                        if (file.size > maxSize) {
+                            alert('{{ __("The file size must not exceed 100MB.") }}');
+                            return;
+                        }
+
+                        // Show progress bar and disable submit
+                        progressContainer.classList.remove('hidden');
+                        submitButton.disabled = true;
+                        submitButton.textContent = '{{ __("Uploading...") }}';
+                        statusText.textContent = '{{ __("Uploading file to cloud storage...") }}';
+
+                        try {
+                            // Upload directly to S3 using Vapor.store
+                            const response = await window.Vapor.store(file, {
+                                progress: progress => {
+                                    const percent = Math.round(progress * 100);
+                                    progressBar.style.width = percent + '%';
+                                    progressText.textContent = percent + '%';
+                                }
+                            });
+
+                            // Store the S3 key and file info in hidden inputs
+                            vaporKeyInput.value = response.key;
+                            vaporNameInput.value = file.name;
+                            vaporTypeInput.value = file.type;
+
+                            // Clear the file input so it doesn't try to upload again via form
+                            fileInput.value = '';
+
+                            // Update status
+                            statusText.textContent = '{{ __("Upload complete! Processing...") }}';
+                            submitButton.textContent = '{{ __("Processing...") }}';
+
+                            // Submit the form with the S3 key
+                            form.submit();
+                        } catch (error) {
+                            console.error('Vapor upload error:', error);
+                            progressContainer.classList.add('hidden');
+                            submitButton.disabled = false;
+                            submitButton.textContent = '{{ __("Process Program") }}';
+                            alert('{{ __("Failed to upload file. Please try again.") }}\n\n' + (error.message || error));
+                        }
+                    } else {
+                        // No file selected, just submit normally (for URL input)
+                        form.submit();
+                    }
+                });
+            </script>
         </div>
 
         {{-- Section 2: Confirmation Dialog --}}

@@ -14,6 +14,8 @@ use App\Models\School;
 use App\Models\SongTitle;
 use App\Services\ArtistNameParser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AddProgramController extends Controller
 {
@@ -33,10 +35,28 @@ class AddProgramController extends Controller
             $filePath = null;
             $uris = $request->input('program_uris');
 
-            // Store file temporarily if uploaded
-            if ($request->hasFile('program_file')) {
+            // Handle Vapor S3 direct upload (production on Vapor)
+            if ($request->filled('vapor_file_key')) {
+                $vaporKey = $request->input('vapor_file_key');
+                $fileName = $request->input('vapor_file_name', 'uploaded_file');
+
+                // Generate a unique filename with original extension
+                $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+                $uniqueName = Str::uuid().'.'.$extension;
+
+                // Move file from tmp/ to concert-programs/ in S3
+                $permanentPath = 'concert-programs/'.$uniqueName;
+                Storage::copy($vaporKey, $permanentPath);
+
+                // Delete the temporary file
+                Storage::delete($vaporKey);
+
+                $filePath = $permanentPath;
+            }
+            // Handle traditional file upload (local development)
+            elseif ($request->hasFile('program_file')) {
                 $file = $request->file('program_file');
-                $filePath = $file->store('temp_programs');
+                $filePath = $file->store('concert-programs');
             }
 
             // Clear any previous analysis
