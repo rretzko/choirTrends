@@ -126,3 +126,66 @@ test('ensemble name is shown when owner has no privacy settings', function () {
         ->set('filter', 'all')
         ->assertSee('Public Choir');
 });
+
+test('school name is masked when owner has school privacy enabled', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    // Other user has school privacy enabled
+    UserPrivacy::factory()->create([
+        'user_id' => $otherUser->id,
+        'school' => true,
+    ]);
+
+    $otherSchool = School::factory()->create([
+        'school_name' => 'Secret Academy',
+    ]);
+    $otherUser->schools()->attach($otherSchool);
+    Ensemble::factory()->for($otherSchool)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('filter', 'all')
+        ->assertSee('School'.$otherUser->id)
+        ->assertDontSee('Secret Academy');
+});
+
+test('school name is shown when viewing own school with privacy enabled', function () {
+    $user = User::factory()->create();
+
+    // User has school privacy enabled
+    UserPrivacy::factory()->create([
+        'user_id' => $user->id,
+        'school' => true,
+    ]);
+
+    $school = School::factory()->create([
+        'school_name' => 'My Private School',
+    ]);
+    $user->schools()->attach($school);
+    Ensemble::factory()->for($school)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->assertSee('My Private School');
+});
+
+test('school name is shown when owner has no school privacy settings', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    // Other user has no privacy settings
+    $otherSchool = School::factory()->create([
+        'school_name' => 'Public School Name',
+    ]);
+    $otherUser->schools()->attach($otherSchool);
+    Ensemble::factory()->for($otherSchool)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('filter', 'all')
+        ->assertSee('Public School Name');
+});

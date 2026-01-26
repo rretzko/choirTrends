@@ -31,7 +31,7 @@
                             {{ $displayNames[$ensemble->id] }}
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
-                            {{ $ensemble->school?->school_name }}
+                            {{ $schoolDisplayNames[$ensemble->id] }}
                         </td>
                     </tr>
                 @empty

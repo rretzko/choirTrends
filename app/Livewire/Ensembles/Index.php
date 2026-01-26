@@ -38,13 +38,19 @@ class Index extends Component
 
         /** @var array<int, string> $displayNames */
         $displayNames = [];
+
+        /** @var array<int, string> $schoolDisplayNames */
+        $schoolDisplayNames = [];
+
         foreach ($ensembles as $ensemble) {
             $displayNames[$ensemble->id] = $this->getDisplayName($ensemble, $currentUserId);
+            $schoolDisplayNames[$ensemble->id] = $this->getDisplaySchoolName($ensemble, $currentUserId);
         }
 
         return view('livewire.ensembles.index', [
             'ensembles' => $ensembles,
             'displayNames' => $displayNames,
+            'schoolDisplayNames' => $schoolDisplayNames,
         ])->layout('components.layouts.app', ['title' => __('Ensembles')]);
     }
 
@@ -71,5 +77,30 @@ class Index extends Component
         }
 
         return $ensemble->ensemble_name;
+    }
+
+    private function getDisplaySchoolName(Ensemble $ensemble, int $currentUserId): string
+    {
+        /** @var School|null $school */
+        $school = $ensemble->school;
+        if (! $school) {
+            return '';
+        }
+
+        // Check if current user owns this school
+        $isOwner = $school->users->contains('id', $currentUserId);
+        if ($isOwner) {
+            return $school->school_name;
+        }
+
+        // Check if any owner has school privacy enabled
+        /** @var User $user */
+        foreach ($school->users as $user) {
+            if ($user->privacy?->school) {
+                return 'School'.$user->id;
+            }
+        }
+
+        return $school->school_name;
     }
 }

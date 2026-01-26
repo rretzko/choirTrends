@@ -4,12 +4,16 @@ environments:
   production:
     domain: choirtrends.com
     memory: 1024
-    cli-timeout: 900
     cli-memory: 1024
+    cli-timeout: 900
     timeout: 30
     runtime: 'php-8.4:al2'
     database: choirTrendsProd
     storage: choirtrends
+    queues:
+      - default
+    queue-memory: 1024
+    queue-timeout: 900
     deploy-timeout: 300
     build:
       - 'composer install --no-dev --no-ansi --no-interaction --prefer-dist --optimize-autoloader'
