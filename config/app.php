@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Founder
+    |--------------------------------------------------------------------------
+    |
+    | The email address of the application founder. This user has access to
+    | additional features and information not available to regular users.
+    |
+    */
+
+    'founder' => env('FOUNDER'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

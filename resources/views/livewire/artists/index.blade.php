@@ -4,10 +4,10 @@
 
         <div class="flex gap-2">
             <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm">
-                {{ __('My') }}
+                {{ __('My') }} ({{ $myCount }})
             </flux:button>
             <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm">
-                {{ __('All') }}
+                {{ __('All') }} ({{ $allCount }})
             </flux:button>
         </div>
     </div>
@@ -16,20 +16,41 @@
         <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        {{ __('Artist Name') }}
+                    <th class="w-12 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        #
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        {{ __('First Name') }}
+                        <button wire:click="sort('artist_name')" class="flex items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
+                            {{ __('Artist Name') }}
+                            @if ($sortColumn === 'artist_name')
+                                <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
+                            @endif
+                        </button>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        {{ __('Last Name') }}
+                        <button wire:click="sort('artist_first_name')" class="flex items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
+                            {{ __('First Name') }}
+                            @if ($sortColumn === 'artist_first_name')
+                                <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
+                            @endif
+                        </button>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <button wire:click="sort('artist_last_name')" class="flex items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
+                            {{ __('Last Name') }}
+                            @if ($sortColumn === 'artist_last_name')
+                                <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
+                            @endif
+                        </button>
                     </th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
                 @forelse ($artists as $artist)
                     <tr wire:key="artist-{{ $artist->id }}">
+                        <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
+                            {{ $loop->iteration }}
+                        </td>
                         <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-900 dark:text-neutral-100">
                             {{ $artist->artist_name }}
                         </td>
@@ -42,7 +63,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="3" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                        <td colspan="4" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
                             {{ __('No artists found.') }}
                         </td>
                     </tr>

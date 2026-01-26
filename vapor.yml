@@ -1,24 +1,24 @@
 id: 74449
 name: choirTrends
 environments:
-#  production:
-#    domain: choirtrends.com
-#    memory: 1024
-#    cli-timeout: 900
-#    cli-memory: 1024
-#    timeout: 30
-#    runtime: 'php-8.4:al2'
-#    database: choirtrendsProd
-#    storage: choirtrends
-#    deploy-timeout: 300
-#    build:
-#      - 'composer install --no-dev --no-ansi --no-interaction --prefer-dist --optimize-autoloader'
-#      - 'php artisan event:cache'
-#      - 'npm ci && npm run build && rm -rf node_modules'
-#      - 'rm -rf tests'
-#      - 'rm -rf .git'
-#      - 'find vendor -type d -name "test" -o -name "tests" -o -name "Test" -o -name "Tests" | xargs rm -rf'
-#      - 'find vendor -type f -name "*.md" -o -name "*.txt" -o -name "LICENSE*" -o -name "CHANGELOG*" | xargs rm -f'
+  production:
+    domain: choirtrends.com
+    memory: 1024
+    cli-timeout: 900
+    cli-memory: 1024
+    timeout: 30
+    runtime: 'php-8.4:al2'
+    database: choirTrendsProd
+    storage: choirtrends
+    deploy-timeout: 300
+    build:
+      - 'composer install --no-dev --no-ansi --no-interaction --prefer-dist --optimize-autoloader'
+      - 'php artisan event:cache '
+      - 'npm ci && npm run build && rm -rf node_modules'
+      - 'rm -rf tests'
+      - 'rm -rf .git'
+      - 'find vendor -type d -name "test" -o -name "tests" -o -name "Test" -o -name "Tests" | xargs rm -rf'
+      - 'find vendor -type f -name "*.md" -o -name "*.txt" -o -name "LICENSE*" -o -name "CHANGELOG*" | xargs rm -f'
   staging:
     memory: 1024
     cli-memory: 1024
@@ -29,7 +29,7 @@ environments:
     queues:
       - default
     queue-memory: 1024
-    queue-timeout: 300
+    queue-timeout: 900
     deploy-timeout: 300
     build:
       - 'composer install --no-dev --no-ansi --no-interaction --prefer-dist --optimize-autoloader'

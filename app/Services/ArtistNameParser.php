@@ -15,6 +15,11 @@ class ArtistNameParser
     {
         $name = trim($name);
 
+        // Remove arranger abbreviation prefixes (case-insensitive)
+        // Matches: "arr ", "arr. ", "arr." at the start of the string
+        $name = preg_replace('/^arr(?:\.|\s)\s*/i', '', $name);
+        $name = trim($name);
+
         // Check if the name contains a space
         if (! str_contains($name, ' ')) {
             // Single word name (e.g., "Traditional")

@@ -78,4 +78,11 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserPrivacy::class);
     }
+
+    public function isFounder(): bool
+    {
+        $founderEmail = config('app.founder');
+
+        return $founderEmail && $this->email === $founderEmail;
+    }
 }

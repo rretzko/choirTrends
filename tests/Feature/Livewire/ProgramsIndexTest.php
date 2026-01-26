@@ -1,8 +1,11 @@
 <?php
 
 use App\Livewire\Programs\Index;
+use App\Models\Artist;
+use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
+use App\Models\SongTitle;
 use App\Models\User;
 use App\Models\UserPrivacy;
 use Livewire\Livewire;
@@ -133,4 +136,112 @@ test('school and director are shown when owner has no privacy settings', functio
         ->set('filter', 'all')
         ->assertSee('Public School')
         ->assertSee('Public Director');
+});
+
+test('clicking program name loads program details', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create(['school_name' => 'Test School']);
+    $program = Program::factory()->for($user)->for($school)->create([
+        'event_name' => 'Spring Concert',
+        'director_name' => 'Jane Doe',
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('showProgramDetails', $program->id)
+        ->assertSet('selectedProgram.id', $program->id);
+});
+
+test('program details modal shows song titles with composer and arranger', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create([
+        'event_name' => 'Winter Concert',
+    ]);
+
+    $composer = Artist::factory()->create(['artist_name' => 'Johann Bach']);
+    $arranger = Artist::factory()->create(['artist_name' => 'John Rutter']);
+    $songTitle = SongTitle::factory()->create([
+        'song_title' => 'Ave Maria',
+        'composer_id' => $composer->id,
+        'arranger_id' => $arranger->id,
+    ]);
+    $program->songTitles()->attach($songTitle);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('showProgramDetails', $program->id)
+        ->assertSee('Ave Maria')
+        ->assertSee('Johann Bach')
+        ->assertSee('arr. John Rutter');
+});
+
+test('program details modal groups songs by ensemble', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $concertChoir = Ensemble::factory()->create([
+        'school_id' => $school->id,
+        'ensemble_name' => 'Concert Choir',
+    ]);
+    $chamberSingers = Ensemble::factory()->create([
+        'school_id' => $school->id,
+        'ensemble_name' => 'Chamber Singers',
+    ]);
+
+    $song1 = SongTitle::factory()->create(['song_title' => 'Gloria']);
+    $song2 = SongTitle::factory()->create(['song_title' => 'Ave Maria']);
+    $song3 = SongTitle::factory()->create(['song_title' => 'Lux Aurumque']);
+
+    // Attach songs with ensemble associations
+    $program->songTitles()->attach([
+        $song1->id => ['ensemble_id' => $chamberSingers->id],
+        $song2->id => ['ensemble_id' => $concertChoir->id],
+        $song3->id => ['ensemble_id' => $concertChoir->id],
+    ]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Index::class)
+        ->call('showProgramDetails', $program->id);
+
+    // Check that songs are grouped by ensemble
+    $songsByEnsemble = $component->get('songsByEnsemble');
+    expect($songsByEnsemble)->toHaveCount(2);
+
+    // Ensembles should be sorted alphabetically
+    expect($songsByEnsemble[0]['ensemble']->ensemble_name)->toBe('Chamber Singers');
+    expect($songsByEnsemble[1]['ensemble']->ensemble_name)->toBe('Concert Choir');
+
+    // Verify songs are in the correct groups
+    expect($songsByEnsemble[0]['songs'])->toHaveCount(1);
+    expect($songsByEnsemble[1]['songs'])->toHaveCount(2);
+
+    // Check the view displays ensemble names
+    $component->assertSee('Chamber Singers')
+        ->assertSee('Concert Choir')
+        ->assertSee('Gloria')
+        ->assertSee('Ave Maria')
+        ->assertSee('Lux Aurumque');
+});
+
+test('program details modal shows songs without ensemble under Other', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $song = SongTitle::factory()->create(['song_title' => 'Orphan Song']);
+
+    // Attach song without ensemble
+    $program->songTitles()->attach($song->id);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('showProgramDetails', $program->id)
+        ->assertSee('Other')
+        ->assertSee('Orphan Song');
 });

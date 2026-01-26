@@ -47,6 +47,14 @@
                             @endif
                         </div>
                     </th>
+                    <th wire:click="sort('performed')" class="cursor-pointer px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                        <div class="flex items-center justify-end gap-1">
+                            {{ __('Performed') }}
+                            @if ($sortBy === 'performed')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @endif
+                        </div>
+                    </th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
@@ -64,10 +72,13 @@
                         <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $songTitle->arranger?->artist_name }}
                         </td>
+                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-neutral-500 dark:text-neutral-400">
+                            {{ $songTitle->performed_count }}
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                        <td colspan="5" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
                             {{ __('No song titles found.') }}
                         </td>
                     </tr>

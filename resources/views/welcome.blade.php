@@ -21,15 +21,13 @@
         </style>
     </head>
     <body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
-        <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6 grid grid-cols-3 items-center" >
-            <div></div>
-
+        <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6 flex flex-col items-center gap-6">
             <div class="text-lg font-semibold dark:text-[#EDEDEC] text-[#1b1b18] text-center">
                 {{ config('app.name') }}
             </div>
 
             @if (Route::has('login'))
-                <nav class="flex items-center justify-end gap-4">
+                <nav class="flex items-center justify-center gap-4">
                     @auth
                         <a
                             href="{{ url('/dashboard') }}"

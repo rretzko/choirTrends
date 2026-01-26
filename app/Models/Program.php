@@ -45,6 +45,12 @@ class Program extends Model
 
     public function songTitles(): BelongsToMany
     {
-        return $this->belongsToMany(SongTitle::class);
+        return $this->belongsToMany(SongTitle::class)->withPivot('ensemble_id');
+    }
+
+    public function ensembles(): BelongsToMany
+    {
+        return $this->belongsToMany(Ensemble::class, 'program_song_title', 'program_id', 'ensemble_id')
+            ->distinct();
     }
 }

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Livewire\Programs;
 
+use App\Models\Ensemble;
 use App\Models\Program;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -12,6 +14,73 @@ use Livewire\Component;
 class Index extends Component
 {
     public string $filter = 'my';
+
+    public ?Program $selectedProgram = null;
+
+    /** @var Collection<int, array<string, mixed>> */
+    public Collection $songsByEnsemble;
+
+    public function mount(): void
+    {
+        /** @var Collection<int, array<string, mixed>> $empty */
+        $empty = collect();
+        $this->songsByEnsemble = $empty;
+    }
+
+    public function showProgramDetails(int $programId): void
+    {
+        $this->selectedProgram = Program::with(['school', 'user.privacy', 'songTitles.composer', 'songTitles.arranger'])->find($programId);
+
+        // Group songs by ensemble
+        $this->songsByEnsemble = $this->getSongsByEnsemble();
+
+        $this->modal('program-details')->show();
+    }
+
+    /**
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function getSongsByEnsemble(): Collection
+    {
+        if (! $this->selectedProgram) {
+            /** @var Collection<int, array<string, mixed>> $empty */
+            $empty = collect();
+
+            return $empty;
+        }
+
+        // Get all ensemble IDs from the pivot table
+        $ensembleIds = $this->selectedProgram->songTitles
+            ->pluck('pivot.ensemble_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        // Load ensembles
+        $ensembles = Ensemble::whereIn('id', $ensembleIds)->get()->keyBy('id');
+
+        // Group songs by ensemble_id
+        $grouped = $this->selectedProgram->songTitles->groupBy('pivot.ensemble_id');
+
+        // Build the result with ensemble objects
+        /** @var Collection<int, array<string, mixed>> $result */
+        $result = $grouped->map(function ($songs, $ensembleId) use ($ensembles) {
+            /** @var Ensemble|null $ensemble */
+            $ensemble = $ensembleId ? $ensembles->get($ensembleId) : null;
+
+            return [
+                'ensemble' => $ensemble,
+                'songs' => $songs,
+            ];
+        })->sortBy(function ($group) {
+            /** @var Ensemble|null $ensemble */
+            $ensemble = $group['ensemble'];
+
+            return $ensemble ? $ensemble->ensemble_name : 'zzz';
+        })->values();
+
+        return $result;
+    }
 
     public function render(): View
     {

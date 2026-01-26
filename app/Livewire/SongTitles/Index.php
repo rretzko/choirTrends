@@ -49,11 +49,16 @@ class Index extends Component
             ->leftJoin('artists as composers', 'song_titles.composer_id', '=', 'composers.id')
             ->leftJoin('artists as arrangers', 'song_titles.arranger_id', '=', 'arrangers.id');
 
-        // Apply filter
+        // Add performed count based on filter
         if ($this->filter === 'my') {
+            $query->withCount(['programs as performed_count' => function ($q) {
+                $q->where('user_id', Auth::id());
+            }]);
             $query->whereHas('programs', function ($q) {
                 $q->where('user_id', Auth::id());
             });
+        } else {
+            $query->withCount('programs as performed_count');
         }
 
         if ($this->search !== '') {
@@ -68,6 +73,7 @@ class Index extends Component
         $sortColumn = match ($this->sortBy) {
             'composer' => 'composers.artist_name',
             'arranger' => 'arrangers.artist_name',
+            'performed' => 'performed_count',
             default => 'song_titles.song_title',
         };
 

@@ -21,34 +21,42 @@ test('ensembles index displays ensembles with my filter', function () {
     $user = User::factory()->create();
     $school = School::factory()->create();
     $user->schools()->attach($school);
-    $myEnsemble = Ensemble::factory()->for($school)->create();
+    $myEnsemble = Ensemble::factory()->for($school)->create([
+        'ensemble_name' => 'My Concert Choir',
+    ]);
 
     $otherSchool = School::factory()->create();
-    $otherEnsemble = Ensemble::factory()->for($otherSchool)->create();
+    $otherEnsemble = Ensemble::factory()->for($otherSchool)->create([
+        'ensemble_name' => 'Other School Singers',
+    ]);
 
     $this->actingAs($user);
 
     Livewire::test(Index::class)
         ->assertSet('filter', 'my')
-        ->assertSee($myEnsemble->ensemble_name)
-        ->assertDontSee($otherEnsemble->ensemble_name);
+        ->assertSee('My Concert Choir')
+        ->assertDontSee('Other School Singers');
 });
 
 test('ensembles index displays all ensembles with all filter', function () {
     $user = User::factory()->create();
     $school = School::factory()->create();
     $user->schools()->attach($school);
-    $myEnsemble = Ensemble::factory()->for($school)->create();
+    $myEnsemble = Ensemble::factory()->for($school)->create([
+        'ensemble_name' => 'My Chamber Singers',
+    ]);
 
     $otherSchool = School::factory()->create();
-    $otherEnsemble = Ensemble::factory()->for($otherSchool)->create();
+    $otherEnsemble = Ensemble::factory()->for($otherSchool)->create([
+        'ensemble_name' => 'Other Jazz Choir',
+    ]);
 
     $this->actingAs($user);
 
     Livewire::test(Index::class)
         ->set('filter', 'all')
-        ->assertSee($myEnsemble->ensemble_name)
-        ->assertSee($otherEnsemble->ensemble_name);
+        ->assertSee('My Chamber Singers')
+        ->assertSee('Other Jazz Choir');
 });
 
 test('guests cannot access ensembles index', function () {

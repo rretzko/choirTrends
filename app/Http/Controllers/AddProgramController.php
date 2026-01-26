@@ -144,14 +144,15 @@ class AddProgramController extends Controller
 
             // Get ensembles from the analysis cache and create them
             $analysis = cache()->get("program_analysis_{$request->user()->id}");
-            $songTitleIds = [];
+            $songTitleAttachments = [];
 
             if ($analysis && isset($analysis['data']['ensembles'])) {
                 $artistNameParser = new ArtistNameParser;
 
                 foreach ($analysis['data']['ensembles'] as $ensembleData) {
+                    $ensemble = null;
                     if (! empty($ensembleData['name'])) {
-                        Ensemble::firstOrCreate([
+                        $ensemble = Ensemble::firstOrCreate([
                             'school_id' => $school->id,
                             'ensemble_name' => $ensembleData['name'],
                         ]);
@@ -194,15 +195,16 @@ class AddProgramController extends Controller
                                 'arranger_id' => $arrangerId,
                             ]);
 
-                            $songTitleIds[] = $songTitle->id;
+                            // Store song title with its ensemble for attachment
+                            $songTitleAttachments[$songTitle->id] = ['ensemble_id' => $ensemble?->id];
                         }
                     }
                 }
             }
 
-            // Attach song titles to the program
-            if (! empty($songTitleIds)) {
-                $program->songTitles()->attach(array_unique($songTitleIds));
+            // Attach song titles to the program with ensemble information
+            if (! empty($songTitleAttachments)) {
+                $program->songTitles()->attach($songTitleAttachments);
             }
 
             // Clear the analysis cache
