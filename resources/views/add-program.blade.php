@@ -112,6 +112,13 @@
                 const useVaporUpload = {{ config('filesystems.default') === 's3' ? 'true' : 'false' }};
 
                 form.addEventListener('submit', async (e) => {
+                    console.log('Form submit triggered', {
+                        useVaporUpload: useVaporUpload,
+                        hasVapor: !!window.Vapor,
+                        hasFiles: fileInput.files.length > 0,
+                        submitButtonDisabled: submitButton.disabled
+                    });
+
                     // Check if there's a file to upload
                     if (fileInput.files.length > 0) {
                         const file = fileInput.files[0];
