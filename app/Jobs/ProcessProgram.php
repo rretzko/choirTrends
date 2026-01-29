@@ -35,9 +35,10 @@ class ProcessProgram implements ShouldQueue
      */
     public function middleware(): array
     {
-        // Limit to 2 jobs per minute to avoid hitting Claude API rate limits
-        // This is conservative to stay well under the 30K tokens/minute limit
-        return [new RateLimited('program-processing')];
+        // Rate limiting temporarily disabled for debugging
+        // TODO: Re-enable once job processing issues are resolved
+        // return [new RateLimited('program-processing')];
+        return [];
     }
 
     /**
@@ -102,7 +103,18 @@ class ProcessProgram implements ShouldQueue
             }
 
             // Analyze with Claude
+            Log::info('ProcessProgram calling Claude API', [
+                'user_id' => $this->userId,
+                'content_length' => strlen($content),
+                'is_pdf_or_image' => $isPdfOrImage,
+            ]);
+
             $extractedData = $analysisService->analyzeProgram($content);
+
+            Log::info('ProcessProgram Claude API response received', [
+                'user_id' => $this->userId,
+                'has_data' => ! empty($extractedData),
+            ]);
 
             // Store results in cache with user-specific key
             // Note: We don't store the raw content for PDFs/images as it can be very large (20+ MB)
@@ -122,6 +134,12 @@ class ProcessProgram implements ShouldQueue
                 $cacheData,
                 now()->addHours(2)
             );
+
+            Log::info('ProcessProgram cache updated', [
+                'user_id' => $this->userId,
+                'cache_key' => "program_analysis_{$this->userId}",
+                'status' => 'completed',
+            ]);
 
             // Send success email notification
             $user = User::find($this->userId);
