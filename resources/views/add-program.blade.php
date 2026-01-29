@@ -135,14 +135,25 @@
                             statusText.textContent = '{{ __("Uploading file to cloud storage...") }}';
 
                             try {
+                                console.log('Starting Vapor upload...', {
+                                    useVaporUpload: useVaporUpload,
+                                    hasVapor: !!window.Vapor,
+                                    fileName: file.name,
+                                    fileSize: file.size,
+                                    fileType: file.type
+                                });
+
                                 // Upload directly to S3 using Vapor.store
                                 const response = await window.Vapor.store(file, {
                                     progress: progress => {
                                         const percent = Math.round(progress * 100);
                                         progressBar.style.width = percent + '%';
                                         progressText.textContent = percent + '%';
+                                        console.log('Upload progress:', percent + '%');
                                     }
                                 });
+
+                                console.log('Vapor upload successful:', response);
 
                                 // Store the S3 key and file info in hidden inputs
                                 vaporKeyInput.value = response.key;
@@ -160,10 +171,30 @@
                                 form.submit();
                             } catch (error) {
                                 console.error('Vapor upload error:', error);
+                                console.error('Error details:', {
+                                    message: error?.message,
+                                    response: error?.response,
+                                    status: error?.response?.status,
+                                    data: error?.response?.data
+                                });
+
                                 progressContainer.classList.add('hidden');
                                 submitButton.disabled = false;
                                 submitButton.textContent = '{{ __("Process Program") }}';
-                                alert('{{ __("Failed to upload file. Please try again.") }}\n\n' + (error.message || error));
+
+                                // Build a more informative error message
+                                let errorMsg = '{{ __("Failed to upload file. Please try again.") }}';
+                                if (error?.response?.status === 401 || error?.response?.status === 419) {
+                                    errorMsg = '{{ __("Your session has expired. Please refresh the page and try again.") }}';
+                                } else if (error?.response?.status === 403) {
+                                    errorMsg = '{{ __("You do not have permission to upload files. Please log in and try again.") }}';
+                                } else if (error?.response?.data?.message) {
+                                    errorMsg += '\n\n' + error.response.data.message;
+                                } else if (error?.message) {
+                                    errorMsg += '\n\n' + error.message;
+                                }
+
+                                alert(errorMsg);
                             }
                         }
                         // On local development, let the form submit normally with traditional upload

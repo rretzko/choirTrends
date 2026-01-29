@@ -27,7 +27,8 @@
       "Bash(git merge:*)",
       "Bash(git stash:*)",
       "Bash(composer update:*)",
-      "Bash(./vendor/bin/phpstan:*)"
+      "Bash(./vendor/bin/phpstan:*)",
+      "mcp__laravel-boost__browser-logs"
     ]
   },
   "enableAllProjectMcpServers": true,
