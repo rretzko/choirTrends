@@ -228,6 +228,39 @@ test('program details modal groups songs by ensemble', function () {
         ->assertSee('Lux Aurumque');
 });
 
+test('programs are sorted by school name then by event date descending', function () {
+    $user = User::factory()->create();
+
+    $schoolB = School::factory()->create(['school_name' => 'Beta School']);
+    $schoolA = School::factory()->create(['school_name' => 'Alpha School']);
+
+    $programB1 = Program::factory()->for($user)->for($schoolB)->create([
+        'event_name' => 'Beta Old',
+        'event_date' => '2024-01-01',
+    ]);
+    $programB2 = Program::factory()->for($user)->for($schoolB)->create([
+        'event_name' => 'Beta New',
+        'event_date' => '2025-06-01',
+    ]);
+    $programA1 = Program::factory()->for($user)->for($schoolA)->create([
+        'event_name' => 'Alpha Old',
+        'event_date' => '2023-03-01',
+    ]);
+    $programA2 = Program::factory()->for($user)->for($schoolA)->create([
+        'event_name' => 'Alpha New',
+        'event_date' => '2025-09-01',
+    ]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Index::class);
+
+    $programs = $component->viewData('programs');
+    $names = $programs->pluck('event_name')->all();
+
+    expect($names)->toBe(['Alpha New', 'Alpha Old', 'Beta New', 'Beta Old']);
+});
+
 test('program details modal shows songs without ensemble under Other', function () {
     $user = User::factory()->create();
     $school = School::factory()->create();

@@ -90,7 +90,12 @@ class Index extends Component
             $query->where('user_id', Auth::id());
         }
 
-        $programs = $query->orderBy('event_date', 'desc')->get();
+        $programs = $query
+            ->join('schools', 'programs.school_id', '=', 'schools.id')
+            ->orderBy('schools.school_name')
+            ->orderBy('programs.event_date', 'desc')
+            ->select('programs.*')
+            ->get();
 
         // Apply privacy masking
         /** @var int $currentUserId */

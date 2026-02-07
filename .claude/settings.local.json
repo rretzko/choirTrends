@@ -30,7 +30,12 @@
       "Bash(./vendor/bin/phpstan:*)",
       "mcp__laravel-boost__browser-logs",
       "Bash(del \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\\\\nul\")",
-      "Bash(git -C \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\" status --short)"
+      "Bash(git -C \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\" status --short)",
+      "Bash(git -C \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\" branch --show-current)",
+      "Bash(git -C \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\" merge main)",
+      "Bash(git -C \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\" stash)",
+      "Bash(git -C \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\" add .claude/settings.local.json)",
+      "Bash(git -C \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\" stash drop)"
     ]
   },
   "enableAllProjectMcpServers": true,
