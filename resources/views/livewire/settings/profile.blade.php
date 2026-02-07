@@ -46,7 +46,7 @@
         </div>
 
         <form wire:submit="updatePrivacySettings" class="my-6 w-full space-y-6">
-            <div class="space-y-4">
+            <div class="space-y-4 pl-4">
                 <flux:checkbox wire:model="privacyName" :label="__('Do not display my name to other users.')" />
                 <flux:checkbox wire:model="privacySchool" :label="__('Do not display my school to other users.')" />
                 <flux:checkbox wire:model="privacyEnsembleName" :label="__('Do not display my ensemble names to other users.')" />

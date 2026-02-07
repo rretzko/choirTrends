@@ -28,7 +28,9 @@
       "Bash(git stash:*)",
       "Bash(composer update:*)",
       "Bash(./vendor/bin/phpstan:*)",
-      "mcp__laravel-boost__browser-logs"
+      "mcp__laravel-boost__browser-logs",
+      "Bash(del \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\\\\nul\")",
+      "Bash(git -C \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\" status --short)"
     ]
   },
   "enableAllProjectMcpServers": true,
