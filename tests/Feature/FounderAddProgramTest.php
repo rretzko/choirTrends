@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Jobs\ProcessProgram;
+use App\Mail\ProgramProcessed;
 use App\Models\Program;
 use App\Models\School;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -230,6 +233,31 @@ test('confirm fails without target user in session', function () {
 
     $response->assertRedirect(route('founder.addProgram'));
     $response->assertSessionHasErrors('error');
+});
+
+test('failed method updates cache and sends failure email when job exhausts retries', function () {
+    Mail::fake();
+
+    $targetUser = User::factory()->withoutTwoFactor()->create();
+
+    // Simulate cache being set to processing (as the controller would)
+    cache()->put(
+        "program_analysis_{$targetUser->id}",
+        ['status' => 'processing'],
+        now()->addHours(2)
+    );
+
+    $job = new ProcessProgram($targetUser->id, 'fake/path.pdf');
+    $job->failed(new \RuntimeException('Claude API timed out'));
+
+    $analysis = cache()->get("program_analysis_{$targetUser->id}");
+    expect($analysis)->toBeArray()
+        ->and($analysis['status'])->toBe('failed')
+        ->and($analysis['error'])->toBe('Claude API timed out');
+
+    Mail::assertSent(ProgramProcessed::class, function ($mail) use ($targetUser) {
+        return $mail->hasTo($targetUser->email) && $mail->success === false;
+    });
 });
 
 test('page shows all users in dropdown', function () {

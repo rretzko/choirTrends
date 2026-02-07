@@ -193,4 +193,36 @@ class ProcessProgram implements ShouldQueue
             throw $e;
         }
     }
+
+    /**
+     * Handle a job failure after all retries are exhausted.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        Log::error('ProcessProgram failed permanently', [
+            'user_id' => $this->userId,
+            'file_path' => $this->filePath,
+            'error' => $exception?->getMessage(),
+        ]);
+
+        cache()->put(
+            "program_analysis_{$this->userId}",
+            [
+                'status' => 'failed',
+                'error' => $exception?->getMessage() ?? 'Job failed after all retry attempts.',
+            ],
+            now()->addHours(2)
+        );
+
+        $user = User::find($this->userId);
+        if ($user) {
+            Mail::to($user->email)->send(
+                new ProgramProcessed(
+                    programData: [],
+                    success: false,
+                    errorMessage: $exception?->getMessage() ?? 'Job failed after all retry attempts.'
+                )
+            );
+        }
+    }
 }
