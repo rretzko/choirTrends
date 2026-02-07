@@ -23,8 +23,14 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $name = fake()->name();
+        $parts = explode(' ', $name);
+        $lastName = array_pop($parts);
+        $alphaName = count($parts) > 0 ? $lastName.', '.implode(' ', $parts) : $name;
+
         return [
-            'name' => fake()->name(),
+            'name' => $name,
+            'alpha_name' => $alphaName,
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
@@ -54,6 +60,16 @@ class UserFactory extends Factory
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is the founder.
+     */
+    public function founder(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email' => config('app.founder') ?: 'founder@example.com',
         ]);
     }
 }

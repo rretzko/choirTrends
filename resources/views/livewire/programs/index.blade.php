@@ -1,8 +1,8 @@
 <div>
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 space-y-4">
         <flux:heading size="xl">{{ __('Programs') }}</flux:heading>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center justify-center gap-4">
             <flux:button href="{{ route('addProgram') }}" variant="primary" size="sm" icon="plus">
                 {{ __('Add Program') }}
             </flux:button>
@@ -23,7 +23,7 @@
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        {{ __('Program Name') }}
+                        {{ __('Program Name') }} <span class="text-xs normal-case">{{ __('(click for details)') }}</span>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         {{ __('Program Date') }}
@@ -39,7 +39,7 @@
             <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
                 @forelse ($programs as $program)
                     <tr wire:key="program-{{ $program->id }}">
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-900 dark:text-neutral-100">
+                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-900 dark:text-neutral-100">
                             <flux:button
                                 wire:click="showProgramDetails({{ $program->id }})"
                                 variant="filled"
@@ -48,13 +48,13 @@
                                 {{ $program->event_name }}
                             </flux:button>
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $program->event_date->format('M j, Y') }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $displayData[$program->id]['school'] }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $displayData[$program->id]['director'] }}
                         </td>
                     </tr>

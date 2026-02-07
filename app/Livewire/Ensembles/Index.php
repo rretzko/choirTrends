@@ -47,10 +47,17 @@ class Index extends Component
             $schoolDisplayNames[$ensemble->id] = $this->getDisplaySchoolName($ensemble, $currentUserId);
         }
 
+        $myCount = Ensemble::whereHas('school.users', function ($q) {
+            $q->where('users.id', Auth::id());
+        })->count();
+        $allCount = Ensemble::count();
+
         return view('livewire.ensembles.index', [
             'ensembles' => $ensembles,
             'displayNames' => $displayNames,
             'schoolDisplayNames' => $schoolDisplayNames,
+            'myCount' => $myCount,
+            'allCount' => $allCount,
         ])->layout('components.layouts.app', ['title' => __('Ensembles')]);
     }
 

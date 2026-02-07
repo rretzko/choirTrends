@@ -1,8 +1,8 @@
 <div>
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 space-y-4">
         <flux:heading size="xl">{{ __('Song Titles') }}</flux:heading>
 
-        <div class="flex gap-2">
+        <div class="flex justify-center gap-2">
             <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm">
                 {{ __('My') }} ({{ $myCount }})
             </flux:button>
@@ -20,7 +20,7 @@
         <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
-                    <th class="w-16 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <th class="hidden w-16 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 md:table-cell dark:text-neutral-400">
                         #
                     </th>
                     <th wire:click="sort('song_title')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
@@ -31,7 +31,12 @@
                             @endif
                         </div>
                     </th>
-                    <th wire:click="sort('composer')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                    {{-- Combined column for narrow viewports --}}
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 md:hidden dark:text-neutral-400">
+                        {{ __('Composer/Arranger') }}
+                    </th>
+                    {{-- Separate columns for wider viewports --}}
+                    <th wire:click="sort('composer')" class="hidden cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 md:table-cell dark:text-neutral-400 dark:hover:text-neutral-200">
                         <div class="flex items-center gap-1">
                             {{ __('Composer') }}
                             @if ($sortBy === 'composer')
@@ -39,7 +44,7 @@
                             @endif
                         </div>
                     </th>
-                    <th wire:click="sort('arranger')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                    <th wire:click="sort('arranger')" class="hidden cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 md:table-cell dark:text-neutral-400 dark:hover:text-neutral-200">
                         <div class="flex items-center gap-1">
                             {{ __('Arranger') }}
                             @if ($sortBy === 'arranger')
@@ -60,19 +65,29 @@
             <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
                 @forelse ($songTitles as $songTitle)
                     <tr wire:key="song-title-{{ $songTitle->id }}">
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="hidden whitespace-nowrap px-6 py-2 text-sm text-neutral-500 md:table-cell dark:text-neutral-400">
                             {{ $loop->iteration }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-900 dark:text-neutral-100">
+                        <td class="px-6 py-2 text-sm text-neutral-900 dark:text-neutral-100">
                             {{ $songTitle->song_title }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
+                        {{-- Combined cell for narrow viewports --}}
+                        <td class="px-6 py-2 text-sm text-neutral-500 md:hidden dark:text-neutral-400">
+                            {{ $songTitle->composer?->artist_name }}
+                            @if ($songTitle->composer && $songTitle->arranger)
+                                / arr. {{ $songTitle->arranger?->artist_name }}
+                            @elseif ($songTitle->arranger)
+                                arr. {{ $songTitle->arranger?->artist_name }}
+                            @endif
+                        </td>
+                        {{-- Separate cells for wider viewports --}}
+                        <td class="hidden whitespace-nowrap px-6 py-2 text-sm text-neutral-500 md:table-cell dark:text-neutral-400">
                             {{ $songTitle->composer?->artist_name }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="hidden whitespace-nowrap px-6 py-2 text-sm text-neutral-500 md:table-cell dark:text-neutral-400">
                             {{ $songTitle->arranger?->artist_name }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="whitespace-nowrap px-6 py-2 text-right text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $songTitle->performed_count }}
                         </td>
                     </tr>

@@ -1,13 +1,13 @@
 <div>
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 space-y-4">
         <flux:heading size="xl">{{ __('Schools') }}</flux:heading>
 
-        <div class="flex gap-2">
+        <div class="flex justify-center gap-2">
             <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm">
-                {{ __('My') }}
+                {{ __('My') }} ({{ $myCount }})
             </flux:button>
             <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm">
-                {{ __('All') }}
+                {{ __('All') }} ({{ $allCount }})
             </flux:button>
         </div>
     </div>
@@ -24,7 +24,7 @@
             <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
                 @forelse ($schools as $school)
                     <tr wire:key="school-{{ $school->id }}">
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-900 dark:text-neutral-100">
+                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-900 dark:text-neutral-100">
                             {{ $displayNames[$school->id] }}
                         </td>
                     </tr>

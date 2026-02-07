@@ -4,45 +4,44 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
-
-            <div class="flex items-center justify-between">
+        <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+            <flux:sidebar.header>
                 <a href="{{ route('dashboard') }}" class="flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
                     <x-app-logo />
                 </a>
+                <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
+            </flux:sidebar.header>
 
-                <flux:button x-data x-on:click="$flux.dark = ! $flux.dark" icon="moon" variant="subtle" size="sm" aria-label="Toggle dark mode" />
-            </div>
+            <flux:sidebar.nav>
+                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate class="mb-4">{{ __('Dashboard') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="document-text" :href="route('programs.index')" :current="request()->routeIs('programs.*')" wire:navigate>{{ __('Programs') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="arrow-up-tray" :href="route('addProgram')" :current="request()->routeIs('addProgram')" wire:navigate>{{ __('Add Program') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="musical-note" :href="route('artists.index')" :current="request()->routeIs('artists.*')" wire:navigate>{{ __('Composers/Arrangers') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="user-group" :href="route('ensembles.index')" :current="request()->routeIs('ensembles.*')" wire:navigate>{{ __('Ensembles') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="academic-cap" :href="route('schools.index')" :current="request()->routeIs('schools.*')" wire:navigate>{{ __('Schools') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="queue-list" :href="route('song-titles.index')" :current="request()->routeIs('song-titles.*')" wire:navigate>{{ __('Songs') }}</flux:sidebar.item>
+            </flux:sidebar.nav>
 
-            <flux:navlist variant="outline">
-                <flux:navlist.group :heading="__('Platform')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
-                    <flux:navlist.item icon="arrow-up-tray" :href="route('addProgram')" :current="request()->routeIs('addProgram')" wire:navigate>{{ __('Add Program') }}</flux:navlist.item>
-                    <flux:navlist.item icon="musical-note" :href="route('artists.index')" :current="request()->routeIs('artists.*')" wire:navigate>{{ __('Artists') }}</flux:navlist.item>
-                    <flux:navlist.item icon="user-group" :href="route('ensembles.index')" :current="request()->routeIs('ensembles.*')" wire:navigate>{{ __('Ensembles') }}</flux:navlist.item>
-                    <flux:navlist.item icon="document-text" :href="route('programs.index')" :current="request()->routeIs('programs.*')" wire:navigate>{{ __('Programs') }}</flux:navlist.item>
-                    <flux:navlist.item icon="academic-cap" :href="route('schools.index')" :current="request()->routeIs('schools.*')" wire:navigate>{{ __('Schools') }}</flux:navlist.item>
-                    <flux:navlist.item icon="queue-list" :href="route('song-titles.index')" :current="request()->routeIs('song-titles.*')" wire:navigate>{{ __('Song Titles') }}</flux:navlist.item>
-                </flux:navlist.group>
-            </flux:navlist>
+            <flux:sidebar.spacer />
 
-            <flux:spacer />
+            <flux:sidebar.nav>
+                <flux:sidebar.item icon="moon" x-data x-on:click.prevent="$flux.dark = ! $flux.dark">{{ __('Dark Mode') }}</flux:sidebar.item>
+            </flux:sidebar.nav>
 
             @if (auth()->user()->isFounder())
-                <flux:navlist variant="outline">
-                    <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
+                <flux:sidebar.nav>
+                    <flux:sidebar.item icon="user-plus" :href="route('founder.addProgram')" :current="request()->routeIs('founder.addProgram*')" wire:navigate>{{ __('Add Program for User') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
                         {{ __('Repository') }}
-                    </flux:navlist.item>
-
-                    <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
                         {{ __('Documentation') }}
-                    </flux:navlist.item>
-                </flux:navlist>
+                    </flux:sidebar.item>
+                </flux:sidebar.nav>
             @endif
 
             <!-- Desktop User Menu -->
-            <flux:dropdown class="hidden lg:block" position="bottom" align="start">
+            <flux:dropdown class="max-lg:hidden" position="bottom" align="start">
                 <flux:profile
                     :name="auth()->user()->name"
                     :initials="auth()->user()->initials()"

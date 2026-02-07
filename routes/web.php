@@ -29,6 +29,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('add-program/confirm', [App\Http\Controllers\AddProgramController::class, 'confirm'])->name('addProgram.confirm');
 
+    // Founder-only routes
+    Route::middleware(App\Http\Middleware\EnsureUserIsFounder::class)->prefix('founder')->group(function () {
+        Route::get('add-program', [App\Http\Controllers\FounderAddProgramController::class, 'index'])->name('founder.addProgram');
+        Route::post('add-program', [App\Http\Controllers\FounderAddProgramController::class, 'store'])->name('founder.addProgram.store');
+        Route::get('add-program/status', [App\Http\Controllers\FounderAddProgramController::class, 'status'])->name('founder.addProgram.status');
+        Route::post('add-program/confirm', [App\Http\Controllers\FounderAddProgramController::class, 'confirm'])->name('founder.addProgram.confirm');
+    });
+
     Route::redirect('settings', 'settings/profile');
 
     Route::get('settings/profile', Profile::class)->name('profile.edit');

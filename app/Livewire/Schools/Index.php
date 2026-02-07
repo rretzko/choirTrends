@@ -36,9 +36,16 @@ class Index extends Component
             $displayNames[$school->id] = $this->getDisplayName($school, $currentUserId);
         }
 
+        $myCount = School::whereHas('users', function ($q) {
+            $q->where('users.id', Auth::id());
+        })->count();
+        $allCount = School::count();
+
         return view('livewire.schools.index', [
             'schools' => $schools,
             'displayNames' => $displayNames,
+            'myCount' => $myCount,
+            'allCount' => $allCount,
         ])->layout('components.layouts.app', ['title' => __('Schools')]);
     }
 

@@ -21,6 +21,15 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            if ($user->isDirty('name')) {
+                $user->alpha_name = $user->generateAlphaName();
+            }
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -28,6 +37,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'alpha_name',
         'email',
         'password',
     ];
@@ -84,5 +94,21 @@ class User extends Authenticatable
         $founderEmail = config('app.founder');
 
         return $founderEmail && $this->email === $founderEmail;
+    }
+
+    /**
+     * Generate "Last, First" format from the user's name.
+     */
+    public function generateAlphaName(): string
+    {
+        $parts = explode(' ', trim($this->name ?? ''));
+
+        if (count($parts) <= 1) {
+            return $this->name ?? '';
+        }
+
+        $lastName = array_pop($parts);
+
+        return $lastName.', '.implode(' ', $parts);
     }
 }
