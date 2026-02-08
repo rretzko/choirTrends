@@ -1,11 +1,24 @@
 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+    <a href="{{ route('programs.index') }}" class="block rounded-xl border border-neutral-200 bg-white p-6 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700">
+        <div class="flex items-center gap-4">
+            <div class="flex size-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900">
+                <flux:icon name="document-text" class="size-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+                <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">Programs</flux:text>
+                <flux:heading size="xl">{{ number_format($programsCount) }}</flux:heading>
+            </div>
+        </div>
+    </a>
+
     <a href="{{ route('artists.index') }}" class="block rounded-xl border border-neutral-200 bg-white p-6 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700">
         <div class="flex items-center gap-4">
             <div class="flex size-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                 <flux:icon name="musical-note" class="size-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-                <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">Artists</flux:text>
+                <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">Composers/Arrangers</flux:text>
                 <flux:heading size="xl">{{ number_format($artistsCount) }}</flux:heading>
             </div>
         </div>
@@ -19,18 +32,6 @@
             <div>
                 <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">Ensembles</flux:text>
                 <flux:heading size="xl">{{ number_format($ensemblesCount) }}</flux:heading>
-            </div>
-        </div>
-    </a>
-
-    <a href="{{ route('programs.index') }}" class="block rounded-xl border border-neutral-200 bg-white p-6 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700">
-        <div class="flex items-center gap-4">
-            <div class="flex size-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900">
-                <flux:icon name="document-text" class="size-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-                <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">Programs</flux:text>
-                <flux:heading size="xl">{{ number_format($programsCount) }}</flux:heading>
             </div>
         </div>
     </a>
