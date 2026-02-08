@@ -28,7 +28,7 @@ test('dashboard component displays summary counts', function () {
         ->assertSet('programsCount', 2)
         ->assertSet('schoolsCount', 3)
         ->assertSet('songTitlesCount', 4)
-        ->assertSee('Artists')
+        ->assertSee('Composers/Arrangers')
         ->assertSee('Ensembles')
         ->assertSee('Programs')
         ->assertSee('Schools')
