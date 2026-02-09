@@ -26,6 +26,7 @@ test('schools index displays schools with my filter', function () {
     $this->actingAs($user);
 
     Livewire::test(Index::class)
+        ->set('filter', 'my')
         ->assertSet('filter', 'my')
         ->assertSee($mySchool->school_name)
         ->assertDontSee($otherSchool->school_name);

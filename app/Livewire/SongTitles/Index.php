@@ -70,14 +70,19 @@ class Index extends Component
             });
         }
 
-        $sortColumn = match ($this->sortBy) {
-            'composer' => 'composers.artist_name',
-            'arranger' => 'arrangers.artist_name',
-            'performed' => 'performed_count',
-            default => 'song_titles.song_title',
-        };
+        if (in_array($this->sortBy, ['composer', 'arranger'])) {
+            $prefix = $this->sortBy === 'composer' ? 'composers' : 'arrangers';
+            $query->orderBy("{$prefix}.artist_last_name", $this->sortDirection)
+                ->orderBy("{$prefix}.artist_first_name", $this->sortDirection);
+        } else {
+            $sortColumn = match ($this->sortBy) {
+                'performed' => 'performed_count',
+                default => 'song_titles.song_title',
+            };
+            $query->orderBy($sortColumn, $this->sortDirection);
+        }
 
-        $songTitles = $query->orderBy($sortColumn, $this->sortDirection)->get();
+        $songTitles = $query->get();
 
         return view('livewire.song-titles.index', [
             'songTitles' => $songTitles,

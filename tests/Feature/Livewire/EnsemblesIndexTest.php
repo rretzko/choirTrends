@@ -33,6 +33,7 @@ test('ensembles index displays ensembles with my filter', function () {
     $this->actingAs($user);
 
     Livewire::test(Index::class)
+        ->set('filter', 'my')
         ->assertSet('filter', 'my')
         ->assertSee('My Concert Choir')
         ->assertDontSee('Other School Singers');

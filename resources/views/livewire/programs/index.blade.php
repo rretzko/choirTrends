@@ -8,10 +8,10 @@
             </flux:button>
 
             <div class="flex gap-2">
-                <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm">
+                <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('My programs') }}">
                     {{ __('My') }}
                 </flux:button>
-                <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm">
+                <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('Programs from participating directors') }}">
                     {{ __('All') }}
                 </flux:button>
             </div>
@@ -22,17 +22,45 @@
         <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        {{ __('Program Name') }} <span class="text-xs normal-case">{{ __('(click for details)') }}</span>
+                    <th wire:click="sort('event_name')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                        <div class="flex items-center gap-1">
+                            {{ __('Program Name') }} <span class="text-xs normal-case">{{ __('(click for details)') }}</span>
+                            @if ($sortBy === 'event_name')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        {{ __('Program Date') }}
+                    <th wire:click="sort('event_date')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                        <div class="flex items-center gap-1">
+                            {{ __('Program Date') }}
+                            @if ($sortBy === 'event_date')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        {{ __('School') }}
+                    <th wire:click="sort('school')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                        <div class="flex items-center gap-1">
+                            {{ __('School') }}
+                            @if ($sortBy === 'school')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        {{ __('Director') }}
+                    <th wire:click="sort('director')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                        <div class="flex items-center gap-1">
+                            {{ __('Director') }}
+                            @if ($sortBy === 'director')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
                     </th>
                 </tr>
             </thead>

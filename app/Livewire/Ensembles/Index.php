@@ -13,7 +13,7 @@ use Livewire\Component;
 
 class Index extends Component
 {
-    public string $filter = 'my';
+    public string $filter = 'all';
 
     public function render(): View
     {

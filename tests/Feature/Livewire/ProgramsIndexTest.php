@@ -31,6 +31,7 @@ test('programs index displays programs with my filter', function () {
     $this->actingAs($user);
 
     Livewire::test(Index::class)
+        ->set('filter', 'my')
         ->assertSet('filter', 'my')
         ->assertSee($myProgram->event_name)
         ->assertDontSee($otherProgram->event_name);
@@ -228,37 +229,49 @@ test('program details modal groups songs by ensemble', function () {
         ->assertSee('Lux Aurumque');
 });
 
-test('programs are sorted by school name then by event date descending', function () {
+test('programs are sorted by school name by default', function () {
     $user = User::factory()->create();
 
     $schoolB = School::factory()->create(['school_name' => 'Beta School']);
     $schoolA = School::factory()->create(['school_name' => 'Alpha School']);
 
-    $programB1 = Program::factory()->for($user)->for($schoolB)->create([
-        'event_name' => 'Beta Old',
-        'event_date' => '2024-01-01',
-    ]);
-    $programB2 = Program::factory()->for($user)->for($schoolB)->create([
-        'event_name' => 'Beta New',
-        'event_date' => '2025-06-01',
-    ]);
-    $programA1 = Program::factory()->for($user)->for($schoolA)->create([
-        'event_name' => 'Alpha Old',
-        'event_date' => '2023-03-01',
-    ]);
-    $programA2 = Program::factory()->for($user)->for($schoolA)->create([
-        'event_name' => 'Alpha New',
-        'event_date' => '2025-09-01',
-    ]);
+    Program::factory()->for($user)->for($schoolB)->create(['event_name' => 'Beta Concert']);
+    Program::factory()->for($user)->for($schoolA)->create(['event_name' => 'Alpha Concert']);
 
     $this->actingAs($user);
 
-    $component = Livewire::test(Index::class);
+    $component = Livewire::test(Index::class)
+        ->assertSet('sortBy', 'school')
+        ->assertSet('sortDirection', 'asc');
 
     $programs = $component->viewData('programs');
     $names = $programs->pluck('event_name')->all();
 
-    expect($names)->toBe(['Alpha New', 'Alpha Old', 'Beta New', 'Beta Old']);
+    expect($names)->toBe(['Alpha Concert', 'Beta Concert']);
+});
+
+test('programs can be sorted by director last name', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+
+    Program::factory()->for($user)->for($school)->create([
+        'event_name' => 'Concert B',
+        'director_name' => 'John Smith',
+    ]);
+    Program::factory()->for($user)->for($school)->create([
+        'event_name' => 'Concert A',
+        'director_name' => 'Mrs. Amy Adams',
+    ]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Index::class)
+        ->call('sort', 'director');
+
+    $programs = $component->viewData('programs');
+    $names = $programs->pluck('event_name')->all();
+
+    expect($names)->toBe(['Concert A', 'Concert B']);
 });
 
 test('program details modal shows songs without ensemble under Other', function () {

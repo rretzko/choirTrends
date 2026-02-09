@@ -1,12 +1,12 @@
 <div>
     <div class="mb-6 space-y-4">
-        <flux:heading size="xl">{{ __('Song Titles') }}</flux:heading>
+        <flux:heading size="xl">{{ __('Songs') }}</flux:heading>
 
         <div class="flex justify-center gap-2">
-            <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm">
+            <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('Songs from my programs') }}">
                 {{ __('My') }} ({{ $myCount }})
             </flux:button>
-            <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm">
+            <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('All songs from submitted programs') }}">
                 {{ __('All') }} ({{ $allCount }})
             </flux:button>
         </div>
@@ -17,7 +17,7 @@
     </div>
 
     <div class="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-        <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+        <table class="w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
                     <th class="hidden w-16 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 md:table-cell dark:text-neutral-400">
@@ -28,12 +28,21 @@
                             {{ __('Song Title') }}
                             @if ($sortBy === 'song_title')
                                 <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
                             @endif
                         </div>
                     </th>
                     {{-- Combined column for narrow viewports --}}
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 md:hidden dark:text-neutral-400">
-                        {{ __('Composer/Arranger') }}
+                    <th wire:click="sort('composer')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 md:hidden dark:text-neutral-400 dark:hover:text-neutral-200">
+                        <div class="flex items-center gap-1">
+                            {{ __('Composer/Arranger') }}
+                            @if ($sortBy === 'composer')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
                     </th>
                     {{-- Separate columns for wider viewports --}}
                     <th wire:click="sort('composer')" class="hidden cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 md:table-cell dark:text-neutral-400 dark:hover:text-neutral-200">
@@ -41,6 +50,8 @@
                             {{ __('Composer') }}
                             @if ($sortBy === 'composer')
                                 <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
                             @endif
                         </div>
                     </th>
@@ -49,6 +60,8 @@
                             {{ __('Arranger') }}
                             @if ($sortBy === 'arranger')
                                 <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
                             @endif
                         </div>
                     </th>
@@ -57,6 +70,8 @@
                             {{ __('Performed') }}
                             @if ($sortBy === 'performed')
                                 <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
                             @endif
                         </div>
                     </th>

@@ -13,12 +13,26 @@ use Livewire\Component;
 
 class Index extends Component
 {
-    public string $filter = 'my';
+    public string $filter = 'all';
+
+    public string $sortBy = 'school';
+
+    public string $sortDirection = 'asc';
 
     public ?Program $selectedProgram = null;
 
     /** @var Collection<int, array<string, mixed>> */
     public Collection $songsByEnsemble;
+
+    public function sort(string $column): void
+    {
+        if ($this->sortBy === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortBy = $column;
+            $this->sortDirection = 'asc';
+        }
+    }
 
     public function mount(): void
     {
@@ -90,12 +104,30 @@ class Index extends Component
             $query->where('user_id', Auth::id());
         }
 
-        $programs = $query
-            ->join('schools', 'programs.school_id', '=', 'schools.id')
-            ->orderBy('schools.school_name')
-            ->orderBy('programs.event_date', 'desc')
-            ->select('programs.*')
-            ->get();
+        $query->join('schools', 'programs.school_id', '=', 'schools.id')
+            ->select('programs.*');
+
+        if ($this->sortBy !== 'director') {
+            $sortColumn = match ($this->sortBy) {
+                'event_name' => 'programs.event_name',
+                'event_date' => 'programs.event_date',
+                default => 'schools.school_name',
+            };
+            $query->orderBy($sortColumn, $this->sortDirection);
+        }
+
+        $programs = $query->get();
+
+        if ($this->sortBy === 'director') {
+            $sorted = $programs->sortBy(function (Program $program) {
+                $parts = explode(' ', $program->director_name ?? '');
+                $lastName = end($parts);
+                $firstName = count($parts) > 1 ? $parts[count($parts) - 2] : '';
+
+                return mb_strtolower($lastName).' '.mb_strtolower($firstName);
+            }, SORT_STRING, $this->sortDirection === 'desc');
+            $programs = $sorted->values();
+        }
 
         // Apply privacy masking
         /** @var int $currentUserId */

@@ -3,10 +3,10 @@
         <flux:heading size="xl">{{ __('Schools') }}</flux:heading>
 
         <div class="flex justify-center gap-2">
-            <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm">
+            <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('My schools') }}">
                 {{ __('My') }} ({{ $myCount }})
             </flux:button>
-            <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm">
+            <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('Schools of submitting directors') }}">
                 {{ __('All') }} ({{ $allCount }})
             </flux:button>
         </div>

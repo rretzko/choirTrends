@@ -1,12 +1,12 @@
 <div>
     <div class="mb-6 space-y-4">
-        <flux:heading size="xl">{{ __('Artists') }}</flux:heading>
+        <flux:heading size="xl">{{ __('Composers and Arrangers') }}</flux:heading>
 
         <div class="flex justify-center gap-2">
-            <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm">
+            <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('Composers and arrangers from my programs') }}">
                 {{ __('My') }} ({{ $myCount }})
             </flux:button>
-            <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm">
+            <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('Composers and arrangers from all submitted programs') }}">
                 {{ __('All') }} ({{ $allCount }})
             </flux:button>
         </div>
@@ -24,6 +24,8 @@
                             {{ __('Artist Name') }}
                             @if ($sortColumn === 'artist_name')
                                 <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
                             @endif
                         </button>
                     </th>
@@ -32,6 +34,8 @@
                             {{ __('First Name') }}
                             @if ($sortColumn === 'artist_first_name')
                                 <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
                             @endif
                         </button>
                     </th>
@@ -40,6 +44,8 @@
                             {{ __('Last Name') }}
                             @if ($sortColumn === 'artist_last_name')
                                 <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
                             @endif
                         </button>
                     </th>
