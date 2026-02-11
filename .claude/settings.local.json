@@ -39,7 +39,8 @@
       "mcp__laravel-boost__list-artisan-commands",
       "Bash(npm run build:*)",
       "Bash(copy /Y \"C:\\\\Users\\\\RickRetzko\\\\Desktop\\\\favicon.ico\" \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\\\\public\\\\favicon.ico\")",
-      "Bash(php vendor/bin/phpstan analyse:*)"
+      "Bash(php vendor/bin/phpstan analyse:*)",
+      "WebFetch(domain:api.zippopotam.us)"
     ]
   },
   "enableAllProjectMcpServers": true,

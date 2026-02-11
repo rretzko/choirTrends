@@ -40,6 +40,10 @@
 
         <flux:separator class="my-6" />
 
+        <livewire:settings.profile-schools />
+
+        <flux:separator class="my-6" />
+
         <div>
             <flux:heading size="lg">{{ __('Privacy') }}</flux:heading>
             <flux:text class="mt-1">{{ __('Control what information is visible to other users.') }}</flux:text>
