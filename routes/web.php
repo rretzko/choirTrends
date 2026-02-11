@@ -23,6 +23,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('schools', App\Livewire\Schools\Index::class)->name('schools.index');
     Route::get('song-titles', App\Livewire\SongTitles\Index::class)->name('song-titles.index');
 
+    Route::get('feedback/create', App\Livewire\Feedback\Create::class)->name('feedback.create');
+    Route::get('feedback', App\Livewire\Feedback\Index::class)->name('feedback.index');
+
     Route::get('add-program', [App\Http\Controllers\AddProgramController::class, 'index'])->name('addProgram');
 
     Route::post('add-program', [App\Http\Controllers\AddProgramController::class, 'store'])->name('addProgram.store');

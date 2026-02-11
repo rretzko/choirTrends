@@ -20,6 +20,8 @@
                 <flux:sidebar.item icon="user-group" :href="route('ensembles.index')" :current="request()->routeIs('ensembles.*')" wire:navigate>{{ __('Ensembles') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="academic-cap" :href="route('schools.index')" :current="request()->routeIs('schools.*')" wire:navigate>{{ __('Schools') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="queue-list" :href="route('song-titles.index')" :current="request()->routeIs('song-titles.*')" wire:navigate>{{ __('Songs') }}</flux:sidebar.item>
+                <flux:separator class="my-2"/>
+                <flux:sidebar.item icon="bug-ant" :href="route('feedback.create')" :current="request()->routeIs('feedback.*')" wire:navigate>{{ __('Feedback') }}</flux:sidebar.item>
             </flux:sidebar.nav>
 
             <flux:sidebar.spacer />
