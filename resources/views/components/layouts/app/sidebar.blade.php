@@ -28,9 +28,10 @@
                 <flux:sidebar.item icon="moon" x-data x-on:click.prevent="$flux.dark = ! $flux.dark">{{ __('Dark Mode') }}</flux:sidebar.item>
             </flux:sidebar.nav>
 
-            @if (auth()->user()->isFounder())
+            @if (auth()->user()->isFounder() && ! session()->has('impersonating_from'))
                 <flux:sidebar.nav>
                     <flux:sidebar.item icon="user-plus" :href="route('founder.addProgram')" :current="request()->routeIs('founder.addProgram*')" wire:navigate>{{ __('Add Program for User') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="identification" :href="route('founder.impersonate')" :current="request()->routeIs('founder.impersonate')" wire:navigate>{{ __('Impersonate User') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
                         {{ __('Repository') }}
                     </flux:sidebar.item>
@@ -135,6 +136,18 @@
                 </flux:menu>
             </flux:dropdown>
         </flux:header>
+
+        @if (session()->has('impersonating_from'))
+            <div class="flex items-center justify-between bg-amber-500 px-4 py-2 text-sm font-medium text-black">
+                <span>{{ __('Impersonating :name', ['name' => auth()->user()->name]) }}</span>
+                <form method="POST" action="{{ route('founder.impersonate.stop') }}">
+                    @csrf
+                    <flux:button type="submit" variant="filled" size="sm" class="!bg-amber-700 !text-white hover:!bg-amber-800">
+                        {{ __('Stop Impersonating') }}
+                    </flux:button>
+                </form>
+            </div>
+        @endif
 
         {{ $slot }}
 
