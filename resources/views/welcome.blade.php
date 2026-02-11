@@ -9,7 +9,7 @@
         <header class="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-zinc-950/80 border-b border-zinc-200 dark:border-zinc-800">
             <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <img src="/favicon.svg" alt="{{ config('app.name') }}" class="size-9">
+                    <img src="{{ asset('favicon.svg') }}" alt="{{ config('app.name') }}" class="size-9">
                     <span class="text-lg font-semibold tracking-tight">{{ config('app.name') }}</span>
                 </div>
                 @if (Route::has('login'))
@@ -324,7 +324,7 @@
         <footer class="border-t border-zinc-200 dark:border-zinc-800 py-8">
             <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                    <img src="/favicon.svg" alt="{{ config('app.name') }}" class="size-5">
+                    <img src="{{ asset('favicon.svg') }}" alt="{{ config('app.name') }}" class="size-5">
                     <span>&copy; {{ date('Y') }} {{ config('app.name') }}</span>
                 </div>
                 <p class="text-xs text-zinc-400 dark:text-zinc-500">Built for choral directors, with a choral director.</p>
