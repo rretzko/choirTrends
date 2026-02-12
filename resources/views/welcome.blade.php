@@ -68,8 +68,8 @@
                         Discover What's <span class="bg-gradient-to-r from-teal-600 to-cyan-500 bg-clip-text text-transparent">Trending</span> in Choral Music
                     </h1>
 
-                    <p class="text-lg lg:text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed mb-10 max-w-2xl mx-auto">
-                        Upload your concert programs and unlock insights into what songs, composers, and arrangers other choral directors are performing this season.
+                    <p>
+                        Submit your past concert programs to discover trends in repertoire, composers, and arrangers acroll the choral community.
                     </p>
 
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
