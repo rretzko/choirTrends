@@ -69,7 +69,7 @@
                     </h1>
 
                     <p>
-                        Submit your past concert programs to discover trends in repertoire, composers, and arrangers acroll the choral community.
+                        Submit your past concert programs to discover trends in repertoire, composers, and arrangers across the choral community.
                     </p>
 
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
