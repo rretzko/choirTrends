@@ -56,7 +56,17 @@ class Index extends Component
         $myCount = count($myArtistIds);
         $allCount = Artist::count();
 
+        $repertoireSql = '(
+            SELECT COUNT(*)
+            FROM program_song_title
+            INNER JOIN song_titles ON program_song_title.song_title_id = song_titles.id
+            WHERE song_titles.composer_id = artists.id
+               OR song_titles.arranger_id = artists.id
+        ) AS `repertoire_count`';
+
         $query = Artist::query()
+            ->select(['artists.*'])
+            ->selectRaw($repertoireSql)
             ->orderBy($this->sortColumn, $this->sortDirection);
 
         if ($this->filter === 'my') {

@@ -13,10 +13,17 @@
     </div>
 
     <div class="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-        <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+        <table class="w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
+            <colgroup>
+                <col class="w-12" />
+                <col />
+                <col class="w-1/5" />
+                <col class="w-1/5" />
+                <col class="w-16" />
+            </colgroup>
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
-                    <th class="w-12 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         #
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -49,6 +56,16 @@
                             @endif
                         </button>
                     </th>
+                    <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <button wire:click="sort('repertoire_count')" class="mx-auto flex items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
+                            {{ __('Rep#') }}
+                            @if ($sortColumn === 'repertoire_count')
+                                <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
+                            @endif
+                        </button>
+                    </th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
@@ -57,19 +74,22 @@
                         <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $loop->iteration }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-900 dark:text-neutral-100">
+                        <td class="truncate px-6 py-2 text-sm text-neutral-900 dark:text-neutral-100">
                             {{ $artist->artist_name }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="truncate px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $artist->artist_first_name }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="truncate px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $artist->artist_last_name }}
+                        </td>
+                        <td class="whitespace-nowrap px-6 py-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                            {{ $artist->repertoire_count }}
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                        <td colspan="5" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
                             {{ __('No artists found.') }}
                         </td>
                     </tr>

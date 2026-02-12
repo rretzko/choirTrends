@@ -26,7 +26,7 @@ class AddProgramController extends Controller
 
         $userSchools = $request->user()->schools()->get(['schools.id', 'school_name', 'abbreviation']);
 
-        $userSchoolsJson = $userSchools->map(fn ($s) => [
+        $userSchoolsJson = $userSchools->map(fn (School $s) => [
             'id' => $s->id,
             'school_name' => $s->school_name,
             'abbreviation' => $s->abbreviation ?? School::guessAbbreviation($s->school_name),

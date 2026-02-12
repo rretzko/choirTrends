@@ -43,6 +43,7 @@ class ProfileSchools extends Component
 
     public function openEditModal(int $schoolId): void
     {
+        /** @var School|null $school */
         $school = Auth::user()->schools()->find($schoolId);
 
         if (! $school) {
@@ -153,7 +154,9 @@ class ProfileSchools extends Component
 
     private function loadSchools(): void
     {
-        $this->schools = Auth::user()->schools()->get();
+        /** @var Collection<int, School> $schools */
+        $schools = Auth::user()->schools()->get();
+        $this->schools = $schools;
     }
 
     private function resetForm(): void

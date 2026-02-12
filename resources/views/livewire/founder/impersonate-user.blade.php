@@ -14,7 +14,7 @@
                 >
                     <option value="">{{ __('Select a user...') }}</option>
                     @foreach ($users as $user)
-                        <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                        <option value="{{ $user->id }}">{{ $user->alpha_name }} ({{ $user->email }})</option>
                     @endforeach
                 </select>
                 <flux:error name="userId" />
