@@ -24,8 +24,18 @@ class AddProgramController extends Controller
         // Check if there's a completed analysis for this user
         $analysis = cache()->get("program_analysis_{$request->user()->id}");
 
+        $userSchools = $request->user()->schools()->get(['schools.id', 'school_name', 'abbreviation']);
+
+        $userSchoolsJson = $userSchools->map(fn ($s) => [
+            'id' => $s->id,
+            'school_name' => $s->school_name,
+            'abbreviation' => $s->abbreviation ?? School::guessAbbreviation($s->school_name),
+        ])->values();
+
         return view('add-program', [
             'analysis' => $analysis,
+            'userSchools' => $userSchools,
+            'userSchoolsJson' => $userSchoolsJson,
         ]);
     }
 

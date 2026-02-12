@@ -270,6 +270,7 @@
                         <flux:input
                             type="text"
                             name="school_name"
+                            id="school-name-input"
                             value="{{ old('school_name', $data['school_name'] ?? '') }}"
                             placeholder="{{ __('No school name found') }}"
                             required
@@ -277,6 +278,14 @@
                         @error('school_name')
                             <flux:text class="text-xs text-red-500">{{ $message }}</flux:text>
                         @enderror
+
+                        {{-- "Did you mean" school suggestion --}}
+                        <div id="school-suggestion" class="hidden mt-2 rounded-lg border border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20 p-3">
+                            <p class="text-sm text-amber-800 dark:text-amber-200">
+                                {{ __('Did you mean:') }}
+                            </p>
+                            <div id="school-suggestion-options" class="mt-1 flex flex-wrap gap-2"></div>
+                        </div>
                     </flux:field>
 
                     <flux:field>
@@ -573,5 +582,84 @@
             songsContainer.appendChild(newSong);
             newSong.querySelector('input[type="text"]').focus();
         }
+
+        // School name matching against user's existing schools
+        (function () {
+            const schoolInput = document.getElementById('school-name-input');
+            const suggestionBox = document.getElementById('school-suggestion');
+            const suggestionOptions = document.getElementById('school-suggestion-options');
+
+            if (!schoolInput || !suggestionBox) return;
+
+            const userSchools = @json($targetUserSchoolsJson);
+
+            if (!userSchools.length) return;
+
+            function normalize(str) {
+                return (str || '').trim().toLowerCase();
+            }
+
+            function checkSchoolMatch() {
+                const input = normalize(schoolInput.value);
+                if (!input) {
+                    suggestionBox.classList.add('hidden');
+                    return;
+                }
+
+                // Check for exact match on school_name (case-insensitive)
+                const exactNameMatch = userSchools.find(s => normalize(s.school_name) === input);
+                if (exactNameMatch) {
+                    suggestionBox.classList.add('hidden');
+                    return;
+                }
+
+                // Check for exact match on abbreviation — auto-fill the full school name
+                const abbrMatch = userSchools.find(s => normalize(s.abbreviation) && normalize(s.abbreviation) === input);
+                if (abbrMatch) {
+                    schoolInput.value = abbrMatch.school_name;
+                    suggestionBox.classList.add('hidden');
+                    return;
+                }
+
+                // Find matches by partial abbreviation or partial name
+                const matches = userSchools.filter(s => {
+                    const name = normalize(s.school_name);
+                    const abbr = normalize(s.abbreviation);
+
+                    // Input contains abbreviation or abbreviation contains input
+                    if (abbr && (input.includes(abbr) || abbr.includes(input))) return true;
+
+                    // Partial name match (input is substring of name or vice versa)
+                    if (name.includes(input) || input.includes(name)) return true;
+
+                    // Word overlap: share at least one significant word (3+ chars)
+                    const inputWords = input.split(/\s+/).filter(w => w.length >= 3);
+                    const nameWords = name.split(/\s+/).filter(w => w.length >= 3);
+                    return inputWords.some(w => nameWords.includes(w));
+                });
+
+                if (matches.length) {
+                    suggestionOptions.innerHTML = '';
+                    matches.forEach(school => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'rounded-md bg-amber-200 dark:bg-amber-800 px-3 py-1 text-sm font-medium text-amber-900 dark:text-amber-100 hover:bg-amber-300 dark:hover:bg-amber-700 transition-colors';
+                        btn.textContent = school.school_name + (school.abbreviation ? ' (' + school.abbreviation + ')' : '');
+                        btn.addEventListener('click', function () {
+                            schoolInput.value = school.school_name;
+                            suggestionBox.classList.add('hidden');
+                        });
+                        suggestionOptions.appendChild(btn);
+                    });
+                    suggestionBox.classList.remove('hidden');
+                } else {
+                    suggestionBox.classList.add('hidden');
+                }
+            }
+
+            // Run on page load and on input change
+            checkSchoolMatch();
+            schoolInput.addEventListener('input', checkSchoolMatch);
+        })();
     </script>
 </x-layouts.app>

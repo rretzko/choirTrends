@@ -260,6 +260,34 @@ test('failed method updates cache and sends failure email when job exhausts retr
     });
 });
 
+test('page passes target user schools to view when target user is in session', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+    $targetUser = User::factory()->withoutTwoFactor()->create();
+
+    $school = School::factory()->create(['school_name' => 'Lincoln High School', 'abbreviation' => 'LHS']);
+    $targetUser->schools()->attach($school);
+
+    $response = $this->actingAs($founder)
+        ->withSession(['founder_target_user_id' => $targetUser->id])
+        ->get(route('founder.addProgram'));
+
+    $response->assertSuccessful();
+    $schools = $response->viewData('targetUserSchools');
+    expect($schools)->toHaveCount(1)
+        ->and($schools->first()->school_name)->toBe('Lincoln High School')
+        ->and($schools->first()->abbreviation)->toBe('LHS');
+});
+
+test('page passes empty collection when no target user in session', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $response = $this->actingAs($founder)->get(route('founder.addProgram'));
+
+    $response->assertSuccessful();
+    $schools = $response->viewData('targetUserSchools');
+    expect($schools)->toBeEmpty();
+});
+
 test('page shows all users in dropdown', function () {
     $founder = User::factory()->withoutTwoFactor()->founder()->create();
     $user1 = User::factory()->withoutTwoFactor()->create(['name' => 'Alice Smith']);

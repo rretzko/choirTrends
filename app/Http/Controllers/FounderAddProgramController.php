@@ -25,10 +25,22 @@ class FounderAddProgramController extends Controller
         $targetUserId = $request->session()->get('founder_target_user_id');
         $analysis = $targetUserId ? cache()->get("program_analysis_{$targetUserId}") : null;
 
+        $targetUserSchools = $targetUserId
+            ? User::find($targetUserId)?->schools()->get(['schools.id', 'school_name', 'abbreviation']) ?? collect()
+            : collect();
+
+        $targetUserSchoolsJson = $targetUserSchools->map(fn ($s) => [
+            'id' => $s->id,
+            'school_name' => $s->school_name,
+            'abbreviation' => $s->abbreviation ?? School::guessAbbreviation($s->school_name),
+        ])->values();
+
         return view('founder.add-program', [
             'analysis' => $analysis,
             'users' => User::orderBy('alpha_name')->get(),
             'targetUserId' => $targetUserId,
+            'targetUserSchools' => $targetUserSchools,
+            'targetUserSchoolsJson' => $targetUserSchoolsJson,
         ]);
     }
 
