@@ -19,7 +19,7 @@
                 <col />
                 <col class="w-1/5" />
                 <col class="w-1/5" />
-                <col class="w-16" />
+                <col class="w-24" />
             </colgroup>
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
@@ -83,8 +83,14 @@
                         <td class="truncate px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $artist->artist_last_name }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                            {{ $artist->repertoire_count }}
+                        <td class="whitespace-nowrap px-6 py-2 text-center text-sm">
+                            @if ($artist->repertoire_count > 0)
+                                <flux:button wire:click="showRepertoire({{ $artist->id }})" variant="filled" size="sm">
+                                    {{ $artist->repertoire_count }}
+                                </flux:button>
+                            @else
+                                <span class="text-neutral-500 dark:text-neutral-400">0</span>
+                            @endif
                         </td>
                     </tr>
                 @empty
@@ -97,4 +103,51 @@
             </tbody>
         </table>
     </div>
+
+    <flux:modal name="artist-repertoire" class="max-w-2xl">
+        @if ($selectedArtist)
+            <div class="space-y-6">
+                <flux:heading size="lg">{{ $selectedArtist->artist_name }}</flux:heading>
+
+                <div class="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
+                    <table class="w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+                        <thead class="bg-neutral-50 dark:bg-neutral-800">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                                    {{ __('Song Title') }}
+                                </th>
+                                <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                                    {{ __('Role') }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
+                            @foreach ($repertoire as $song)
+                                <tr wire:key="song-{{ $song->id }}">
+                                    <td class="px-4 py-2 text-sm text-neutral-900 dark:text-neutral-100">
+                                        {{ $song->song_title }}
+                                    </td>
+                                    <td class="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                                        @if ($song->composer_id === $selectedArtist->id && $song->arranger_id === $selectedArtist->id)
+                                            {{ __('Composer & Arranger') }}
+                                        @elseif ($song->composer_id === $selectedArtist->id)
+                                            {{ __('Composer') }}
+                                        @else
+                                            {{ __('Arranger') }}
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-end">
+                    <flux:modal.close>
+                        <flux:button variant="filled">{{ __('Close') }}</flux:button>
+                    </flux:modal.close>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
 </div>

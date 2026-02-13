@@ -70,6 +70,63 @@ test('artists index can sort by repertoire count', function () {
         ->assertStatus(200);
 });
 
+test('showRepertoire loads song titles for the artist', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $composer = Artist::factory()->create(['artist_name' => 'Mozart']);
+    $arranger = Artist::factory()->create(['artist_name' => 'Lauridsen']);
+
+    $composedSong = SongTitle::factory()->create([
+        'song_title' => 'Ave Verum Corpus',
+        'composer_id' => $composer->id,
+        'arranger_id' => $arranger->id,
+    ]);
+    $arrangedSong = SongTitle::factory()->create([
+        'song_title' => 'O Magnum Mysterium',
+        'composer_id' => $arranger->id,
+        'arranger_id' => null,
+    ]);
+    $unrelatedSong = SongTitle::factory()->create([
+        'song_title' => 'Unrelated Piece',
+        'composer_id' => Artist::factory()->create()->id,
+    ]);
+
+    $program = Program::factory()->create(['user_id' => $user->id, 'school_id' => $school->id]);
+    $program->songTitles()->attach([$composedSong->id, $arrangedSong->id, $unrelatedSong->id]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('showRepertoire', $composer->id)
+        ->assertSet('selectedArtist.id', $composer->id)
+        ->assertCount('repertoire', 1)
+        ->assertSee('Ave Verum Corpus')
+        ->assertSee('Composer')
+        ->assertDontSee('Unrelated Piece');
+});
+
+test('showRepertoire shows both roles when artist is composer and arranger', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $artist = Artist::factory()->create(['artist_name' => 'Whitacre']);
+
+    $song = SongTitle::factory()->create([
+        'song_title' => 'Sleep',
+        'composer_id' => $artist->id,
+        'arranger_id' => $artist->id,
+    ]);
+
+    $program = Program::factory()->create(['user_id' => $user->id, 'school_id' => $school->id]);
+    $program->songTitles()->attach([$song->id]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('showRepertoire', $artist->id)
+        ->assertSee('Sleep')
+        ->assertSee('Composer & Arranger');
+});
+
 test('guests cannot access artists index', function () {
     $this->get(route('artists.index'))
         ->assertRedirect(route('login'));

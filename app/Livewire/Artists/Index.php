@@ -6,6 +6,7 @@ namespace App\Livewire\Artists;
 
 use App\Models\Artist;
 use App\Models\SongTitle;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -17,6 +18,34 @@ class Index extends Component
     public string $sortColumn = 'artist_last_name';
 
     public string $sortDirection = 'asc';
+
+    public ?Artist $selectedArtist = null;
+
+    /** @var Collection<int, SongTitle> */
+    public Collection $repertoire;
+
+    public function mount(): void
+    {
+        $this->repertoire = new Collection;
+    }
+
+    public function showRepertoire(int $artistId): void
+    {
+        $this->selectedArtist = Artist::find($artistId);
+
+        if (! $this->selectedArtist) {
+            return;
+        }
+
+        $this->repertoire = SongTitle::query()
+            ->where('composer_id', $artistId)
+            ->orWhere('arranger_id', $artistId)
+            ->with(['composer', 'arranger'])
+            ->orderBy('song_title')
+            ->get();
+
+        $this->modal('artist-repertoire')->show();
+    }
 
     public function sort(string $column): void
     {
