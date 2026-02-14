@@ -2,6 +2,11 @@ includes:
     - vendor/larastan/larastan/extension.neon
 
 parameters:
+    tmpDir: %currentWorkingDirectory%/.phpstan-tmp
+
+    parallel:
+        maximumNumberOfProcesses: 1
+
     paths:
         - app
 
