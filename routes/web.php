@@ -34,6 +34,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Founder-only routes
     Route::middleware(App\Http\Middleware\EnsureUserIsFounder::class)->prefix('founder')->group(function () {
+        Route::get('dashboard', App\Livewire\Founder\Dashboard::class)->name('founder.dashboard');
         Route::get('add-program', [App\Http\Controllers\FounderAddProgramController::class, 'index'])->name('founder.addProgram');
         Route::post('add-program', [App\Http\Controllers\FounderAddProgramController::class, 'store'])->name('founder.addProgram.store');
         Route::get('add-program/status', [App\Http\Controllers\FounderAddProgramController::class, 'status'])->name('founder.addProgram.status');

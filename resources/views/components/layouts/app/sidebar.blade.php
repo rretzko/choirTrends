@@ -33,6 +33,7 @@
             @if (auth()->user()->isFounder() && ! session()->has('impersonating_from'))
                 <flux:sidebar.nav>
                     <flux:sidebar.group expandable icon="shield-check" heading="Founder" class="grid">
+                        <flux:sidebar.item icon="chart-bar" :href="route('founder.dashboard')" :current="request()->routeIs('founder.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="user-plus" :href="route('founder.addProgram')" :current="request()->routeIs('founder.addProgram*')" wire:navigate>{{ __('Add Program for User') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="identification" :href="route('founder.impersonate')" :current="request()->routeIs('founder.impersonate')" wire:navigate>{{ __('Impersonate User') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="document-duplicate" :href="route('founder.duplicates')" :current="request()->routeIs('founder.duplicates')" wire:navigate>{{ __('Duplicates') }}</flux:sidebar.item>

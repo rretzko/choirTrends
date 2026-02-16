@@ -54,12 +54,16 @@
                 viewable
             />
 
+            <input type="hidden" name="viewport" id="register-viewport-field">
+
             <div class="flex items-center justify-end">
                 <flux:button type="submit" variant="primary" class="w-full">
                     {{ __('Create account') }}
                 </flux:button>
             </div>
         </form>
+
+        <script>document.getElementById('register-viewport-field').value = window.innerWidth + 'x' + window.innerHeight;</script>
 
         <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
             <span>{{ __('Already have an account?') }}</span>

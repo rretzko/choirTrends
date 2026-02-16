@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Ensemble> $ensembles
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $users
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Program> $programs
+ */
 class School extends Model
 {
     /** @use HasFactory<\Database\Factories\SchoolFactory> */

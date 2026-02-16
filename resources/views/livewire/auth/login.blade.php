@@ -43,12 +43,16 @@
             <!-- Remember Me -->
             <flux:checkbox name="remember" :label="__('Remember me')" :checked="old('remember')" />
 
+            <input type="hidden" name="viewport" id="login-viewport-field">
+
             <div class="flex items-center justify-end">
                 <flux:button variant="primary" type="submit" class="w-full" data-test="login-button">
                     {{ __('Log in') }}
                 </flux:button>
             </div>
         </form>
+
+        <script>document.getElementById('login-viewport-field').value = window.innerWidth + 'x' + window.innerHeight;</script>
 
         @if (Route::has('register'))
             <div class="space-x-1 text-sm text-center rtl:space-x-reverse text-zinc-600 dark:text-zinc-400">

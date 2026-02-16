@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -16,6 +17,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 /**
  * @property-read UserPrivacy|null $privacy
  * @property-read Collection<int, School> $schools
+ * @property-read Collection<int, UserLogin> $userLogins
  */
 class User extends Authenticatable
 {
@@ -96,6 +98,11 @@ class User extends Authenticatable
     public function privacy(): HasOne
     {
         return $this->hasOne(UserPrivacy::class);
+    }
+
+    public function userLogins(): HasMany
+    {
+        return $this->hasMany(UserLogin::class);
     }
 
     public function isFounder(): bool
