@@ -39,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('add-program/status', [App\Http\Controllers\FounderAddProgramController::class, 'status'])->name('founder.addProgram.status');
         Route::post('add-program/confirm', [App\Http\Controllers\FounderAddProgramController::class, 'confirm'])->name('founder.addProgram.confirm');
         Route::get('impersonate', App\Livewire\Founder\ImpersonateUser::class)->name('founder.impersonate');
+        Route::get('duplicates', App\Livewire\Founder\Duplicates::class)->name('founder.duplicates');
     });
 
     // Stop impersonation (must be accessible while impersonating)
