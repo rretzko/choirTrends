@@ -6,11 +6,13 @@ use App\Livewire\Founder\CreateUser;
 use App\Models\School;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
 beforeEach(function () {
     config(['app.founder' => 'founder@example.com']);
+    Mail::fake();
     Notification::fake();
 });
 

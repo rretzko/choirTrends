@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
@@ -26,6 +27,14 @@ class User extends Authenticatable
         static::saving(function (User $user) {
             if ($user->isDirty('name')) {
                 $user->alpha_name = $user->generateAlphaName();
+            }
+        });
+
+        static::created(function (User $user) {
+            $founderEmail = config('app.founder');
+
+            if ($founderEmail) {
+                Mail::to($founderEmail)->send(new \App\Mail\NewUserRegistered($user));
             }
         });
     }

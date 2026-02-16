@@ -45,7 +45,8 @@
       "WebFetch(domain:github.com)",
       "Bash(composer require:*)",
       "Bash(composer install:*)",
-      "Bash(php vendor/bin/phpstan:*)"
+      "Bash(php vendor/bin/phpstan:*)",
+      "Bash(php:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
