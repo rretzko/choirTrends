@@ -8,7 +8,6 @@ use App\Models\Artist;
 use App\Models\Ensemble;
 use App\Models\School;
 use App\Models\SongTitle;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -18,85 +17,43 @@ class Duplicates extends Component
 {
     public string $activeTab = 'schools';
 
-    /** @var array<string, int> */
-    public array $selectedKeepers = [];
+    public ?int $keeperId = null;
+
+    public ?int $duplicateId = null;
 
     public string $successMessage = '';
 
     public function switchTab(string $tab): void
     {
         $this->activeTab = $tab;
-        $this->selectedKeepers = [];
+        $this->keeperId = null;
+        $this->duplicateId = null;
+        $this->successMessage = '';
     }
 
-    /**
-     * Find schools that share the same name (case-insensitive) but different postal codes.
-     */
-    public function findSchoolDuplicates(): Collection
+    public function updatedKeeperId(): void
     {
-        $duplicateNames = School::query()
-            ->select(DB::raw('LOWER(school_name) as lower_name'))
-            ->groupBy('lower_name')
-            ->havingRaw('COUNT(*) > 1')
-            ->pluck('lower_name');
-
-        if ($duplicateNames->isEmpty()) {
-            return collect();
+        if ($this->keeperId && $this->keeperId === $this->duplicateId) {
+            $this->duplicateId = null;
         }
-
-        return School::query()
-            ->whereIn(DB::raw('LOWER(school_name)'), $duplicateNames)
-            ->orderBy('school_name')
-            ->orderBy('id')
-            ->get()
-            ->groupBy(fn (School $school) => mb_strtolower($school->school_name));
     }
 
-    /**
-     * Find artists that share the same name (case-insensitive).
-     */
-    public function findArtistDuplicates(): Collection
+    public function manualMerge(): void
     {
-        $duplicateNames = Artist::query()
-            ->select(DB::raw('LOWER(artist_name) as lower_name'))
-            ->groupBy('lower_name')
-            ->havingRaw('COUNT(*) > 1')
-            ->pluck('lower_name');
+        abort_unless(auth()->user()?->isFounder(), Response::HTTP_FORBIDDEN);
 
-        if ($duplicateNames->isEmpty()) {
-            return collect();
+        if (! $this->keeperId || ! $this->duplicateId || $this->keeperId === $this->duplicateId) {
+            return;
         }
 
-        return Artist::query()
-            ->whereIn(DB::raw('LOWER(artist_name)'), $duplicateNames)
-            ->orderBy('artist_name')
-            ->orderBy('id')
-            ->get()
-            ->groupBy(fn (Artist $artist) => mb_strtolower($artist->artist_name));
-    }
+        match ($this->activeTab) {
+            'artists' => $this->mergeArtists($this->keeperId, (string) $this->duplicateId),
+            'song-titles' => $this->mergeSongTitles($this->keeperId, (string) $this->duplicateId),
+            default => $this->mergeSchools($this->keeperId, (string) $this->duplicateId),
+        };
 
-    /**
-     * Find song titles that share the same title (case-insensitive) with different composer/arranger combos.
-     */
-    public function findSongTitleDuplicates(): Collection
-    {
-        $duplicateNames = SongTitle::query()
-            ->select(DB::raw('LOWER(song_title) as lower_title'))
-            ->groupBy('lower_title')
-            ->havingRaw('COUNT(*) > 1')
-            ->pluck('lower_title');
-
-        if ($duplicateNames->isEmpty()) {
-            return collect();
-        }
-
-        return SongTitle::query()
-            ->with(['composer', 'arranger'])
-            ->whereIn(DB::raw('LOWER(song_title)'), $duplicateNames)
-            ->orderBy('song_title')
-            ->orderBy('id')
-            ->get()
-            ->groupBy(fn (SongTitle $songTitle) => mb_strtolower($songTitle->song_title));
+        $this->keeperId = null;
+        $this->duplicateId = null;
     }
 
     public function mergeSchools(int $keeperId, string $duplicateIds): void
@@ -145,8 +102,6 @@ class Duplicates extends Component
                 $duplicate->delete();
             }
         });
-
-        $this->selectedKeepers = [];
 
         $this->successMessage = __('Schools merged successfully.');
     }
@@ -201,8 +156,6 @@ class Duplicates extends Component
             }
         });
 
-        $this->selectedKeepers = [];
-
         $this->successMessage = __('Artists merged successfully.');
     }
 
@@ -224,8 +177,6 @@ class Duplicates extends Component
                 $duplicate->delete();
             }
         });
-
-        $this->selectedKeepers = [];
 
         $this->successMessage = __('Song titles merged successfully.');
     }
@@ -263,14 +214,14 @@ class Duplicates extends Component
 
     public function render(): View
     {
-        $duplicates = match ($this->activeTab) {
-            'artists' => $this->findArtistDuplicates(),
-            'song-titles' => $this->findSongTitleDuplicates(),
-            default => $this->findSchoolDuplicates(),
+        $records = match ($this->activeTab) {
+            'artists' => Artist::query()->orderBy('artist_name')->get(),
+            'song-titles' => SongTitle::query()->with(['composer', 'arranger'])->orderBy('song_title')->get(),
+            default => School::query()->orderBy('school_name')->get(),
         };
 
         return view('livewire.founder.duplicates', [
-            'duplicateGroups' => $duplicates,
+            'records' => $records,
         ])->layout('components.layouts.app', ['title' => __('Duplicates')]);
     }
 }

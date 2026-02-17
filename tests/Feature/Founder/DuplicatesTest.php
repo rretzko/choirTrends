@@ -52,102 +52,178 @@ test('duplicates page renders with correct layout', function () {
         ->assertStatus(200);
 });
 
-test('tab switching works', function () {
+test('tab switching works and resets selections', function () {
     $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $school = School::factory()->create();
 
     Livewire::actingAs($founder)
         ->test(Duplicates::class)
         ->assertSet('activeTab', 'schools')
+        ->set('keeperId', $school->id)
         ->call('switchTab', 'artists')
         ->assertSet('activeTab', 'artists')
+        ->assertSet('keeperId', null)
+        ->assertSet('duplicateId', null)
         ->call('switchTab', 'song-titles')
         ->assertSet('activeTab', 'song-titles');
 });
 
-// --- Empty States ---
+// --- Manual Selection ---
 
-test('shows no duplicates message when no school duplicates exist', function () {
+test('records list shows all schools on schools tab', function () {
     $founder = User::factory()->withoutTwoFactor()->founder()->create();
 
-    School::factory()->create(['school_name' => 'Unique School']);
+    $schoolA = School::factory()->create(['school_name' => 'Alpha School']);
+    $schoolB = School::factory()->create(['school_name' => 'Beta School']);
 
     Livewire::actingAs($founder)
         ->test(Duplicates::class)
-        ->assertSee('No duplicates found.');
+        ->assertSee('Alpha School')
+        ->assertSee('Beta School');
 });
 
-test('shows no duplicates message when no artist duplicates exist', function () {
+test('records list shows all artists on artists tab', function () {
     $founder = User::factory()->withoutTwoFactor()->founder()->create();
 
-    Artist::factory()->create(['artist_name' => 'Unique Artist']);
+    Artist::factory()->create(['artist_name' => 'Johann Bach']);
+    Artist::factory()->create(['artist_name' => 'Wolfgang Mozart']);
 
     Livewire::actingAs($founder)
         ->test(Duplicates::class)
         ->call('switchTab', 'artists')
-        ->assertSee('No duplicates found.');
+        ->assertSee('Johann Bach')
+        ->assertSee('Wolfgang Mozart');
 });
 
-test('shows no duplicates message when no song title duplicates exist', function () {
+test('records list shows all song titles on song-titles tab', function () {
     $founder = User::factory()->withoutTwoFactor()->founder()->create();
 
-    $composer = Artist::factory()->create();
-    SongTitle::factory()->create([
-        'song_title' => 'Unique Song',
-        'composer_id' => $composer->id,
+    $composer = Artist::factory()->create(['artist_name' => 'Composer A']);
+    SongTitle::factory()->create(['song_title' => 'Ave Maria', 'composer_id' => $composer->id, 'arranger_id' => null]);
+    SongTitle::factory()->create(['song_title' => 'Hallelujah', 'composer_id' => $composer->id, 'arranger_id' => null]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'song-titles')
+        ->assertSee('Ave Maria')
+        ->assertSee('Hallelujah');
+});
+
+test('selecting same record as keeper clears duplicate selection', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $school = School::factory()->create();
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->set('duplicateId', $school->id)
+        ->set('keeperId', $school->id)
+        ->assertSet('duplicateId', null);
+});
+
+// --- Manual Merge ---
+
+test('manual merge calls correct merge method for schools', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = School::factory()->create(['school_name' => 'North Plainfield High School']);
+    $duplicate = School::factory()->create(['school_name' => 'Plainfield Public High School']);
+
+    $program = Program::factory()->create(['school_id' => $duplicate->id]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->set('keeperId', $keeper->id)
+        ->set('duplicateId', $duplicate->id)
+        ->call('manualMerge');
+
+    expect(Program::find($program->id)->school_id)->toBe($keeper->id);
+    expect(School::find($duplicate->id))->toBeNull();
+});
+
+test('manual merge calls correct merge method for artists', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = Artist::factory()->create(['artist_name' => 'Johann Bach']);
+    $duplicate = Artist::factory()->create(['artist_name' => 'J.S. Bach']);
+
+    $song = SongTitle::factory()->create([
+        'song_title' => 'Mass in B Minor',
+        'composer_id' => $duplicate->id,
         'arranger_id' => null,
     ]);
 
     Livewire::actingAs($founder)
         ->test(Duplicates::class)
-        ->call('switchTab', 'song-titles')
-        ->assertSee('No duplicates found.');
-});
-
-// --- Detection ---
-
-test('detects duplicate schools by name', function () {
-    $founder = User::factory()->withoutTwoFactor()->founder()->create();
-
-    School::factory()->create(['school_name' => 'Lincoln High School', 'postal_code' => '12345']);
-    School::factory()->create(['school_name' => 'Lincoln High School', 'postal_code' => '67890']);
-
-    Livewire::actingAs($founder)
-        ->test(Duplicates::class)
-        ->assertDontSee('No duplicates found.')
-        ->assertSee('Lincoln High School')
-        ->assertSee('2 records');
-});
-
-test('detects duplicate artists by name', function () {
-    $founder = User::factory()->withoutTwoFactor()->founder()->create();
-
-    // SQLite unique constraint is case-sensitive, so case variations are allowed
-    Artist::factory()->create(['artist_name' => 'Johann Bach', 'artist_first_name' => 'Johann', 'artist_last_name' => 'Bach']);
-    Artist::factory()->create(['artist_name' => 'johann bach', 'artist_first_name' => 'J', 'artist_last_name' => 'Bach']);
-
-    Livewire::actingAs($founder)
-        ->test(Duplicates::class)
         ->call('switchTab', 'artists')
-        ->assertDontSee('No duplicates found.')
-        ->assertSee('Johann Bach')
-        ->assertSee('2 records');
+        ->set('keeperId', $keeper->id)
+        ->set('duplicateId', $duplicate->id)
+        ->call('manualMerge');
+
+    expect(SongTitle::find($song->id)->composer_id)->toBe($keeper->id);
+    expect(Artist::find($duplicate->id))->toBeNull();
 });
 
-test('detects duplicate song titles', function () {
+test('manual merge calls correct merge method for song titles', function () {
     $founder = User::factory()->withoutTwoFactor()->founder()->create();
 
     $composerA = Artist::factory()->create(['artist_name' => 'Composer A']);
     $composerB = Artist::factory()->create(['artist_name' => 'Composer B']);
 
-    SongTitle::factory()->create(['song_title' => 'Ave Maria', 'composer_id' => $composerA->id, 'arranger_id' => null]);
-    SongTitle::factory()->create(['song_title' => 'Ave Maria', 'composer_id' => $composerB->id, 'arranger_id' => null]);
+    $keeper = SongTitle::factory()->create(['song_title' => 'Ave Maria', 'composer_id' => $composerA->id, 'arranger_id' => null]);
+    $duplicate = SongTitle::factory()->create(['song_title' => 'Ave Maria', 'composer_id' => $composerB->id, 'arranger_id' => null]);
+
+    $program = Program::factory()->create();
+    $program->songTitles()->attach($duplicate->id);
 
     Livewire::actingAs($founder)
         ->test(Duplicates::class)
         ->call('switchTab', 'song-titles')
-        ->assertDontSee('No duplicates found.')
-        ->assertSee('Ave Maria')
-        ->assertSee('2 records');
+        ->set('keeperId', $keeper->id)
+        ->set('duplicateId', $duplicate->id)
+        ->call('manualMerge');
+
+    expect($program->fresh()->songTitles->pluck('id'))->toContain($keeper->id);
+    expect(SongTitle::find($duplicate->id))->toBeNull();
+});
+
+test('manual merge resets selections after merge', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = School::factory()->create(['school_name' => 'School A']);
+    $duplicate = School::factory()->create(['school_name' => 'School B']);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->set('keeperId', $keeper->id)
+        ->set('duplicateId', $duplicate->id)
+        ->call('manualMerge')
+        ->assertSet('keeperId', null)
+        ->assertSet('duplicateId', null);
+});
+
+test('manual merge does nothing when keeper and duplicate are same', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $school = School::factory()->create(['school_name' => 'Test School']);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->set('keeperId', $school->id)
+        ->set('duplicateId', $school->id)
+        ->call('manualMerge');
+
+    expect(School::find($school->id))->not->toBeNull();
+});
+
+test('manual merge does nothing when selections are missing', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('manualMerge')
+        ->assertSet('successMessage', '');
 });
 
 // --- School Merge ---
@@ -395,6 +471,20 @@ test('non-founder cannot merge song titles', function () {
     Livewire::actingAs($user)
         ->test(Duplicates::class)
         ->call('mergeSongTitles', $songA->id, (string) $songB->id)
+        ->assertForbidden();
+});
+
+test('non-founder cannot call manual merge', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $schoolA = School::factory()->create(['school_name' => 'Test School A']);
+    $schoolB = School::factory()->create(['school_name' => 'Test School B']);
+
+    Livewire::actingAs($user)
+        ->test(Duplicates::class)
+        ->set('keeperId', $schoolA->id)
+        ->set('duplicateId', $schoolB->id)
+        ->call('manualMerge')
         ->assertForbidden();
 });
 
