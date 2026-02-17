@@ -75,3 +75,63 @@ it('handles multi-part last names', function () {
         'artist_last_name' => 'Sebastian Bach',
     ]);
 });
+
+it('treats ampersand-separated names as a collaborative artist', function () {
+    $parser = new ArtistNameParser;
+
+    $result = $parser->parse('Alice Parker & Robert Shaw');
+
+    expect($result)->toBe([
+        'artist_name' => 'Alice Parker & Robert Shaw',
+        'artist_first_name' => null,
+        'artist_last_name' => 'Alice Parker & Robert Shaw',
+    ]);
+});
+
+it('treats "and"-separated names as a collaborative artist', function () {
+    $parser = new ArtistNameParser;
+
+    $result = $parser->parse('Joe Beal and Jim Boothe');
+
+    expect($result)->toBe([
+        'artist_name' => 'Joe Beal and Jim Boothe',
+        'artist_first_name' => null,
+        'artist_last_name' => 'Joe Beal and Jim Boothe',
+    ]);
+});
+
+it('treats comma-separated names as a collaborative artist', function () {
+    $parser = new ArtistNameParser;
+
+    $result = $parser->parse('George Gordy, Allen Story, and Anna Gordy Gaye');
+
+    expect($result)->toBe([
+        'artist_name' => 'George Gordy, Allen Story, and Anna Gordy Gaye',
+        'artist_first_name' => null,
+        'artist_last_name' => 'George Gordy, Allen Story, and Anna Gordy Gaye',
+    ]);
+});
+
+it('treats last-name-only pairs as a collaborative artist', function () {
+    $parser = new ArtistNameParser;
+
+    $result = $parser->parse('Rodgers & Hammerstein');
+
+    expect($result)->toBe([
+        'artist_name' => 'Rodgers & Hammerstein',
+        'artist_first_name' => null,
+        'artist_last_name' => 'Rodgers & Hammerstein',
+    ]);
+});
+
+it('treats initials with ampersand as a collaborative artist', function () {
+    $parser = new ArtistNameParser;
+
+    $result = $parser->parse('F. Slay, Jr & B. Crewe');
+
+    expect($result)->toBe([
+        'artist_name' => 'F. Slay, Jr & B. Crewe',
+        'artist_first_name' => null,
+        'artist_last_name' => 'F. Slay, Jr & B. Crewe',
+    ]);
+});

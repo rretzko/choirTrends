@@ -12,10 +12,13 @@ use Flux;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Symfony\Component\HttpFoundation\Response;
 
 class Duplicates extends Component
 {
+    use WithPagination;
+
     public string $activeTab = 'schools';
 
     public ?int $keeperId = null;
@@ -32,12 +35,21 @@ class Duplicates extends Component
 
     public string $editArtistLastName = '';
 
+    public ?int $editingSongId = null;
+
+    public string $editSongName = '';
+
+    public ?int $editSongComposerId = null;
+
+    public ?int $editSongArrangerId = null;
+
     public function switchTab(string $tab): void
     {
         $this->activeTab = $tab;
         $this->keeperId = null;
         $this->duplicateId = null;
         $this->successMessage = '';
+        $this->resetPage();
     }
 
     public function updatedKeeperId(): void
@@ -263,6 +275,64 @@ class Duplicates extends Component
         $this->successMessage = __('Artist updated successfully.');
     }
 
+    public function editSong(int $id): void
+    {
+        abort_unless(auth()->user()?->isFounder(), Response::HTTP_FORBIDDEN);
+
+        $song = SongTitle::findOrFail($id);
+
+        $this->editingSongId = $song->id;
+        $this->editSongName = $song->song_title;
+        $this->editSongComposerId = $song->composer_id;
+        $this->editSongArrangerId = $song->arranger_id;
+
+        Flux::modal('edit-song')->show();
+    }
+
+    public function updateSong(): void
+    {
+        abort_unless(auth()->user()?->isFounder(), Response::HTTP_FORBIDDEN);
+
+        $this->validate([
+            'editSongName' => 'required|string|max:255',
+            'editSongComposerId' => 'nullable|exists:artists,id',
+            'editSongArrangerId' => 'nullable|exists:artists,id',
+        ]);
+
+        $song = SongTitle::findOrFail($this->editingSongId);
+
+        $song->update([
+            'song_title' => $this->editSongName,
+            'composer_id' => $this->editSongComposerId,
+            'arranger_id' => $this->editSongArrangerId,
+        ]);
+
+        $this->editingSongId = null;
+        $this->editSongName = '';
+        $this->editSongComposerId = null;
+        $this->editSongArrangerId = null;
+
+        Flux::modal('edit-song')->close();
+
+        $this->successMessage = __('Song updated successfully.');
+    }
+
+    public function removeSong(int $id): void
+    {
+        abort_unless(auth()->user()?->isFounder(), Response::HTTP_FORBIDDEN);
+
+        $song = SongTitle::findOrFail($id);
+
+        // Detach from programs before deleting
+        DB::table('program_song_title')
+            ->where('song_title_id', $song->id)
+            ->delete();
+
+        $song->delete();
+
+        $this->successMessage = __('Song removed successfully.');
+    }
+
     public function render(): View
     {
         $records = match ($this->activeTab) {
@@ -271,8 +341,25 @@ class Duplicates extends Component
             default => School::query()->orderBy('school_name')->get(),
         };
 
+        $songTitlePages = null;
+        $artists = collect();
+
+        if ($this->activeTab === 'song-titles') {
+            $songTitlePages = SongTitle::query()
+                ->with(['composer', 'arranger'])
+                ->orderBy('song_title')
+                ->paginate(20);
+
+            $artists = Artist::query()
+                ->orderBy('artist_last_name')
+                ->orderBy('artist_first_name')
+                ->get();
+        }
+
         return view('livewire.founder.duplicates', [
             'records' => $records,
+            'songTitlePages' => $songTitlePages,
+            'artists' => $artists,
         ])->layout('components.layouts.app', ['title' => __('Duplicates')]);
     }
 }

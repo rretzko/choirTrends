@@ -30,6 +30,15 @@ class ArtistNameParser
             ];
         }
 
+        // Detect multiple artists: & separator, "and" as a word, or comma-separated names
+        if (preg_match('/\s&\s|\band\b|,\s/', $name)) {
+            return [
+                'artist_name' => $name,
+                'artist_first_name' => null,
+                'artist_last_name' => $name,
+            ];
+        }
+
         // Split the name into parts
         $parts = explode(' ', $name);
 

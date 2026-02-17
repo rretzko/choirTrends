@@ -616,3 +616,171 @@ test('merge schools shows success message', function () {
         ->assertSet('successMessage', 'Schools merged successfully.')
         ->assertSee('Schools merged successfully.');
 });
+
+// --- Song Title Table ---
+
+test('song-titles tab shows paginated reference table', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $composer = Artist::factory()->create(['artist_name' => 'Test Composer']);
+    $arranger = Artist::factory()->create(['artist_name' => 'Test Arranger']);
+
+    SongTitle::factory()->create([
+        'song_title' => 'Amazing Grace',
+        'composer_id' => $composer->id,
+        'arranger_id' => $arranger->id,
+    ]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'song-titles')
+        ->assertSee('Song Title')
+        ->assertSee('Composer')
+        ->assertSee('Arranger')
+        ->assertSee('Amazing Grace')
+        ->assertSee('Test Composer')
+        ->assertSee('Test Arranger');
+});
+
+test('song-titles table is not visible on other tabs', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    SongTitle::factory()->create(['song_title' => 'Hidden Song']);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->assertSet('activeTab', 'schools')
+        ->assertDontSee('Song Title');
+});
+
+test('song-titles table shows em-dash for missing composer and arranger', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    SongTitle::factory()->create([
+        'song_title' => 'Orphan Song',
+        'composer_id' => null,
+        'arranger_id' => null,
+    ]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'song-titles')
+        ->assertSee('Orphan Song');
+});
+
+// --- Song Title Edit ---
+
+test('founder can open edit song modal', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $composer = Artist::factory()->create(['artist_name' => 'Bach']);
+    $song = SongTitle::factory()->create([
+        'song_title' => 'Mass in B Minor',
+        'composer_id' => $composer->id,
+        'arranger_id' => null,
+    ]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'song-titles')
+        ->call('editSong', $song->id)
+        ->assertSet('editingSongId', $song->id)
+        ->assertSet('editSongName', 'Mass in B Minor')
+        ->assertSet('editSongComposerId', $composer->id)
+        ->assertSet('editSongArrangerId', null);
+});
+
+test('founder can update a song title', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $composer = Artist::factory()->create(['artist_name' => 'Bach']);
+    $newComposer = Artist::factory()->create(['artist_name' => 'Mozart']);
+
+    $song = SongTitle::factory()->create([
+        'song_title' => 'Mass in B Minor',
+        'composer_id' => $composer->id,
+        'arranger_id' => null,
+    ]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'song-titles')
+        ->call('editSong', $song->id)
+        ->set('editSongName', 'Mass in B Minor, BWV 232')
+        ->set('editSongComposerId', $newComposer->id)
+        ->call('updateSong')
+        ->assertSet('editingSongId', null)
+        ->assertSet('successMessage', 'Song updated successfully.');
+
+    $song->refresh();
+    expect($song->song_title)->toBe('Mass in B Minor, BWV 232');
+    expect($song->composer_id)->toBe($newComposer->id);
+});
+
+test('update song validates required song title', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $song = SongTitle::factory()->create(['song_title' => 'Test Song']);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'song-titles')
+        ->call('editSong', $song->id)
+        ->set('editSongName', '')
+        ->call('updateSong')
+        ->assertHasErrors(['editSongName' => 'required']);
+});
+
+test('non-founder cannot edit a song', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $song = SongTitle::factory()->create(['song_title' => 'Test Song']);
+
+    Livewire::actingAs($user)
+        ->test(Duplicates::class)
+        ->call('editSong', $song->id)
+        ->assertForbidden();
+});
+
+test('non-founder cannot update a song', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $song = SongTitle::factory()->create(['song_title' => 'Test Song']);
+
+    Livewire::actingAs($user)
+        ->test(Duplicates::class)
+        ->set('editingSongId', $song->id)
+        ->set('editSongName', 'Hacked')
+        ->call('updateSong')
+        ->assertForbidden();
+});
+
+// --- Song Title Remove ---
+
+test('founder can remove a song title', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $song = SongTitle::factory()->create(['song_title' => 'Delete Me']);
+    $program = Program::factory()->create();
+    $program->songTitles()->attach($song->id);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'song-titles')
+        ->call('removeSong', $song->id)
+        ->assertSet('successMessage', 'Song removed successfully.');
+
+    expect(SongTitle::find($song->id))->toBeNull();
+    expect($program->fresh()->songTitles)->toBeEmpty();
+});
+
+test('non-founder cannot remove a song', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $song = SongTitle::factory()->create(['song_title' => 'Test Song']);
+
+    Livewire::actingAs($user)
+        ->test(Duplicates::class)
+        ->call('removeSong', $song->id)
+        ->assertForbidden();
+});
