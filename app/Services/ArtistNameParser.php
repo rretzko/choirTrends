@@ -42,9 +42,9 @@ class ArtistNameParser
         // Split the name into parts
         $parts = explode(' ', $name);
 
-        // First part is the first name, rest is the last name
-        $firstName = array_shift($parts);
-        $lastName = implode(' ', $parts);
+        // Last part is the last name, everything before it is the first name
+        $lastName = array_pop($parts);
+        $firstName = implode(' ', $parts);
 
         return [
             'artist_name' => $name,

@@ -64,15 +64,27 @@ it('strips ARR prefix case-insensitively', function () {
     ]);
 });
 
-it('handles multi-part last names', function () {
+it('handles names with middle names or initials', function () {
     $parser = new ArtistNameParser;
 
     $result = $parser->parse('Johann Sebastian Bach');
 
     expect($result)->toBe([
         'artist_name' => 'Johann Sebastian Bach',
-        'artist_first_name' => 'Johann',
-        'artist_last_name' => 'Sebastian Bach',
+        'artist_first_name' => 'Johann Sebastian',
+        'artist_last_name' => 'Bach',
+    ]);
+});
+
+it('keeps middle initials with the first name', function () {
+    $parser = new ArtistNameParser;
+
+    $result = $parser->parse('Glenda E. Franklin');
+
+    expect($result)->toBe([
+        'artist_name' => 'Glenda E. Franklin',
+        'artist_first_name' => 'Glenda E.',
+        'artist_last_name' => 'Franklin',
     ]);
 });
 
