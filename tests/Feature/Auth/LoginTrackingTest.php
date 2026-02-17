@@ -36,28 +36,54 @@ test('login record captures IP address', function () {
     expect($login->ip_address)->not->toBeNull();
 });
 
-test('login counter increments on subsequent logins', function () {
+test('login counter increments on subsequent logins from same environment', function () {
     $user = User::factory()->withoutTwoFactor()->create();
 
     // First login
     $this->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'password',
+        'viewport' => '1920x1080',
     ]);
 
     $this->post(route('logout'));
 
-    // Second login
+    // Second login from same environment
     $this->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'password',
+        'viewport' => '1920x1080',
     ]);
 
-    $logins = UserLogin::where('user_id', $user->id)->orderBy('counter')->get();
+    $logins = UserLogin::where('user_id', $user->id)->get();
+
+    expect($logins)->toHaveCount(1);
+    expect($logins->first()->counter)->toBe(2);
+});
+
+test('different environments create separate login records', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    // Login from one viewport
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+        'viewport' => '1920x1080',
+    ]);
+
+    $this->post(route('logout'));
+
+    // Login from a different viewport
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+        'viewport' => '390x844',
+    ]);
+
+    $logins = UserLogin::where('user_id', $user->id)->get();
 
     expect($logins)->toHaveCount(2);
-    expect($logins[0]->counter)->toBe(1);
-    expect($logins[1]->counter)->toBe(2);
+    expect($logins->pluck('counter')->toArray())->each->toBe(1);
 });
 
 test('registration also creates a user_logins record', function () {

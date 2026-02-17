@@ -5,7 +5,8 @@
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
-        <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
+        <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6"
+              onsubmit="this.querySelector('#register-viewport-field').value = window.innerWidth + 'x' + window.innerHeight">
             @csrf
             <x-honeypot />
 
@@ -62,8 +63,6 @@
                 </flux:button>
             </div>
         </form>
-
-        <script>document.getElementById('register-viewport-field').value = window.innerWidth + 'x' + window.innerHeight;</script>
 
         <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
             <span>{{ __('Already have an account?') }}</span>

@@ -5,7 +5,8 @@
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
-        <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6">
+        <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6"
+              onsubmit="this.querySelector('#login-viewport-field').value = window.innerWidth + 'x' + window.innerHeight">
             @csrf
             <x-honeypot />
 
@@ -51,8 +52,6 @@
                 </flux:button>
             </div>
         </form>
-
-        <script>document.getElementById('login-viewport-field').value = window.innerWidth + 'x' + window.innerHeight;</script>
 
         @if (Route::has('register'))
             <div class="space-x-1 text-sm text-center rtl:space-x-reverse text-zinc-600 dark:text-zinc-400">
