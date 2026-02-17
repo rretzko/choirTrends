@@ -10,6 +10,8 @@
 .env
 .env.backup
 .env.production
+.env.production.backup
+.env.staging.backup
 .env.testing
 .phpactor.json
 .phpunit.result.cache
@@ -23,3 +25,4 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/.env.production.backup
