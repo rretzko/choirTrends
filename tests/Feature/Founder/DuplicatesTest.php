@@ -96,6 +96,37 @@ test('records list shows all artists on artists tab', function () {
         ->assertSee('Wolfgang Mozart');
 });
 
+test('artists tab shows reference table with artist details', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    Artist::factory()->create([
+        'artist_name' => 'Bach, Johann Sebastian',
+        'artist_first_name' => 'Johann Sebastian',
+        'artist_last_name' => 'Bach',
+    ]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'artists')
+        ->assertSee('Artist Name')
+        ->assertSee('First Name')
+        ->assertSee('Last Name')
+        ->assertSee('Bach, Johann Sebastian')
+        ->assertSee('Johann Sebastian')
+        ->assertSeeInOrder(['Bach, Johann Sebastian', 'Johann Sebastian', 'Bach']);
+});
+
+test('artists reference table is not visible on schools tab', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    Artist::factory()->create(['artist_name' => 'Test Artist']);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->assertSet('activeTab', 'schools')
+        ->assertDontSee('Artist Name');
+});
+
 test('records list shows all song titles on song-titles tab', function () {
     $founder = User::factory()->withoutTwoFactor()->founder()->create();
 
@@ -431,6 +462,89 @@ test('merging song titles handles pivot primary key conflicts', function () {
     // Program still linked to keeper (only one entry)
     expect($program->fresh()->songTitles->count())->toBe(1);
     expect($program->fresh()->songTitles->first()->id)->toBe($keeper->id);
+});
+
+// --- Artist Edit ---
+
+test('founder can open edit artist modal', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $artist = Artist::factory()->create([
+        'artist_name' => 'Bach, Johann Sebastian',
+        'artist_first_name' => 'Johann Sebastian',
+        'artist_last_name' => 'Bach',
+    ]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'artists')
+        ->call('editArtist', $artist->id)
+        ->assertSet('editingArtistId', $artist->id)
+        ->assertSet('editArtistName', 'Bach, Johann Sebastian')
+        ->assertSet('editArtistFirstName', 'Johann Sebastian')
+        ->assertSet('editArtistLastName', 'Bach');
+});
+
+test('founder can update an artist', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $artist = Artist::factory()->create([
+        'artist_name' => 'Bach, Johann Sebastian',
+        'artist_first_name' => 'Johann Sebastian',
+        'artist_last_name' => 'Bach',
+    ]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'artists')
+        ->call('editArtist', $artist->id)
+        ->set('editArtistName', 'Bach, J.S.')
+        ->set('editArtistFirstName', 'J.S.')
+        ->set('editArtistLastName', 'Bach')
+        ->call('updateArtist')
+        ->assertSet('editingArtistId', null)
+        ->assertSet('successMessage', 'Artist updated successfully.');
+
+    expect($artist->fresh()->artist_name)->toBe('Bach, J.S.');
+    expect($artist->fresh()->artist_first_name)->toBe('J.S.');
+});
+
+test('update artist validates required artist name', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $artist = Artist::factory()->create(['artist_name' => 'Test Artist']);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'artists')
+        ->call('editArtist', $artist->id)
+        ->set('editArtistName', '')
+        ->call('updateArtist')
+        ->assertHasErrors(['editArtistName' => 'required']);
+});
+
+test('non-founder cannot edit an artist', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $artist = Artist::factory()->create(['artist_name' => 'Test Artist']);
+
+    Livewire::actingAs($user)
+        ->test(Duplicates::class)
+        ->call('editArtist', $artist->id)
+        ->assertForbidden();
+});
+
+test('non-founder cannot update an artist', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $artist = Artist::factory()->create(['artist_name' => 'Test Artist']);
+
+    Livewire::actingAs($user)
+        ->test(Duplicates::class)
+        ->set('editingArtistId', $artist->id)
+        ->set('editArtistName', 'Hacked')
+        ->call('updateArtist')
+        ->assertForbidden();
 });
 
 // --- Authorization on Merge Actions ---

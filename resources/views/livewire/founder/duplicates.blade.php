@@ -105,4 +105,58 @@
             </div>
         </div>
     </div>
+
+        {{-- Artists reference table --}}
+        @if ($activeTab === 'artists')
+            <div class="rounded-lg border border-zinc-200 dark:border-zinc-700">
+                <table class="w-full text-left text-sm">
+                    <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
+                        <tr>
+                            <th class="px-4 py-2 font-medium text-zinc-500 dark:text-zinc-400">{{ __('ID') }}</th>
+                            <th class="px-4 py-2 font-medium text-zinc-500 dark:text-zinc-400">{{ __('Artist Name') }}</th>
+                            <th class="px-4 py-2 font-medium text-zinc-500 dark:text-zinc-400">{{ __('First Name') }}</th>
+                            <th class="px-4 py-2 font-medium text-zinc-500 dark:text-zinc-400">{{ __('Last Name') }}</th>
+                            <th class="px-4 py-2 font-medium text-zinc-500 dark:text-zinc-400">{{ __('Edit') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                        @foreach ($records as $record)
+                            <tr wire:key="artist-row-{{ $record->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                                <td class="px-4 py-2 text-zinc-500 dark:text-zinc-400">{{ $record->id }}</td>
+                                <td class="px-4 py-2 text-zinc-900 dark:text-zinc-100">{{ $record->artist_name }}</td>
+                                <td class="px-4 py-2 text-zinc-700 dark:text-zinc-300">{{ $record->artist_first_name }}</td>
+                                <td class="px-4 py-2 text-zinc-700 dark:text-zinc-300">{{ $record->artist_last_name }}</td>
+                                <td class="px-4 py-2">
+                                    <flux:button wire:click="editArtist({{ $record->id }})" variant="ghost" size="sm">
+                                        <flux:icon name="pencil-square" class="size-4" />
+                                    </flux:button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <flux:modal name="edit-artist" class="md:w-96">
+                <form wire:submit="updateArtist" class="space-y-6">
+                    <div>
+                        <flux:heading size="lg">{{ __('Edit Artist') }}</flux:heading>
+                        <flux:text class="mt-2">{{ __('Update the artist details.') }}</flux:text>
+                    </div>
+
+                    <flux:input wire:model="editArtistName" label="{{ __('Artist Name') }}" required />
+                    <flux:input wire:model="editArtistFirstName" label="{{ __('First Name') }}" />
+                    <flux:input wire:model="editArtistLastName" label="{{ __('Last Name') }}" />
+
+                    <div class="flex gap-2">
+                        <flux:spacer />
+                        <flux:modal.close>
+                            <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                        </flux:modal.close>
+                        <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
+                    </div>
+                </form>
+            </flux:modal>
+        @endif
+    </div>
 </div>

@@ -8,6 +8,7 @@ use App\Models\Artist;
 use App\Models\Ensemble;
 use App\Models\School;
 use App\Models\SongTitle;
+use Flux;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -22,6 +23,14 @@ class Duplicates extends Component
     public ?int $duplicateId = null;
 
     public string $successMessage = '';
+
+    public ?int $editingArtistId = null;
+
+    public string $editArtistName = '';
+
+    public string $editArtistFirstName = '';
+
+    public string $editArtistLastName = '';
 
     public function switchTab(string $tab): void
     {
@@ -212,10 +221,52 @@ class Duplicates extends Component
         }
     }
 
+    public function editArtist(int $id): void
+    {
+        abort_unless(auth()->user()?->isFounder(), Response::HTTP_FORBIDDEN);
+
+        $artist = Artist::findOrFail($id);
+
+        $this->editingArtistId = $artist->id;
+        $this->editArtistName = $artist->artist_name;
+        $this->editArtistFirstName = $artist->artist_first_name ?? '';
+        $this->editArtistLastName = $artist->artist_last_name ?? '';
+
+        Flux::modal('edit-artist')->show();
+    }
+
+    public function updateArtist(): void
+    {
+        abort_unless(auth()->user()?->isFounder(), Response::HTTP_FORBIDDEN);
+
+        $this->validate([
+            'editArtistName' => 'required|string|max:255',
+            'editArtistFirstName' => 'nullable|string|max:255',
+            'editArtistLastName' => 'nullable|string|max:255',
+        ]);
+
+        $artist = Artist::findOrFail($this->editingArtistId);
+
+        $artist->update([
+            'artist_name' => $this->editArtistName,
+            'artist_first_name' => $this->editArtistFirstName,
+            'artist_last_name' => $this->editArtistLastName,
+        ]);
+
+        $this->editingArtistId = null;
+        $this->editArtistName = '';
+        $this->editArtistFirstName = '';
+        $this->editArtistLastName = '';
+
+        Flux::modal('edit-artist')->close();
+
+        $this->successMessage = __('Artist updated successfully.');
+    }
+
     public function render(): View
     {
         $records = match ($this->activeTab) {
-            'artists' => Artist::query()->orderBy('artist_name')->get(),
+            'artists' => Artist::query()->orderBy('artist_last_name')->orderBy('artist_first_name')->get(),
             'song-titles' => SongTitle::query()->with(['composer', 'arranger'])->orderBy('song_title')->get(),
             default => School::query()->orderBy('school_name')->get(),
         };
