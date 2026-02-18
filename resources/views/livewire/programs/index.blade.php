@@ -62,6 +62,9 @@
                             @endif
                         </div>
                     </th>
+                    <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        {{ __('Actions') }}
+                    </th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
@@ -85,10 +88,15 @@
                         <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $displayData[$program->id]['director'] }}
                         </td>
+                        <td class="whitespace-nowrap px-6 py-2 text-right text-sm">
+                            @if ($program->user_id === auth()->id())
+                                <flux:button href="{{ route('programs.edit', $program) }}" variant="ghost" size="sm" icon="pencil-square" title="{{ __('Edit Program') }}" />
+                            @endif
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                        <td colspan="5" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
                             {{ __('No programs found.') }}
                         </td>
                     </tr>
