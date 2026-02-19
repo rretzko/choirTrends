@@ -6,9 +6,19 @@
             <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('Songs from my programs') }}">
                 {{ __('My') }} ({{ $myCount }})
             </flux:button>
-            <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('All songs from submitted programs') }}">
-                {{ __('All') }} ({{ $allCount }})
-            </flux:button>
+            @if ($compliance['canViewAll'])
+                <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('All songs from submitted programs') }}">
+                    {{ __('All') }} ({{ $allCount }})
+                </flux:button>
+            @else
+                <flux:tooltip content="{{ __('Upload programs to unlock community data') }}">
+                    <div>
+                        <flux:button disabled variant="ghost" size="sm">
+                            {{ __('All') }} ({{ $allCount }})
+                        </flux:button>
+                    </div>
+                </flux:tooltip>
+            @endif
         </div>
     </div>
 

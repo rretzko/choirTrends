@@ -71,4 +71,53 @@
             </div>
         </div>
     </div>
+
+    @if (! $compliance['isExempt'])
+        <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+            <div class="flex items-center gap-4">
+                <div class="flex size-12 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900">
+                    <flux:icon name="clipboard-document-check" class="size-6 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <div>
+                    <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">{{ __('Participation Status') }}</flux:text>
+                </div>
+            </div>
+
+            <div class="mt-4 space-y-2">
+                <div class="flex items-start gap-2">
+                    @if ($compliance['initialUpload']['status'] === 'green')
+                        <flux:icon name="check-circle" variant="mini" class="mt-0.5 size-4 text-green-500" />
+                    @elseif ($compliance['initialUpload']['status'] === 'amber')
+                        <flux:icon name="exclamation-circle" variant="mini" class="mt-0.5 size-4 text-amber-500" />
+                    @else
+                        <flux:icon name="x-circle" variant="mini" class="mt-0.5 size-4 text-red-500" />
+                    @endif
+                    <flux:text class="text-xs">{{ $compliance['initialUpload']['message'] }}</flux:text>
+                </div>
+
+                @foreach ($compliance['annualRequirements'] as $year => $requirement)
+                    <div class="flex items-start gap-2">
+                        @if ($requirement['status'] === 'green')
+                            <flux:icon name="check-circle" variant="mini" class="mt-0.5 size-4 text-green-500" />
+                        @else
+                            <flux:icon name="x-circle" variant="mini" class="mt-0.5 size-4 text-red-500" />
+                        @endif
+                        <flux:text class="text-xs">{{ $requirement['message'] }}</flux:text>
+                    </div>
+                @endforeach
+
+                @if ($compliance['currentYearAdvisory'])
+                    <div class="flex items-start gap-2">
+                        @if ($compliance['currentYearAdvisory']['status'] === 'green')
+                            <flux:icon name="check-circle" variant="mini" class="mt-0.5 size-4 text-green-500" />
+                        @else
+                            <flux:icon name="exclamation-circle" variant="mini" class="mt-0.5 size-4 text-amber-500" />
+                        @endif
+                        <flux:text class="text-xs">{{ $compliance['currentYearAdvisory']['message'] }}</flux:text>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
+
 </div>

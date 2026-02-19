@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Programs;
 
+use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\Ensemble;
 use App\Models\Program;
 use Illuminate\Support\Collection;
@@ -13,6 +14,8 @@ use Livewire\Component;
 
 class Index extends Component
 {
+    use ChecksProgramCompliance;
+
     public string $filter = 'all';
 
     public string $sortBy = 'school';
@@ -98,6 +101,10 @@ class Index extends Component
 
     public function render(): View
     {
+        if (! $this->canViewAll() && $this->filter === 'all') {
+            $this->filter = 'my';
+        }
+
         $query = Program::query()->with(['school', 'user.privacy']);
 
         if ($this->filter === 'my') {

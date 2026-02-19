@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Artists;
 
+use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\Artist;
 use App\Models\SongTitle;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,6 +14,8 @@ use Livewire\Component;
 
 class Index extends Component
 {
+    use ChecksProgramCompliance;
+
     public string $filter = 'all';
 
     public string $sortColumn = 'artist_last_name';
@@ -81,6 +84,10 @@ class Index extends Component
 
     public function render(): View
     {
+        if (! $this->canViewAll() && $this->filter === 'all') {
+            $this->filter = 'my';
+        }
+
         $myArtistIds = $this->getMyArtistIds();
         $myCount = count($myArtistIds);
         $allCount = Artist::count();

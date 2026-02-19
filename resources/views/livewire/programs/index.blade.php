@@ -11,9 +11,19 @@
                 <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('My programs') }}">
                     {{ __('My') }}
                 </flux:button>
-                <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('Programs from participating directors') }}">
-                    {{ __('All') }}
-                </flux:button>
+                @if ($compliance['canViewAll'])
+                    <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('Programs from participating directors') }}">
+                        {{ __('All') }}
+                    </flux:button>
+                @else
+                    <flux:tooltip content="{{ __('Upload programs to unlock community data') }}">
+                        <div>
+                            <flux:button disabled variant="ghost" size="sm">
+                                {{ __('All') }}
+                            </flux:button>
+                        </div>
+                    </flux:tooltip>
+                @endif
             </div>
         </div>
     </div>

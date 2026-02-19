@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\Artist;
 use App\Models\Ensemble;
 use App\Models\Program;
@@ -14,6 +15,8 @@ use Livewire\Component;
 
 class Dashboard extends Component
 {
+    use ChecksProgramCompliance;
+
     public int $artistsCount = 0;
 
     public int $ensemblesCount = 0;

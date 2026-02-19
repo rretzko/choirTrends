@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Schools;
 
+use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\School;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -12,10 +13,16 @@ use Livewire\Component;
 
 class Index extends Component
 {
+    use ChecksProgramCompliance;
+
     public string $filter = 'all';
 
     public function render(): View
     {
+        if (! $this->canViewAll() && $this->filter === 'all') {
+            $this->filter = 'my';
+        }
+
         $query = School::query()->with('users.privacy');
 
         if ($this->filter === 'my') {

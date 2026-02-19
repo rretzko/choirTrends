@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\SongTitles;
 
+use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\SongTitle;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -11,6 +12,8 @@ use Livewire\Component;
 
 class Index extends Component
 {
+    use ChecksProgramCompliance;
+
     public string $filter = 'all';
 
     public string $search = '';
@@ -35,6 +38,10 @@ class Index extends Component
 
     public function render(): View
     {
+        if (! $this->canViewAll() && $this->filter === 'all') {
+            $this->filter = 'my';
+        }
+
         // Calculate counts for filters
         $this->allCount = SongTitle::query()->count();
         $this->myCount = SongTitle::query()

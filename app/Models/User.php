@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
+ * @property-read Collection<int, Program> $programs
  * @property-read UserPrivacy|null $privacy
  * @property-read Collection<int, School> $schools
  * @property-read Collection<int, UserLogin> $userLogins
@@ -88,6 +89,11 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    public function programs(): HasMany
+    {
+        return $this->hasMany(Program::class);
     }
 
     public function schools(): BelongsToMany
