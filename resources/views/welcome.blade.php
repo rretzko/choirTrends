@@ -332,7 +332,7 @@
                     <img src="{{ asset('favicon.svg') }}" alt="{{ config('app.name') }}" class="size-5">
                     <span>&copy; {{ date('Y') }} {{ config('app.name') }}</span>
                 </div>
-                <p class="text-xs text-zinc-400 dark:text-zinc-500">Built for choral directors, with a choral director.</p>
+                <p class="text-xs text-zinc-400 dark:text-zinc-500">Built for choral directors, with a choral director (test).</p>
             </div>
         </footer>
 
