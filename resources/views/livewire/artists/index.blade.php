@@ -26,50 +26,31 @@
         <table class="w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
             <colgroup>
                 <col class="w-12" />
+                <col class="w-36" />
                 <col />
-                <col class="w-1/5" />
-                <col class="w-1/5" />
-                <col class="w-24" />
             </colgroup>
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         #
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        <button wire:click="sort('artist_name')" class="flex items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
-                            {{ __('Artist Name') }}
-                            @if ($sortColumn === 'artist_name')
-                                <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
-                            @else
-                                <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
-                            @endif
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        <button wire:click="sort('artist_first_name')" class="flex items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
-                            {{ __('First Name') }}
-                            @if ($sortColumn === 'artist_first_name')
-                                <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
-                            @else
-                                <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
-                            @endif
+                    <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <button wire:click="sort('repertoire_count')" class="mx-auto flex flex-col items-center hover:text-neutral-700 dark:hover:text-neutral-200">
+                            <span class="flex items-center gap-1">
+                                {{ __('Song Titles') }}
+                                @if ($sortColumn === 'repertoire_count')
+                                    <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
+                                @else
+                                    <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
+                                @endif
+                            </span>
+                            <span class="text-xs normal-case tracking-normal">({{ __('click to display') }})</span>
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         <button wire:click="sort('artist_last_name')" class="flex items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
-                            {{ __('Last Name') }}
+                            {{ __('Artist Name') }}
                             @if ($sortColumn === 'artist_last_name')
-                                <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
-                            @else
-                                <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
-                            @endif
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        <button wire:click="sort('repertoire_count')" class="mx-auto flex items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
-                            {{ __('Rep#') }}
-                            @if ($sortColumn === 'repertoire_count')
                                 <flux:icon :name="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="size-3" />
                             @else
                                 <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
@@ -84,15 +65,6 @@
                         <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $loop->iteration }}
                         </td>
-                        <td class="truncate px-6 py-2 text-sm text-neutral-900 dark:text-neutral-100">
-                            {{ $artist->artist_name }}
-                        </td>
-                        <td class="truncate px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
-                            {{ $artist->artist_first_name }}
-                        </td>
-                        <td class="truncate px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
-                            {{ $artist->artist_last_name }}
-                        </td>
                         <td class="whitespace-nowrap px-6 py-2 text-center text-sm">
                             @if ($artist->repertoire_count > 0)
                                 <flux:button wire:click="showRepertoire({{ $artist->id }})" variant="filled" size="sm">
@@ -102,10 +74,13 @@
                                 <span class="text-neutral-500 dark:text-neutral-400">0</span>
                             @endif
                         </td>
+                        <td class="truncate px-6 py-2 text-sm text-neutral-900 dark:text-neutral-100">
+                            {{ $artist->artist_name }}
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                        <td colspan="3" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
                             {{ __('No artists found.') }}
                         </td>
                     </tr>
