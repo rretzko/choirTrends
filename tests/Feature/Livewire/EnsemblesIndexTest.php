@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\EnsembleType;
 use App\Livewire\Ensembles\Index;
 use App\Models\Ensemble;
 use App\Models\School;
@@ -189,4 +190,94 @@ test('school name is shown when owner has no school privacy settings', function 
     Livewire::test(Index::class)
         ->set('filter', 'all')
         ->assertSee('Public School Name');
+});
+
+test('owner can update ensemble type inline', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $user->schools()->attach($school);
+    $ensemble = Ensemble::factory()->for($school)->create(['type' => EnsembleType::Unknown]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('updateType', $ensemble->id, EnsembleType::Satb->value);
+
+    $ensemble->refresh();
+    expect($ensemble->type)->toBe(EnsembleType::Satb);
+});
+
+test('owner can update a_cappella inline', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $user->schools()->attach($school);
+    $ensemble = Ensemble::factory()->for($school)->create(['a_cappella' => false]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('updateACappella', $ensemble->id, true);
+
+    $ensemble->refresh();
+    expect($ensemble->a_cappella)->toBeTrue();
+});
+
+test('non-owner cannot update ensemble type inline', function () {
+    $owner = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $school = School::factory()->create();
+    $owner->schools()->attach($school);
+    $ensemble = Ensemble::factory()->for($school)->create(['type' => EnsembleType::Unknown]);
+
+    $this->actingAs($otherUser);
+
+    Livewire::test(Index::class)
+        ->call('updateType', $ensemble->id, EnsembleType::Satb->value)
+        ->assertForbidden();
+
+    $ensemble->refresh();
+    expect($ensemble->type)->toBe(EnsembleType::Unknown);
+});
+
+test('non-owner cannot update a_cappella inline', function () {
+    $owner = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $school = School::factory()->create();
+    $owner->schools()->attach($school);
+    $ensemble = Ensemble::factory()->for($school)->create(['a_cappella' => false]);
+
+    $this->actingAs($otherUser);
+
+    Livewire::test(Index::class)
+        ->call('updateACappella', $ensemble->id, true)
+        ->assertForbidden();
+
+    $ensemble->refresh();
+    expect($ensemble->a_cappella)->toBeFalse();
+});
+
+test('updateType rejects invalid enum value', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $user->schools()->attach($school);
+    $ensemble = Ensemble::factory()->for($school)->create(['type' => EnsembleType::Unknown]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('updateType', $ensemble->id, 'InvalidType')
+        ->assertStatus(422);
+
+    $ensemble->refresh();
+    expect($ensemble->type)->toBe(EnsembleType::Unknown);
+});
+
+test('new ensemble defaults to unknown type and not a_cappella', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $user->schools()->attach($school);
+    $ensemble = Ensemble::factory()->for($school)->create();
+
+    expect($ensemble->type)->toBe(EnsembleType::Unknown)
+        ->and($ensemble->a_cappella)->toBeFalse();
 });

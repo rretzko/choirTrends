@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\EnsembleType;
 use App\Models\School;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -33,6 +34,8 @@ class EnsembleFactory extends Factory
         return [
             'school_id' => School::factory(),
             'ensemble_name' => fake()->randomElement($ensembleTypes),
+            'type' => EnsembleType::Unknown,
+            'a_cappella' => false,
         ];
     }
 }

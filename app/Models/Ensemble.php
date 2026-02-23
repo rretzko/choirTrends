@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\EnsembleType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property EnsembleType $type
+ * @property-read School|null $school
+ */
 class Ensemble extends Model
 {
     /** @use HasFactory<\Database\Factories\EnsembleFactory> */
@@ -16,7 +21,20 @@ class Ensemble extends Model
     protected $fillable = [
         'school_id',
         'ensemble_name',
+        'type',
+        'a_cappella',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'type' => EnsembleType::class,
+            'a_cappella' => 'boolean',
+        ];
+    }
 
     public function school(): BelongsTo
     {
