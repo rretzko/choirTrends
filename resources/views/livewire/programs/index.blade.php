@@ -2,7 +2,7 @@
     <div class="mb-6 space-y-4">
         <flux:heading size="xl">{{ __('Programs') }}</flux:heading>
 
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-start space-x-2">
             <flux:button href="{{ route('addProgram') }}" variant="primary" size="sm" icon="plus">
                 {{ __('Add Program') }}
             </flux:button>

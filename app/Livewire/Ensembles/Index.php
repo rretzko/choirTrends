@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Ensembles;
 
+use App\Enums\EnsembleType;
 use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\Ensemble;
 use App\Models\School;
@@ -17,6 +18,27 @@ class Index extends Component
     use ChecksProgramCompliance;
 
     public string $filter = 'all';
+
+    public function updateType(int $ensembleId, string $type): void
+    {
+        $ensemble = Ensemble::findOrFail($ensembleId);
+        $ensemble->load('school.users');
+        abort_unless($ensemble->school?->users->contains('id', Auth::id()) ?? false, 403);
+
+        $ensembleType = EnsembleType::tryFrom($type);
+        abort_unless($ensembleType !== null, 422);
+
+        $ensemble->update(['type' => $ensembleType]);
+    }
+
+    public function updateACappella(int $ensembleId, bool $value): void
+    {
+        $ensemble = Ensemble::findOrFail($ensembleId);
+        $ensemble->load('school.users');
+        abort_unless($ensemble->school?->users->contains('id', Auth::id()) ?? false, 403);
+
+        $ensemble->update(['a_cappella' => $value]);
+    }
 
     public function render(): View
     {
@@ -39,7 +61,7 @@ class Index extends Component
             ->orderBy('ensembles.ensemble_name')
             ->get();
 
-        // Apply privacy masking
+        // Apply privacy masking and ownership check
         /** @var int $currentUserId */
         $currentUserId = Auth::id();
 
@@ -49,9 +71,13 @@ class Index extends Component
         /** @var array<int, string> $schoolDisplayNames */
         $schoolDisplayNames = [];
 
+        /** @var array<int, bool> $ownedEnsembleIds */
+        $ownedEnsembleIds = [];
+
         foreach ($ensembles as $ensemble) {
             $displayNames[$ensemble->id] = $this->getDisplayName($ensemble, $currentUserId);
             $schoolDisplayNames[$ensemble->id] = $this->getDisplaySchoolName($ensemble, $currentUserId);
+            $ownedEnsembleIds[$ensemble->id] = $ensemble->school?->users->contains('id', $currentUserId) ?? false;
         }
 
         $myCount = Ensemble::whereHas('school.users', function ($q) {
@@ -63,6 +89,7 @@ class Index extends Component
             'ensembles' => $ensembles,
             'displayNames' => $displayNames,
             'schoolDisplayNames' => $schoolDisplayNames,
+            'ownedEnsembleIds' => $ownedEnsembleIds,
             'myCount' => $myCount,
             'allCount' => $allCount,
         ])->layout('components.layouts.app', ['title' => __('Ensembles')]);

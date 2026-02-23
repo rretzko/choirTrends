@@ -19,6 +19,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('artists', App\Livewire\Artists\Index::class)->name('artists.index');
     Route::get('ensembles', App\Livewire\Ensembles\Index::class)->name('ensembles.index');
+    Route::get('ensembles/{ensemble}/edit', App\Livewire\Ensembles\Edit::class)->name('ensembles.edit');
     Route::get('programs', App\Livewire\Programs\Index::class)->name('programs.index');
     Route::get('programs/{program}/edit', App\Livewire\Programs\Edit::class)->name('programs.edit');
     Route::get('schools', App\Livewire\Schools\Index::class)->name('schools.index');
