@@ -23,11 +23,65 @@
     </div>
 
     <div class="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-        <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+        <table class="min-w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
+            <colgroup>
+                <col />
+                <col class="w-24" />
+                <col class="w-24" />
+                <col class="w-36" />
+                <col class="w-24" />
+            </colgroup>
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        {{ __('School Name') }}
+                    <th wire:click="sort('school_name')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <div class="flex items-center gap-1">
+                            {{ __('School Name') }}
+                            @if ($sortBy === 'school_name')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
+                    </th>
+                    <th wire:click="sort('programs_count')" class="cursor-pointer px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <div class="flex items-center justify-center gap-1">
+                            {{ __('Programs') }}
+                            @if ($sortBy === 'programs_count')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
+                    </th>
+                    <th wire:click="sort('ensembles_count')" class="cursor-pointer px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <div class="flex items-center justify-center gap-1">
+                            {{ __('Ensembles') }}
+                            @if ($sortBy === 'ensembles_count')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
+                    </th>
+                    <th wire:click="sort('artists_count')" class="cursor-pointer px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <div class="flex items-center justify-center gap-1">
+                            {{ __('Composers/Arrangers') }}
+                            @if ($sortBy === 'artists_count')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
+                    </th>
+                    <th wire:click="sort('songs_count')" class="cursor-pointer px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <div class="flex items-center justify-center gap-1">
+                            {{ __('Song Titles') }}
+                            @if ($sortBy === 'songs_count')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
                     </th>
                 </tr>
             </thead>
@@ -37,10 +91,22 @@
                         <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-900 dark:text-neutral-100">
                             {{ $displayNames[$school->id] }}
                         </td>
+                        <td class="whitespace-nowrap px-3 py-2 text-center text-sm text-neutral-900 dark:text-neutral-100">
+                            {{ $school->programs_count }}
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-2 text-center text-sm text-neutral-900 dark:text-neutral-100">
+                            {{ $school->ensembles_count }}
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-2 text-center text-sm text-neutral-900 dark:text-neutral-100">
+                            {{ $artistsCounts[$school->id] ?? 0 }}
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-2 text-center text-sm text-neutral-900 dark:text-neutral-100">
+                            {{ $songsCounts[$school->id] ?? 0 }}
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                        <td colspan="5" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
                             {{ __('No schools found.') }}
                         </td>
                     </tr>
