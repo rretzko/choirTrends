@@ -7,6 +7,7 @@ namespace App\Livewire\Programs;
 use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\Ensemble;
 use App\Models\Program;
+use App\Models\School;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -17,6 +18,9 @@ class Index extends Component
     use ChecksProgramCompliance;
 
     public string $filter = 'all';
+
+    /** @var array<int, string> */
+    public array $schoolFilter = [];
 
     public string $sortBy = 'school';
 
@@ -37,11 +41,33 @@ class Index extends Component
         }
     }
 
+    public function updatedFilter(): void
+    {
+        $this->schoolFilter = $this->getUserSchoolIds();
+    }
+
+    public function clearSchoolFilter(): void
+    {
+        $this->schoolFilter = [];
+    }
+
     public function mount(): void
     {
         /** @var Collection<int, array<string, mixed>> $empty */
         $empty = collect();
         $this->songsByEnsemble = $empty;
+
+        $this->schoolFilter = $this->getUserSchoolIds();
+    }
+
+    /** @return array<int, string> */
+    private function getUserSchoolIds(): array
+    {
+        return Program::where('user_id', Auth::id())
+            ->distinct()
+            ->pluck('school_id')
+            ->map(fn (int $id): string => (string) $id)
+            ->toArray();
     }
 
     public function showProgramDetails(int $programId): void
@@ -111,6 +137,10 @@ class Index extends Component
             $query->where('user_id', Auth::id());
         }
 
+        if ($this->schoolFilter !== []) {
+            $query->whereIn('school_id', $this->schoolFilter);
+        }
+
         $query->join('schools', 'programs.school_id', '=', 'schools.id')
             ->select('programs.*');
 
@@ -149,9 +179,37 @@ class Index extends Component
             ];
         }
 
+        // Load schools for dropdown (respects privacy, independent of schoolFilter)
+        $schools = School::query()
+            ->whereHas('programs', function ($q) use ($currentUserId) {
+                if ($this->filter === 'my') {
+                    $q->where('user_id', $currentUserId);
+                } else {
+                    $q->where('user_id', $currentUserId)
+                        ->orWhereHas('user', function ($uq) {
+                            $uq->whereDoesntHave('privacy')
+                                ->orWhereHas('privacy', function ($pq) {
+                                    $pq->where(function ($inner) {
+                                        $inner->where('school', false)->orWhereNull('school');
+                                    });
+                                });
+                        });
+                }
+            })
+            ->orderBy('school_name')
+            ->get();
+
+        $schoolFilterLabel = match (true) {
+            $this->schoolFilter === [] => __('All Schools'),
+            count($this->schoolFilter) === 1 => $schools->firstWhere('id', (int) $this->schoolFilter[0])->school_name ?? __('1 School'),
+            default => count($this->schoolFilter).' '.__('Schools'),
+        };
+
         return view('livewire.programs.index', [
             'programs' => $programs,
             'displayData' => $displayData,
+            'schools' => $schools,
+            'schoolFilterLabel' => $schoolFilterLabel,
         ])->layout('components.layouts.app', ['title' => __('Programs')]);
     }
 

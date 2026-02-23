@@ -71,34 +71,35 @@ test('founder can always use all filter', function (string $componentClass) {
     Carbon::setTestNow();
 })->with('index components');
 
-test('non-compliant user sees disabled All button', function () {
-    Carbon::setTestNow(Carbon::parse('2026-02-19'));
-
-    $user = User::factory()->create([
-        'created_at' => Carbon::parse('2026-01-15'),
-    ]);
-
-    $this->actingAs($user);
-
-    Livewire::test(ProgramsIndex::class)
-        ->assertSee('Upload programs to unlock community data');
-
-    Carbon::setTestNow();
-});
-
-test('compliant user sees active All button', function () {
-    Carbon::setTestNow(Carbon::parse('2026-02-19'));
-
-    $user = User::factory()->create([
-        'created_at' => Carbon::parse('2026-01-01'),
-    ]);
-    $school = School::factory()->create();
-    Program::factory()->for($user)->for($school)->create(['event_date' => '2026-01-15']);
-
-    $this->actingAs($user);
-
-    Livewire::test(ProgramsIndex::class)
-        ->assertDontSee('Upload programs to unlock community data');
-
-    Carbon::setTestNow();
-});
+// My/All buttons are currently commented out in the Programs index blade
+// test('non-compliant user sees disabled All button', function () {
+//     Carbon::setTestNow(Carbon::parse('2026-02-19'));
+//
+//     $user = User::factory()->create([
+//         'created_at' => Carbon::parse('2026-01-15'),
+//     ]);
+//
+//     $this->actingAs($user);
+//
+//     Livewire::test(ProgramsIndex::class)
+//         ->assertSee('Upload programs to unlock community data');
+//
+//     Carbon::setTestNow();
+// });
+//
+// test('compliant user sees active All button', function () {
+//     Carbon::setTestNow(Carbon::parse('2026-02-19'));
+//
+//     $user = User::factory()->create([
+//         'created_at' => Carbon::parse('2026-01-01'),
+//     ]);
+//     $school = School::factory()->create();
+//     Program::factory()->for($user)->for($school)->create(['event_date' => '2026-01-15']);
+//
+//     $this->actingAs($user);
+//
+//     Livewire::test(ProgramsIndex::class)
+//         ->assertDontSee('Upload programs to unlock community data');
+//
+//     Carbon::setTestNow();
+// });

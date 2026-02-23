@@ -291,3 +291,119 @@ test('program details modal shows songs without ensemble under Other', function 
         ->assertSee('Other')
         ->assertSee('Orphan Song');
 });
+
+test('school filter filters programs by school', function () {
+    $user = User::factory()->create();
+    $schoolA = School::factory()->create(['school_name' => 'Alpha School']);
+    $schoolB = School::factory()->create(['school_name' => 'Beta School']);
+
+    Program::factory()->for($user)->for($schoolA)->create(['event_name' => 'Alpha Concert']);
+    Program::factory()->for($user)->for($schoolB)->create(['event_name' => 'Beta Concert']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->assertSee('Alpha Concert')
+        ->assertSee('Beta Concert')
+        ->set('schoolFilter', [(string) $schoolA->id])
+        ->assertSee('Alpha Concert')
+        ->assertDontSee('Beta Concert')
+        ->set('schoolFilter', [])
+        ->assertSee('Alpha Concert')
+        ->assertSee('Beta Concert');
+});
+
+test('school filter supports multiple schools', function () {
+    $user = User::factory()->create();
+    $schoolA = School::factory()->create(['school_name' => 'Alpha School']);
+    $schoolB = School::factory()->create(['school_name' => 'Beta School']);
+    $schoolC = School::factory()->create(['school_name' => 'Gamma School']);
+
+    Program::factory()->for($user)->for($schoolA)->create(['event_name' => 'Alpha Concert']);
+    Program::factory()->for($user)->for($schoolB)->create(['event_name' => 'Beta Concert']);
+    Program::factory()->for($user)->for($schoolC)->create(['event_name' => 'Gamma Concert']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('schoolFilter', [(string) $schoolA->id, (string) $schoolB->id])
+        ->assertSee('Alpha Concert')
+        ->assertSee('Beta Concert')
+        ->assertDontSee('Gamma Concert');
+});
+
+test('school filter defaults to user schools', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    Program::factory()->for($user)->for($school)->create();
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Index::class);
+
+    expect($component->get('schoolFilter'))->toBe([(string) $school->id]);
+});
+
+test('school filter resets to user schools when my/all filter changes', function () {
+    $user = User::factory()->create();
+    $schoolA = School::factory()->create();
+    $schoolB = School::factory()->create();
+    Program::factory()->for($user)->for($schoolA)->create();
+
+    $otherUser = User::factory()->create();
+    Program::factory()->for($otherUser)->for($schoolB)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('schoolFilter', [(string) $schoolA->id, (string) $schoolB->id])
+        ->set('filter', 'my')
+        ->assertSet('schoolFilter', [(string) $schoolA->id]);
+});
+
+test('school dropdown only shows schools with visible programs', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    UserPrivacy::factory()->create([
+        'user_id' => $otherUser->id,
+        'school' => true,
+    ]);
+
+    $visibleSchool = School::factory()->create(['school_name' => 'Public School']);
+    $hiddenSchool = School::factory()->create(['school_name' => 'Private School']);
+
+    Program::factory()->for($user)->for($visibleSchool)->create();
+    Program::factory()->for($otherUser)->for($hiddenSchool)->create();
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Index::class)
+        ->set('filter', 'all');
+
+    $schools = $component->viewData('schools');
+    $schoolNames = $schools->pluck('school_name')->all();
+
+    expect($schoolNames)->toContain('Public School');
+    expect($schoolNames)->not->toContain('Private School');
+});
+
+test('school dropdown shows all user schools in my filter', function () {
+    $user = User::factory()->create();
+    $schoolA = School::factory()->create(['school_name' => 'First School']);
+    $schoolB = School::factory()->create(['school_name' => 'Second School']);
+
+    Program::factory()->for($user)->for($schoolA)->create();
+    Program::factory()->for($user)->for($schoolB)->create();
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Index::class)
+        ->set('filter', 'my');
+
+    $schools = $component->viewData('schools');
+    $schoolNames = $schools->pluck('school_name')->all();
+
+    expect($schoolNames)->toContain('First School');
+    expect($schoolNames)->toContain('Second School');
+});
