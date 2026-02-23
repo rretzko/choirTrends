@@ -22,7 +22,32 @@
         </div>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
+    {{-- Mobile card layout --}}
+    <div class="space-y-2 md:hidden">
+        @forelse ($artists as $artist)
+            <div wire:key="artist-card-{{ $artist->id }}" class="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="min-w-0 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ $artist->artist_name }}
+                    </div>
+                    @if ($artist->repertoire_count > 0)
+                        <flux:button wire:click="showRepertoire({{ $artist->id }})" variant="filled" size="sm">
+                            {{ $artist->repertoire_count }}
+                        </flux:button>
+                    @else
+                        <span class="text-sm text-neutral-500 dark:text-neutral-400">0</span>
+                    @endif
+                </div>
+            </div>
+        @empty
+            <div class="rounded-xl border border-neutral-200 px-6 py-12 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+                {{ __('No artists found.') }}
+            </div>
+        @endforelse
+    </div>
+
+    {{-- Desktop table layout --}}
+    <div class="hidden overflow-hidden rounded-xl border border-neutral-200 md:block dark:border-neutral-700">
         <table class="w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
             <colgroup>
                 <col class="w-12" />

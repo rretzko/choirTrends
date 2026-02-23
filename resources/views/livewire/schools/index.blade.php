@@ -22,7 +22,29 @@
         </div>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
+    {{-- Mobile card layout --}}
+    <div class="space-y-2 md:hidden">
+        @forelse ($schools as $school)
+            <div wire:key="school-card-{{ $school->id }}" class="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+                <div class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    {{ $displayNames[$school->id] }}
+                </div>
+                <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    <span>{{ __('Programs') }}: {{ $school->programs_count }}</span>
+                    <span>{{ __('Ensembles') }}: {{ $school->ensembles_count }}</span>
+                    <span>{{ __('Artists') }}: {{ $artistsCounts[$school->id] ?? 0 }}</span>
+                    <span>{{ __('Songs') }}: {{ $songsCounts[$school->id] ?? 0 }}</span>
+                </div>
+            </div>
+        @empty
+            <div class="rounded-xl border border-neutral-200 px-6 py-12 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+                {{ __('No schools found.') }}
+            </div>
+        @endforelse
+    </div>
+
+    {{-- Desktop table layout --}}
+    <div class="hidden overflow-hidden rounded-xl border border-neutral-200 md:block dark:border-neutral-700">
         <table class="min-w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
             <colgroup>
                 <col />
