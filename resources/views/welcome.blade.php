@@ -72,7 +72,7 @@
                         Submit your past concert programs to discover trends in repertoire, composers, and arrangers across the choral community.
                     </p>
 
-                    <a href="https://choirtrends.s3.us-east-1.amazonaws.com/mp4s/ChoirTrends-v2.mp4" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 dark:bg-white/5 border border-teal-300/40 dark:border-teal-600/40 text-teal-700 dark:text-teal-300 text-sm font-medium hover:bg-teal-50 dark:hover:bg-teal-950/50 transition-colors backdrop-blur-sm my-6">
+                    <a href="https://choirtrends.s3.us-east-1.amazonaws.com/mp4s/ChoirTrends-v3.mp4" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 dark:bg-white/5 border border-teal-300/40 dark:border-teal-600/40 text-teal-700 dark:text-teal-300 text-sm font-medium hover:bg-teal-50 dark:hover:bg-teal-950/50 transition-colors backdrop-blur-sm my-6">
                         <svg class="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                         Watch the Overview
                     </a>
