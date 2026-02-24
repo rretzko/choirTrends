@@ -6,10 +6,10 @@
     <body class="min-h-screen bg-blue-100 dark:bg-zinc-800">
         <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
-                <a href="{{ route('dashboard') }}" class="flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+                <a href="{{ route('dashboard') }}" class="flex items-center space-x-2 rtl:space-x-reverse in-data-flux-sidebar-collapsed-desktop:hidden" wire:navigate>
                     <x-app-logo />
                 </a>
-                <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
+                <flux:sidebar.collapse class="in-data-flux-sidebar-collapsed-desktop:!opacity-100 in-data-flux-sidebar-collapsed-desktop:!relative" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
