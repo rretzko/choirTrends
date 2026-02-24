@@ -148,7 +148,11 @@ class Edit extends Component
                     if ($ensembleData['id'] && $ensembleData['editable']) {
                         $ensemble = Ensemble::find($ensembleData['id']);
                         if ($ensemble && $ensemble->ensemble_name !== $ensembleData['name']) {
-                            $ensemble->update(['ensemble_name' => $ensembleData['name']]);
+                            // If an ensemble with the new name already exists for this school, reuse it
+                            $existing = Ensemble::where('school_id', $this->program->school_id)
+                                ->where('ensemble_name', $ensembleData['name'])
+                                ->first();
+                            $ensemble = $existing ?? tap($ensemble, fn (Ensemble $e) => $e->update(['ensemble_name' => $ensembleData['name']]));
                         }
                     } elseif ($ensembleData['id'] && ! $ensembleData['editable']) {
                         $ensemble = Ensemble::find($ensembleData['id']);

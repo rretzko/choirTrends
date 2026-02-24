@@ -495,3 +495,29 @@ test('can rename an editable ensemble', function () {
     $ensemble->refresh();
     expect($ensemble->ensemble_name)->toBe('New Name');
 });
+
+test('renaming ensemble to existing name reuses existing ensemble', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $chorus = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'Chorus']);
+    $chorus2 = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'Chorus 2']);
+
+    $song = SongTitle::factory()->create(['song_title' => 'Test Song']);
+    $program->songTitles()->attach($song->id, ['ensemble_id' => $chorus2->id]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Edit::class, ['program' => $program])
+        ->set('ensembles.0.name', 'Chorus')
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('programs.index'));
+
+    $program->refresh();
+    $program->load('songTitles');
+
+    // Song should now be linked to the existing "Chorus" ensemble
+    expect($program->songTitles->first()->pivot->ensemble_id)->toBe($chorus->id);
+});
