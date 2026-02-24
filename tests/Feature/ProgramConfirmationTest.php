@@ -693,3 +693,44 @@ test('songs with empty titles are skipped', function () {
     $program = Program::where('user_id', $user->id)->first();
     expect($program->songTitles)->toHaveCount(2);
 });
+
+test('sort_order is assigned sequentially per ensemble during confirmation', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Sort Order Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Sort Order School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'First Song', 'composer' => null, 'arranger' => null, 'notes' => null],
+                    ['title' => 'Second Song', 'composer' => null, 'arranger' => null, 'notes' => null],
+                    ['title' => 'Third Song', 'composer' => null, 'arranger' => null, 'notes' => null],
+                ],
+            ],
+            [
+                'name' => 'Jazz Choir',
+                'songs' => [
+                    ['title' => 'Jazz First', 'composer' => null, 'arranger' => null, 'notes' => null],
+                    ['title' => 'Jazz Second', 'composer' => null, 'arranger' => null, 'notes' => null],
+                ],
+            ],
+        ],
+    ]);
+
+    $program = Program::where('user_id', $user->id)->first();
+    $songs = $program->songTitles;
+
+    expect($songs)->toHaveCount(5);
+
+    // Concert Choir songs should have sort_order 1, 2, 3
+    $choirSongs = $songs->filter(fn ($s) => str_starts_with($s->song_title, 'First') || str_starts_with($s->song_title, 'Second') || str_starts_with($s->song_title, 'Third'));
+    expect($choirSongs->pluck('pivot.sort_order')->sort()->values()->all())->toBe([1, 2, 3]);
+
+    // Jazz Choir songs should have sort_order 1, 2 (resets per ensemble)
+    $jazzSongs = $songs->filter(fn ($s) => str_starts_with($s->song_title, 'Jazz'));
+    expect($jazzSongs->pluck('pivot.sort_order')->sort()->values()->all())->toBe([1, 2]);
+});

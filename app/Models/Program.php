@@ -45,7 +45,9 @@ class Program extends Model
 
     public function songTitles(): BelongsToMany
     {
-        return $this->belongsToMany(SongTitle::class)->withPivot('ensemble_id');
+        return $this->belongsToMany(SongTitle::class)
+            ->withPivot('ensemble_id', 'sort_order')
+            ->orderByPivot('sort_order');
     }
 
     public function ensembles(): BelongsToMany

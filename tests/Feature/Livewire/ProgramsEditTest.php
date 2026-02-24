@@ -375,7 +375,7 @@ test('saving creates new song title record when editing to different values', fu
         'song_title' => 'Original Title',
         'composer_id' => $composer->id,
     ]);
-    $program->songTitles()->attach($originalSong->id);
+    $program->songTitles()->attach($originalSong->id, ['sort_order' => 1]);
 
     $originalSongCount = SongTitle::count();
 
@@ -406,7 +406,7 @@ test('saving reuses existing song title record when values match', function () {
     ]);
 
     $anotherSong = SongTitle::factory()->create(['song_title' => 'My Song']);
-    $program->songTitles()->attach($anotherSong->id);
+    $program->songTitles()->attach($anotherSong->id, ['sort_order' => 1]);
 
     $this->actingAs($user);
 
@@ -483,7 +483,7 @@ test('can rename an editable ensemble', function () {
 
     $ensemble = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'Old Name']);
     $song = SongTitle::factory()->create(['song_title' => 'Test Song']);
-    $program->songTitles()->attach($song->id, ['ensemble_id' => $ensemble->id]);
+    $program->songTitles()->attach($song->id, ['ensemble_id' => $ensemble->id, 'sort_order' => 1]);
 
     $this->actingAs($user);
 
@@ -505,7 +505,7 @@ test('renaming ensemble to existing name reuses existing ensemble', function () 
     $chorus2 = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'Chorus 2']);
 
     $song = SongTitle::factory()->create(['song_title' => 'Test Song']);
-    $program->songTitles()->attach($song->id, ['ensemble_id' => $chorus2->id]);
+    $program->songTitles()->attach($song->id, ['ensemble_id' => $chorus2->id, 'sort_order' => 1]);
 
     $this->actingAs($user);
 
@@ -520,4 +520,67 @@ test('renaming ensemble to existing name reuses existing ensemble', function () 
 
     // Song should now be linked to the existing "Chorus" ensemble
     expect($program->songTitles->first()->pivot->ensemble_id)->toBe($chorus->id);
+});
+
+test('sort_order is assigned sequentially per ensemble when saving', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Edit::class, ['program' => $program])
+        ->call('addEnsemble')
+        ->set('ensembles.0.name', 'Concert Choir')
+        ->set('ensembles.0.songs.0.title', 'First Song')
+        ->call('addSong', 0)
+        ->set('ensembles.0.songs.1.title', 'Second Song')
+        ->call('addSong', 0)
+        ->set('ensembles.0.songs.2.title', 'Third Song')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $program->refresh();
+    $songs = $program->songTitles;
+
+    expect($songs)->toHaveCount(3);
+    expect($songs[0]->song_title)->toBe('First Song');
+    expect($songs[0]->pivot->sort_order)->toBe(1);
+    expect($songs[1]->song_title)->toBe('Second Song');
+    expect($songs[1]->pivot->sort_order)->toBe(2);
+    expect($songs[2]->song_title)->toBe('Third Song');
+    expect($songs[2]->pivot->sort_order)->toBe(3);
+});
+
+test('sort_order resets per ensemble within a program', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Edit::class, ['program' => $program])
+        ->call('addEnsemble')
+        ->set('ensembles.0.name', 'Concert Choir')
+        ->set('ensembles.0.songs.0.title', 'Choir Song A')
+        ->call('addSong', 0)
+        ->set('ensembles.0.songs.1.title', 'Choir Song B')
+        ->call('addEnsemble')
+        ->set('ensembles.1.name', 'Jazz Choir')
+        ->set('ensembles.1.songs.0.title', 'Jazz Song A')
+        ->call('addSong', 1)
+        ->set('ensembles.1.songs.1.title', 'Jazz Song B')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $program->refresh();
+    $songs = $program->songTitles;
+
+    // Concert Choir songs: sort_order 1, 2
+    $choirSongs = $songs->filter(fn ($s) => str_starts_with($s->song_title, 'Choir'));
+    expect($choirSongs->pluck('pivot.sort_order')->sort()->values()->all())->toBe([1, 2]);
+
+    // Jazz Choir songs: sort_order 1, 2 (resets per ensemble)
+    $jazzSongs = $songs->filter(fn ($s) => str_starts_with($s->song_title, 'Jazz'));
+    expect($jazzSongs->pluck('pivot.sort_order')->sort()->values()->all())->toBe([1, 2]);
 });

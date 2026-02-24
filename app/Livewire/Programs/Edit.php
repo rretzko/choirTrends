@@ -29,7 +29,7 @@ class Edit extends Component
 
     public bool $schoolEditable = true;
 
-    /** @var array<int, array{id: int|null, name: string, editable: bool, songs: list<array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null}>}> */
+    /** @var array<int, array{id: int|null, name: string, editable: bool, songs: list<array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int}>}> */
     public array $ensembles = [];
 
     public function mount(Program $program): void
@@ -63,6 +63,7 @@ class Edit extends Component
                     'arrangerEditable' => true,
                     'composerId' => null,
                     'arrangerId' => null,
+                    'sortOrder' => 1,
                 ],
             ],
         ];
@@ -76,6 +77,8 @@ class Edit extends Component
 
     public function addSong(int $ensembleIndex): void
     {
+        $maxSortOrder = max(array_column($this->ensembles[$ensembleIndex]['songs'], 'sortOrder') ?: [0]);
+
         $this->ensembles[$ensembleIndex]['songs'][] = [
             'songTitleId' => null,
             'title' => '',
@@ -86,6 +89,7 @@ class Edit extends Component
             'arrangerEditable' => true,
             'composerId' => null,
             'arrangerId' => null,
+            'sortOrder' => $maxSortOrder + 1,
         ];
     }
 
@@ -106,6 +110,7 @@ class Edit extends Component
             'ensembles.*.songs.*.title' => ['required', 'string', 'max:255'],
             'ensembles.*.songs.*.composer' => ['nullable', 'string', 'max:255'],
             'ensembles.*.songs.*.arranger' => ['nullable', 'string', 'max:255'],
+            'ensembles.*.songs.*.sortOrder' => ['required', 'integer', 'min:1'],
         ]);
 
         $duplicate = Program::query()
@@ -203,7 +208,10 @@ class Edit extends Component
                         'arranger_id' => $arrangerId,
                     ]);
 
-                    $songTitleAttachments[$songTitle->id] = ['ensemble_id' => $ensemble?->id];
+                    $songTitleAttachments[$songTitle->id] = [
+                        'ensemble_id' => $ensemble?->id,
+                        'sort_order' => (int) $songData['sortOrder'],
+                    ];
                 }
             }
 
@@ -287,6 +295,7 @@ class Edit extends Component
                     'arrangerEditable' => $arrangerEditable,
                     'composerId' => $songTitle->composer_id,
                     'arrangerId' => $songTitle->arranger_id,
+                    'sortOrder' => $songTitle->pivot->sort_order ?? 0,
                 ];
             }
 

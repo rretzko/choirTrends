@@ -175,6 +175,7 @@ class FounderAddProgramController extends Controller
                 // Process ensembles and songs from user-submitted form data
                 $ensembles = $validated['ensembles'] ?? [];
                 $songTitleAttachments = [];
+                $ensembleSongOrder = [];
                 $artistNameParser = new ArtistNameParser;
 
                 foreach ($ensembles as $ensembleData) {
@@ -184,6 +185,11 @@ class FounderAddProgramController extends Controller
                             'school_id' => $school->id,
                             'ensemble_name' => $ensembleData['name'],
                         ]);
+                    }
+
+                    $ensembleKey = $ensemble?->id ?? 0;
+                    if (! isset($ensembleSongOrder[$ensembleKey])) {
+                        $ensembleSongOrder[$ensembleKey] = 0;
                     }
 
                     if (isset($ensembleData['songs']) && is_array($ensembleData['songs'])) {
@@ -219,7 +225,11 @@ class FounderAddProgramController extends Controller
                                 'arranger_id' => $arrangerId,
                             ]);
 
-                            $songTitleAttachments[$songTitle->id] = ['ensemble_id' => $ensemble?->id];
+                            $ensembleSongOrder[$ensembleKey]++;
+                            $songTitleAttachments[$songTitle->id] = [
+                                'ensemble_id' => $ensemble?->id,
+                                'sort_order' => $ensembleSongOrder[$ensembleKey],
+                            ];
                         }
                     }
                 }

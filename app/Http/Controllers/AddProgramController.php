@@ -157,6 +157,7 @@ class AddProgramController extends Controller
                 // Process ensembles and songs from user-submitted form data
                 $ensembles = $validated['ensembles'] ?? [];
                 $songTitleAttachments = [];
+                $ensembleSongOrder = [];
                 $artistNameParser = new ArtistNameParser;
 
                 foreach ($ensembles as $ensembleData) {
@@ -166,6 +167,11 @@ class AddProgramController extends Controller
                             'school_id' => $school->id,
                             'ensemble_name' => $ensembleData['name'],
                         ]);
+                    }
+
+                    $ensembleKey = $ensemble?->id ?? 0;
+                    if (! isset($ensembleSongOrder[$ensembleKey])) {
+                        $ensembleSongOrder[$ensembleKey] = 0;
                     }
 
                     // Process songs for this ensemble
@@ -205,8 +211,12 @@ class AddProgramController extends Controller
                                 'arranger_id' => $arrangerId,
                             ]);
 
-                            // Store song title with its ensemble for attachment
-                            $songTitleAttachments[$songTitle->id] = ['ensemble_id' => $ensemble?->id];
+                            // Store song title with its ensemble and sort order for attachment
+                            $ensembleSongOrder[$ensembleKey]++;
+                            $songTitleAttachments[$songTitle->id] = [
+                                'ensemble_id' => $ensemble?->id,
+                                'sort_order' => $ensembleSongOrder[$ensembleKey],
+                            ];
                         }
                     }
                 }

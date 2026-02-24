@@ -60,6 +60,11 @@
                 {{-- Songs --}}
                 @foreach ($ensemble['songs'] as $sIndex => $song)
                     <div wire:key="song-{{ $eIndex }}-{{ $sIndex }}" class="mb-4 ml-4 flex items-start gap-2 rounded border border-neutral-100 p-3 dark:border-neutral-800">
+                        <flux:field class="w-16 shrink-0">
+                            <flux:label>{{ __('Order') }}</flux:label>
+                            <flux:input wire:model="ensembles.{{ $eIndex }}.songs.{{ $sIndex }}.sortOrder" type="number" min="1" />
+                        </flux:field>
+
                         <div class="grid grow grid-cols-1 gap-4 sm:grid-cols-3">
                             <flux:field>
                                 <flux:label class="!flex w-full justify-between">

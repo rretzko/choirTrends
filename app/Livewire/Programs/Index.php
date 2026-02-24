@@ -151,18 +151,21 @@ class Index extends Component
                 default => 'schools.school_name',
             };
             $query->orderBy($sortColumn, $this->sortDirection);
+
+            if ($this->sortBy !== 'event_date') {
+                $query->orderBy('programs.event_date', 'desc');
+            }
         }
 
         $programs = $query->get();
 
         if ($this->sortBy === 'director') {
-            $sorted = $programs->sortBy(function (Program $program) {
-                $parts = explode(' ', $program->director_name ?? '');
-                $lastName = end($parts);
-                $firstName = count($parts) > 1 ? $parts[count($parts) - 2] : '';
-
-                return mb_strtolower($lastName).' '.mb_strtolower($firstName);
-            }, SORT_STRING, $this->sortDirection === 'desc');
+            $sorted = $programs->sortBy([
+                fn (Program $a, Program $b) => $this->sortDirection === 'desc'
+                    ? $this->compareDirectorNames($b, $a)
+                    : $this->compareDirectorNames($a, $b),
+                fn (Program $a, Program $b) => $b->event_date <=> $a->event_date,
+            ]);
             $programs = $sorted->values();
         }
 
@@ -241,5 +244,23 @@ class Index extends Component
         }
 
         return $program->director_name ?? '';
+    }
+
+    private function compareDirectorNames(Program $a, Program $b): int
+    {
+        $partsA = explode(' ', $a->director_name ?? '');
+        $partsB = explode(' ', $b->director_name ?? '');
+
+        $lastA = mb_strtolower(end($partsA));
+        $lastB = mb_strtolower(end($partsB));
+
+        if ($lastA !== $lastB) {
+            return $lastA <=> $lastB;
+        }
+
+        $firstA = mb_strtolower(count($partsA) > 1 ? $partsA[count($partsA) - 2] : '');
+        $firstB = mb_strtolower(count($partsB) > 1 ? $partsB[count($partsB) - 2] : '');
+
+        return $firstA <=> $firstB;
     }
 }
