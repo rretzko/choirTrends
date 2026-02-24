@@ -44,7 +44,7 @@
                             accept=".pdf,.txt,.png,.jpg,.jpeg,.gif,.webp"
                         />
                         <flux:text class="text-xs">
-                            {{ __('Accepted formats: PDF, TXT, PNG, JPG, JPEG, GIF, WEBP (Max: 100MB)') }}
+                            {{ __('Accepted formats: PDF, TXT, PNG, JPG, JPEG, GIF, WEBP (Max: 20MB)') }}
                         </flux:text>
                     </flux:field>
 
@@ -127,11 +127,12 @@
                     if (fileInput.files.length > 0) {
                         const file = fileInput.files[0];
 
-                        // Validate file size (100MB max)
-                        const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+                        // Validate file size (20MB max)
+                        const maxSize = 20 * 1024 * 1024; // 20MB in bytes
                         if (file.size > maxSize) {
                             e.preventDefault();
-                            alert('{{ __("The file size must not exceed 100MB.") }}');
+                            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                            alert('{{ __("Your file is") }} ' + fileSizeMB + 'MB. {{ __("The file size must not exceed 20MB.") }}');
                             return;
                         }
 

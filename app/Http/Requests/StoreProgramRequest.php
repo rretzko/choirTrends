@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreProgramRequest extends FormRequest
@@ -23,7 +24,7 @@ class StoreProgramRequest extends FormRequest
     {
         return [
             // Traditional file upload (for local development)
-            'program_file' => 'required_without_all:program_uris,vapor_file_key|nullable|file|mimes:pdf,txt,png,jpg,jpeg,gif,webp|max:102400',
+            'program_file' => 'required_without_all:program_uris,vapor_file_key|nullable|file|mimes:pdf,txt,png,jpg,jpeg,gif,webp',
             // Vapor S3 direct upload key (for production on Vapor)
             'vapor_file_key' => 'required_without_all:program_uris,program_file|nullable|string',
             'vapor_file_name' => 'nullable|string',
@@ -31,6 +32,25 @@ class StoreProgramRequest extends FormRequest
             // URL input option
             'program_uris' => 'required_without_all:program_file,vapor_file_key|nullable|string',
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            if ($this->hasFile('program_file') && ! $validator->errors()->has('program_file')) {
+                $sizeInMB = round($this->file('program_file')->getSize() / (1024 * 1024), 1);
+
+                if ($sizeInMB > 20) {
+                    $validator->errors()->add(
+                        'program_file',
+                        "Your file is {$sizeInMB}MB. The file size must not exceed 20MB."
+                    );
+                }
+            }
+        });
     }
 
     /**
@@ -43,7 +63,6 @@ class StoreProgramRequest extends FormRequest
         return [
             'program_file.required_without_all' => 'Please upload a file or provide URLs.',
             'program_file.mimes' => 'The file must be a PDF, text file, or image (PNG, JPG, JPEG, GIF, WEBP).',
-            'program_file.max' => 'The file size must not exceed 100MB.',
             'vapor_file_key.required_without_all' => 'Please upload a file or provide URLs.',
             'program_uris.required_without_all' => 'Please provide URLs or upload a file.',
         ];

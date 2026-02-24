@@ -55,12 +55,13 @@ class ProgramContentExtractor
                 throw new \Exception('Failed to read PDF file or file is empty');
             }
 
-            // Check file size (Claude API limit is 32MB)
+            // Check file size - 20MB limit accounts for ~33% base64 encoding overhead
+            // that pushes the actual API request beyond Claude's max request size
             $sizeInBytes = strlen($pdfData);
-            $sizeInMB = $sizeInBytes / (1024 * 1024);
+            $sizeInMB = round($sizeInBytes / (1024 * 1024), 1);
 
-            if ($sizeInMB > 32) {
-                throw new \Exception("PDF file is too large ({$sizeInMB}MB). Maximum size is 32MB.");
+            if ($sizeInMB > 20) {
+                throw new \Exception("PDF file is too large ({$sizeInMB}MB). Maximum size for processing is 20MB.");
             }
 
             // Encode as base64 - base64_encode() doesn't add whitespace in PHP
