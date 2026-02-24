@@ -2,7 +2,7 @@
 
 use App\Enums\FeedbackStatus;
 use App\Enums\FeedbackType;
-use App\Livewire\Feedback\Create;
+use App\Livewire\Feedback\Index;
 use App\Mail\FeedbackSubmitted;
 use App\Models\Feedback;
 use App\Models\User;
@@ -11,34 +11,39 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
-test('feedback create page can be rendered', function () {
+test('report tab renders the create form', function () {
     $user = User::factory()->withoutTwoFactor()->create();
 
     $this->actingAs($user);
 
-    $this->get(route('feedback.create'))
-        ->assertOk()
-        ->assertSeeLivewire(Create::class);
+    Livewire::test(Index::class, ['tab' => 'report'])
+        ->assertSee('Reported By')
+        ->assertSee('Request Type')
+        ->assertSee('Submit Feedback');
 });
 
-test('guests cannot access feedback create page', function () {
-    $this->get(route('feedback.create'))
-        ->assertRedirect(route('login'));
+test('old feedback/create route redirects to report tab', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user);
+
+    $this->get('/feedback/create')
+        ->assertRedirect('/feedback?tab=report');
 });
 
-test('user can submit feedback', function () {
+test('user can submit feedback from report tab', function () {
     Mail::fake();
 
     $user = User::factory()->withoutTwoFactor()->create();
 
     $this->actingAs($user);
 
-    Livewire::test(Create::class)
+    Livewire::test(Index::class, ['tab' => 'report'])
         ->set('type', 'Bug')
         ->set('body', 'Something is broken on the dashboard')
         ->set('fromPage', '/dashboard')
         ->call('submit')
-        ->assertRedirect(route('feedback.index'));
+        ->assertSet('tab', 'history');
 
     $feedback = Feedback::first();
 
@@ -58,7 +63,7 @@ test('feedback submission sends email to founder', function () {
 
     $this->actingAs($user);
 
-    Livewire::test(Create::class)
+    Livewire::test(Index::class, ['tab' => 'report'])
         ->set('type', 'Enhancement')
         ->set('body', 'Please add dark mode to the settings page')
         ->call('submit');
@@ -73,7 +78,7 @@ test('feedback body is required', function () {
 
     $this->actingAs($user);
 
-    Livewire::test(Create::class)
+    Livewire::test(Index::class, ['tab' => 'report'])
         ->set('type', 'Bug')
         ->set('body', '')
         ->call('submit')
@@ -87,7 +92,7 @@ test('feedback body must be at least 5 characters', function () {
 
     $this->actingAs($user);
 
-    Livewire::test(Create::class)
+    Livewire::test(Index::class, ['tab' => 'report'])
         ->set('type', 'Bug')
         ->set('body', 'Hi')
         ->call('submit')
@@ -99,7 +104,7 @@ test('feedback type must be valid', function () {
 
     $this->actingAs($user);
 
-    Livewire::test(Create::class)
+    Livewire::test(Index::class, ['tab' => 'report'])
         ->set('type', 'InvalidType')
         ->set('body', 'This has an invalid type')
         ->call('submit')
@@ -116,12 +121,12 @@ test('user can upload a file with feedback', function () {
 
     $file = UploadedFile::fake()->image('screenshot.png');
 
-    Livewire::test(Create::class)
+    Livewire::test(Index::class, ['tab' => 'report'])
         ->set('type', 'Bug')
         ->set('body', 'Here is a screenshot of the issue')
         ->set('file', $file)
         ->call('submit')
-        ->assertRedirect(route('feedback.index'));
+        ->assertSet('tab', 'history');
 
     $feedback = Feedback::first();
 
@@ -135,7 +140,7 @@ test('user can set feedback type via setType method', function () {
 
     $this->actingAs($user);
 
-    Livewire::test(Create::class)
+    Livewire::test(Index::class, ['tab' => 'report'])
         ->assertSet('type', 'Bug')
         ->call('setType', 'Enhancement')
         ->assertSet('type', 'Enhancement')
@@ -150,11 +155,11 @@ test('all feedback types can be submitted', function (string $type) {
 
     $this->actingAs($user);
 
-    Livewire::test(Create::class)
+    Livewire::test(Index::class, ['tab' => 'report'])
         ->set('type', $type)
         ->set('body', "Testing {$type} feedback submission")
         ->call('submit')
-        ->assertRedirect(route('feedback.index'));
+        ->assertSet('tab', 'history');
 
     $feedback = Feedback::latest()->first();
     expect($feedback->type)->toBe(FeedbackType::from($type));
@@ -167,12 +172,12 @@ test('from page is optional and can be empty', function () {
 
     $this->actingAs($user);
 
-    Livewire::test(Create::class)
+    Livewire::test(Index::class, ['tab' => 'report'])
         ->set('type', 'Bug')
         ->set('body', 'Bug without from page info')
         ->set('fromPage', '')
         ->call('submit')
-        ->assertRedirect(route('feedback.index'));
+        ->assertSet('tab', 'history');
 
     $feedback = Feedback::first();
     expect($feedback->from_page)->toBeNull();

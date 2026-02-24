@@ -21,8 +21,8 @@
                 <flux:sidebar.item icon="academic-cap" :href="route('schools.index')" :current="request()->routeIs('schools.*')" wire:navigate>{{ __('Schools') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="queue-list" :href="route('song-titles.index')" :current="request()->routeIs('song-titles.*')" wire:navigate>{{ __('Song Titles') }}</flux:sidebar.item>
                 <flux:separator class="my-2"/>
-                <flux:sidebar.item icon="bug-ant" :href="route('feedback.create')" :current="request()->routeIs('feedback.*')" wire:navigate>{{ __('Feedback') }}</flux:sidebar.item>
-                <flux:sidebar.group expandable icon="book-open" heading="Documentation" class="grid">
+                <flux:sidebar.item icon="bug-ant" :href="route('feedback.index') . '?tab=report'" :current="request()->routeIs('feedback.*')" wire:navigate>{{ __('Feedback') }}</flux:sidebar.item>
+                <flux:sidebar.group expandable :expanded="false" icon="book-open" heading="Documentation" class="grid">
                     <flux:sidebar.item icon="map" :href="route('documentation.site-guide')" :current="request()->routeIs('documentation.site-guide')" wire:navigate>{{ __('Site Guide') }}</flux:sidebar.item>
                 </flux:sidebar.group>
                 <flux:sidebar.item icon="moon" x-data x-on:click.prevent="$flux.dark = ! $flux.dark">{{ __('Dark Mode') }}</flux:sidebar.item>
@@ -32,11 +32,12 @@
 
             @if (auth()->user()->isFounder() && ! session()->has('impersonating_from'))
                 <flux:sidebar.nav>
-                    <flux:sidebar.group expandable icon="shield-check" heading="Founder" class="grid">
+                    <flux:sidebar.group expandable :expanded="false" icon="shield-check" heading="Founder" class="grid">
                         <flux:sidebar.item icon="chart-bar" :href="route('founder.dashboard')" :current="request()->routeIs('founder.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="user-plus" :href="route('founder.addProgram')" :current="request()->routeIs('founder.addProgram*')" wire:navigate>{{ __('Add Program for User') }}</flux:sidebar.item>
-                        <flux:sidebar.item icon="identification" :href="route('founder.impersonate')" :current="request()->routeIs('founder.impersonate')" wire:navigate>{{ __('Impersonate User') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="document-duplicate" :href="route('founder.duplicates')" :current="request()->routeIs('founder.duplicates')" wire:navigate>{{ __('Duplicates') }}</flux:sidebar.item>
+                        <flux:sidebar.item icon="identification" :href="route('founder.impersonate')" :current="request()->routeIs('founder.impersonate')" wire:navigate>{{ __('Impersonate User') }}</flux:sidebar.item>
+                        <flux:sidebar.item icon="clipboard-document-list" :href="route('founder.issues')" :current="request()->routeIs('founder.issues')" wire:navigate>{{ __('Issues') }}</flux:sidebar.item>
                     </flux:sidebar.group>
                 </flux:sidebar.nav>
             @endif

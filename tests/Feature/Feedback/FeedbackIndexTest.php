@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\FeedbackStatus;
+use App\Enums\FeedbackType;
 use App\Livewire\Feedback\Index;
 use App\Models\Feedback;
 use App\Models\FeedbackComment;
@@ -21,6 +22,24 @@ test('feedback index page can be rendered', function () {
 test('guests cannot access feedback index page', function () {
     $this->get(route('feedback.index'))
         ->assertRedirect(route('login'));
+});
+
+test('tab defaults to history', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->assertSet('tab', 'history');
+});
+
+test('tab can be set via url parameter', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class, ['tab' => 'report'])
+        ->assertSet('tab', 'report');
 });
 
 test('feedback index shows only my feedback by default', function () {
@@ -102,17 +121,6 @@ test('feedback index can toggle sort direction', function () {
         ->assertSet('sortDirection', 'desc');
 });
 
-test('clicking feedback shows detail modal', function () {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $feedback = Feedback::factory()->for($user)->create(['body' => 'Detailed feedback body']);
-
-    $this->actingAs($user);
-
-    Livewire::test(Index::class)
-        ->call('showDetails', $feedback->id)
-        ->assertSet('selectedFeedback.id', $feedback->id);
-});
-
 test('submitter name is masked when user has name privacy enabled', function () {
     $user = User::factory()->withoutTwoFactor()->create();
     $otherUser = User::factory()->withoutTwoFactor()->create(['name' => 'Private Person']);
@@ -168,85 +176,6 @@ test('founder can see real names even with privacy enabled', function () {
         ->assertSee('Hidden User');
 });
 
-test('founder can update feedback status', function () {
-    config(['app.founder' => 'founder@example.com']);
-
-    $founder = User::factory()->withoutTwoFactor()->founder()->create();
-    $feedback = Feedback::factory()->for($founder)->create(['status' => FeedbackStatus::Open]);
-
-    $this->actingAs($founder);
-
-    Livewire::test(Index::class)
-        ->call('showDetails', $feedback->id)
-        ->set('selectedStatus', 'Closed')
-        ->call('updateStatus');
-
-    expect($feedback->fresh()->status)->toBe(FeedbackStatus::Closed);
-});
-
-test('non-founder cannot update feedback status', function () {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $feedback = Feedback::factory()->for($user)->create(['status' => FeedbackStatus::Open]);
-
-    $this->actingAs($user);
-
-    Livewire::test(Index::class)
-        ->call('showDetails', $feedback->id)
-        ->set('selectedStatus', 'Closed')
-        ->call('updateStatus');
-
-    expect($feedback->fresh()->status)->toBe(FeedbackStatus::Open);
-});
-
-test('founder can add a comment', function () {
-    config(['app.founder' => 'founder@example.com']);
-
-    $founder = User::factory()->withoutTwoFactor()->founder()->create();
-    $feedback = Feedback::factory()->for($founder)->create();
-
-    $this->actingAs($founder);
-
-    Livewire::test(Index::class)
-        ->call('showDetails', $feedback->id)
-        ->set('newComment', 'Working on this now')
-        ->call('addComment');
-
-    expect(FeedbackComment::count())->toBe(1);
-    expect(FeedbackComment::first()->body)->toBe('Working on this now');
-});
-
-test('non-founder cannot add a comment', function () {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $feedback = Feedback::factory()->for($user)->create();
-
-    $this->actingAs($user);
-
-    Livewire::test(Index::class)
-        ->call('showDetails', $feedback->id)
-        ->set('newComment', 'I should not be able to comment')
-        ->call('addComment');
-
-    expect(FeedbackComment::count())->toBe(0);
-});
-
-test('feedback detail modal shows comments', function () {
-    config(['app.founder' => 'founder@example.com']);
-
-    $founder = User::factory()->withoutTwoFactor()->founder()->create();
-    $feedback = Feedback::factory()->for($founder)->create();
-    FeedbackComment::factory()->create([
-        'feedback_id' => $feedback->id,
-        'user_id' => $founder->id,
-        'body' => 'This is a founder comment',
-    ]);
-
-    $this->actingAs($founder);
-
-    Livewire::test(Index::class)
-        ->call('showDetails', $feedback->id)
-        ->assertSee('This is a founder comment');
-});
-
 test('feedback index displays status badges', function () {
     $user = User::factory()->withoutTwoFactor()->create();
 
@@ -271,4 +200,134 @@ test('feedback index displays type badges', function () {
     Livewire::test(Index::class)
         ->assertSee('Bug')
         ->assertSee('Kudo');
+});
+
+// Inline editing tests
+
+test('user can start editing own feedback', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $feedback = Feedback::factory()->for($user)->bug()->create(['body' => 'Original body']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('startEditing', $feedback->id)
+        ->assertSet('editingFeedbackId', $feedback->id)
+        ->assertSet('editBody', 'Original body')
+        ->assertSet('editType', 'Bug');
+});
+
+test('user cannot edit another users feedback', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $otherUser = User::factory()->withoutTwoFactor()->create();
+    $feedback = Feedback::factory()->for($otherUser)->create(['body' => 'Not mine']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('startEditing', $feedback->id)
+        ->assertSet('editingFeedbackId', null);
+});
+
+test('user can save edits to own feedback', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $feedback = Feedback::factory()->for($user)->bug()->create(['body' => 'Original body']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('startEditing', $feedback->id)
+        ->set('editBody', 'Updated body text here')
+        ->set('editType', 'Enhancement')
+        ->call('saveEdit')
+        ->assertSet('editingFeedbackId', null);
+
+    $feedback->refresh();
+    expect($feedback->body)->toBe('Updated body text here')
+        ->and($feedback->type)->toBe(FeedbackType::Enhancement);
+});
+
+test('user can cancel editing', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $feedback = Feedback::factory()->for($user)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('startEditing', $feedback->id)
+        ->assertSet('editingFeedbackId', $feedback->id)
+        ->call('cancelEditing')
+        ->assertSet('editingFeedbackId', null)
+        ->assertSet('editBody', '')
+        ->assertSet('editType', '');
+});
+
+// Inline commenting tests
+
+test('user can start commenting on own feedback', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $feedback = Feedback::factory()->for($user)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('startCommenting', $feedback->id)
+        ->assertSet('commentingFeedbackId', $feedback->id);
+});
+
+test('user cannot comment on another users feedback', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $otherUser = User::factory()->withoutTwoFactor()->create();
+    $feedback = Feedback::factory()->for($otherUser)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('startCommenting', $feedback->id)
+        ->assertSet('commentingFeedbackId', null);
+});
+
+test('user can submit a comment on own feedback', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $feedback = Feedback::factory()->for($user)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('startCommenting', $feedback->id)
+        ->set('userComment', 'Here is my comment')
+        ->call('submitUserComment');
+
+    expect(FeedbackComment::count())->toBe(1);
+    expect(FeedbackComment::first()->body)->toBe('Here is my comment');
+    expect(FeedbackComment::first()->user_id)->toBe($user->id);
+});
+
+test('user comment requires minimum length', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $feedback = Feedback::factory()->for($user)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('startCommenting', $feedback->id)
+        ->set('userComment', 'X')
+        ->call('submitUserComment')
+        ->assertHasErrors(['userComment']);
+
+    expect(FeedbackComment::count())->toBe(0);
+});
+
+test('user can cancel commenting', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $feedback = Feedback::factory()->for($user)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('startCommenting', $feedback->id)
+        ->assertSet('commentingFeedbackId', $feedback->id)
+        ->call('cancelCommenting')
+        ->assertSet('commentingFeedbackId', null)
+        ->assertSet('userComment', '');
 });

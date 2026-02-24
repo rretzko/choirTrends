@@ -95,7 +95,7 @@
                 </div>
 
                 <p class="text-sm text-amber-600 dark:text-amber-400 text-center">
-                    {{ __('If the upload fails for') }} <strong>{{ __('any reason') }}</strong>{{ __(', please use the') }} <a href="{{ route('feedback.create') }}" class="underline hover:no-underline font-medium">{{ __('Feedback') }}</a> {{ __('link on the left and attach the file. We\'ll look into it as quickly as possible!') }}
+                    {{ __('If the upload fails for') }} <strong>{{ __('any reason') }}</strong>{{ __(', please use the') }} <a href="{{ route('feedback.index') . '?tab=report' }}" class="underline hover:no-underline font-medium">{{ __('Feedback') }}</a> {{ __('link on the left and attach the file. We\'ll look into it as quickly as possible!') }}
                 </p>
             </form>
 

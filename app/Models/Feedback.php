@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property FeedbackType $type
  * @property FeedbackStatus $status
  * @property-read User $user
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, FeedbackEffort> $efforts
  */
 class Feedback extends Model
 {
@@ -48,5 +49,18 @@ class Feedback extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(FeedbackComment::class);
+    }
+
+    public function efforts(): HasMany
+    {
+        return $this->hasMany(FeedbackEffort::class);
+    }
+
+    public function totalEffortMinutes(): int
+    {
+        return (int) $this->efforts()
+            ->whereNotNull('stopped_at')
+            ->get()
+            ->sum(fn (FeedbackEffort $effort): int => (int) $effort->started_at->diffInMinutes($effort->stopped_at));
     }
 }

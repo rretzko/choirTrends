@@ -25,8 +25,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('schools', App\Livewire\Schools\Index::class)->name('schools.index');
     Route::get('song-titles', App\Livewire\SongTitles\Index::class)->name('song-titles.index');
 
-    Route::get('feedback/create', App\Livewire\Feedback\Create::class)->name('feedback.create');
     Route::get('feedback', App\Livewire\Feedback\Index::class)->name('feedback.index');
+    Route::redirect('feedback/create', '/feedback?tab=report');
 
     Route::view('documentation/site-guide', 'documentation.site-guide')->name('documentation.site-guide');
     Route::view('documentation/orientation-email', 'documentation.orientation-email')->name('documentation.orientation-email');
@@ -46,6 +46,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('add-program/confirm', [App\Http\Controllers\FounderAddProgramController::class, 'confirm'])->name('founder.addProgram.confirm');
         Route::get('impersonate', App\Livewire\Founder\ImpersonateUser::class)->name('founder.impersonate');
         Route::get('duplicates', App\Livewire\Founder\Duplicates::class)->name('founder.duplicates');
+        Route::get('issues', App\Livewire\Founder\Issues::class)->name('founder.issues');
     });
 
     // Stop impersonation (must be accessible while impersonating)
