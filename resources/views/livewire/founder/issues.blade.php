@@ -29,6 +29,9 @@
                 <table class="hidden min-w-full divide-y divide-neutral-200 md:table dark:divide-neutral-700">
                     <thead class="bg-neutral-50 dark:bg-neutral-800">
                         <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                                {{ __('ID') }}
+                            </th>
                             <th wire:click="sort('created_at')" class="cursor-pointer px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
                                 <div class="flex items-center gap-1">
                                     {{ __('Date') }}
@@ -78,6 +81,9 @@
                                 class="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 {{ $selectedFeedbackId === $feedback->id ? 'bg-blue-50 dark:bg-blue-900/20' : '' }}"
                             >
                                 <td class="whitespace-nowrap px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                                    {{ $feedback->id }}
+                                </td>
+                                <td class="whitespace-nowrap px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                                     {{ $feedback->created_at->format('M j') }}
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-2 text-sm">
@@ -107,7 +113,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                                <td colspan="7" class="px-4 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
                                     {{ __('No issues found.') }}
                                 </td>
                             </tr>
@@ -133,7 +139,7 @@
                             </div>
                             <flux:text class="mt-1 text-sm text-neutral-900 dark:text-neutral-100">{{ Str::limit($feedback->body, 80) }}</flux:text>
                             <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">
-                                {{ $feedback->user->name }} &middot; {{ $feedback->created_at->format('M j, Y') }}
+                                #{{ $feedback->id }} &middot; {{ $feedback->user->name }} &middot; {{ $feedback->created_at->format('M j, Y') }}
                             </flux:text>
                         </div>
                     @empty
@@ -150,7 +156,10 @@
             @if ($selectedFeedback)
                 <div class="space-y-6 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
                     <div class="flex items-start justify-between">
-                        <flux:heading size="lg">{{ __('Feedback Details') }}</flux:heading>
+                        <div class="flex items-baseline gap-2">
+                            <flux:heading size="lg">{{ __('Feedback Details') }}</flux:heading>
+                            <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">#{{ $selectedFeedback->id }}</flux:text>
+                        </div>
                         <flux:button wire:click="closeDetail" variant="ghost" size="xs" icon="x-mark" />
                     </div>
 
