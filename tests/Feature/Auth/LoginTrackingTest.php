@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Models\UserLogin;
+use Livewire\Livewire;
 
 test('login creates a user_logins record', function () {
     $user = User::factory()->withoutTwoFactor()->create();
@@ -118,6 +119,32 @@ test('failed login does not create a user_logins record', function () {
     $this->assertDatabaseMissing('user_logins', [
         'user_id' => $user->id,
     ]);
+});
+
+test('impersonation does not create a user_logins record', function () {
+    config(['app.founder' => 'founder@example.com']);
+
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+    $target = User::factory()->withoutTwoFactor()->create();
+
+    // Log in as founder first (creates a login record for founder)
+    $this->post(route('login.store'), [
+        'email' => $founder->email,
+        'password' => 'password',
+    ]);
+
+    $founderLoginCount = UserLogin::where('user_id', $founder->id)->count();
+
+    // Impersonate the target user via the Livewire component
+    Livewire::actingAs($founder)
+        ->test(\App\Livewire\Founder\ImpersonateUser::class)
+        ->set('userId', $target->id)
+        ->call('impersonate');
+
+    // Target should have no login records from impersonation
+    expect(UserLogin::where('user_id', $target->id)->count())->toBe(0);
+    // Founder should not gain extra login records
+    expect(UserLogin::where('user_id', $founder->id)->count())->toBe($founderLoginCount);
 });
 
 test('login record has os and browser fields populated', function () {

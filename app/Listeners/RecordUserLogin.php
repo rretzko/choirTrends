@@ -12,6 +12,10 @@ class RecordUserLogin
 {
     public function handle(Login $event): void
     {
+        if (session()->has('impersonating_from')) {
+            return;
+        }
+
         $agent = new Agent;
 
         $attributes = [
