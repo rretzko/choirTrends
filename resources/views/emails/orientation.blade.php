@@ -29,8 +29,8 @@
 
     <div style="background: #f9fafb; border-left: 4px solid #3b82f6; padding: 16px; margin: 24px 0;">
         <p style="margin: 8px 0;"><strong>Sortable Columns</strong> &mdash; Click column headers to sort. Chevron icons show the current sort direction.</p>
-        <p style="margin: 8px 0;"><strong>Filter Toggles</strong> &mdash; Use the My/All buttons to switch between your data and all community data. Search bars let you filter by keyword. School drop-down let you select one, many, or all schools.</p>
-        <p style="margin: 8px 0;"><strong>Edit Icons</strong> &mdash; Look for the pencil icon on items you own to make edits.</p>
+        <p style="margin: 8px 0;"><strong>Filter Toggles</strong> &mdash; Use the My/All buttons to switch between your data and all community data. Search bars let you filter by keyword. School drop-down let you select one, many, or all schools. For Composers/Arrangers and Song Titles, search by names and titles.</p>
+        <p style="margin: 8px 0;"><strong>Edit Icons</strong> &mdash; Look for the pencil icon (far right) on items you own to make edits.</p>
     </div>
 
     <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
