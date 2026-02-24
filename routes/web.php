@@ -47,6 +47,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('impersonate', App\Livewire\Founder\ImpersonateUser::class)->name('founder.impersonate');
         Route::get('duplicates', App\Livewire\Founder\Duplicates::class)->name('founder.duplicates');
         Route::get('issues', App\Livewire\Founder\Issues::class)->name('founder.issues');
+        Route::get('song-title-conflicts', App\Livewire\Founder\SongTitleConflicts::class)->name('founder.songTitleConflicts');
     });
 
     // Stop impersonation (must be accessible while impersonating)
