@@ -18,6 +18,8 @@ class Index extends Component
 
     public string $filter = 'all';
 
+    public string $search = '';
+
     public string $sortColumn = 'artist_last_name';
 
     public string $sortDirection = 'asc';
@@ -107,6 +109,11 @@ class Index extends Component
 
         if ($this->filter === 'my') {
             $query->whereIn('id', $myArtistIds);
+        }
+
+        if ($this->search !== '') {
+            $searchTerm = '%'.$this->search.'%';
+            $query->where('artist_name', 'like', $searchTerm);
         }
 
         $artists = $query->get();

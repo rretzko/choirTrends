@@ -20,6 +20,8 @@
                 </flux:tooltip>
             @endif
         </div>
+
+        <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Search artists...') }}" icon="magnifying-glass" class="lg:w-1/3" />
     </div>
 
     {{-- Mobile card layout --}}

@@ -127,6 +127,45 @@ test('showRepertoire shows both roles when artist is composer and arranger', fun
         ->assertSee('Composer & Arranger');
 });
 
+test('artists index can search by artist name', function () {
+    $user = User::factory()->create();
+    Artist::factory()->create(['artist_name' => 'Johann Sebastian Bach']);
+    Artist::factory()->create(['artist_name' => 'Wolfgang Amadeus Mozart']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('search', 'Bach')
+        ->assertSee('Johann Sebastian Bach')
+        ->assertDontSee('Wolfgang Amadeus Mozart');
+});
+
+test('artists index search is case insensitive', function () {
+    $user = User::factory()->create();
+    Artist::factory()->create(['artist_name' => 'Johann Sebastian Bach']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('search', 'bach')
+        ->assertSee('Johann Sebastian Bach');
+});
+
+test('artists index clears search results when search is emptied', function () {
+    $user = User::factory()->create();
+    Artist::factory()->create(['artist_name' => 'Johann Sebastian Bach']);
+    Artist::factory()->create(['artist_name' => 'Wolfgang Amadeus Mozart']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('search', 'Bach')
+        ->assertDontSee('Wolfgang Amadeus Mozart')
+        ->set('search', '')
+        ->assertSee('Johann Sebastian Bach')
+        ->assertSee('Wolfgang Amadeus Mozart');
+});
+
 test('guests cannot access artists index', function () {
     $this->get(route('artists.index'))
         ->assertRedirect(route('login'));
