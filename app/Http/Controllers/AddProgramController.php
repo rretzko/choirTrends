@@ -169,7 +169,7 @@ class AddProgramController extends Controller
                         ]);
                     }
 
-                    $ensembleKey = $ensemble?->id ?? 0;
+                    $ensembleKey = $ensemble->id ?? 0;
                     if (! isset($ensembleSongOrder[$ensembleKey])) {
                         $ensembleSongOrder[$ensembleKey] = 0;
                     }
