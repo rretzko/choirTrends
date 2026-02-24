@@ -22,6 +22,9 @@
                 <flux:sidebar.item icon="queue-list" :href="route('song-titles.index')" :current="request()->routeIs('song-titles.*')" wire:navigate>{{ __('Song Titles') }}</flux:sidebar.item>
                 <flux:separator class="my-2"/>
                 <flux:sidebar.item icon="bug-ant" :href="route('feedback.create')" :current="request()->routeIs('feedback.*')" wire:navigate>{{ __('Feedback') }}</flux:sidebar.item>
+                <flux:sidebar.group expandable icon="book-open" heading="Documentation" class="grid">
+                    <flux:sidebar.item icon="map" :href="route('documentation.site-guide')" :current="request()->routeIs('documentation.site-guide')" wire:navigate>{{ __('Site Guide') }}</flux:sidebar.item>
+                </flux:sidebar.group>
                 <flux:sidebar.item icon="moon" x-data x-on:click.prevent="$flux.dark = ! $flux.dark">{{ __('Dark Mode') }}</flux:sidebar.item>
             </flux:sidebar.nav>
 
@@ -35,12 +38,6 @@
                         <flux:sidebar.item icon="identification" :href="route('founder.impersonate')" :current="request()->routeIs('founder.impersonate')" wire:navigate>{{ __('Impersonate User') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="document-duplicate" :href="route('founder.duplicates')" :current="request()->routeIs('founder.duplicates')" wire:navigate>{{ __('Duplicates') }}</flux:sidebar.item>
                     </flux:sidebar.group>
-                    <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                        {{ __('Repository') }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                        {{ __('Documentation') }}
-                    </flux:sidebar.item>
                 </flux:sidebar.nav>
             @endif
 

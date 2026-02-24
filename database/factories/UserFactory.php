@@ -72,4 +72,34 @@ class UserFactory extends Factory
             'email' => config('app.founder') ?: 'founder@example.com',
         ]);
     }
+
+    /**
+     * Indicate that the user has been welcomed.
+     */
+    public function welcomed(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'welcomed_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the user has dismissed onboarding.
+     */
+    public function onboardingDismissed(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'onboarding_dismissed_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the user has been sent the orientation email.
+     */
+    public function orientationEmailSent(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'orientation_email_sent_at' => now(),
+        ]);
+    }
 }

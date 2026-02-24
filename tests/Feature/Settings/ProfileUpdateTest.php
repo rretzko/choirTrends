@@ -114,6 +114,35 @@ test('privacy settings are loaded on mount', function () {
         ->assertSet('privacyEnsembleName', true);
 });
 
+test('user can reset privacy settings to share all information', function () {
+    $user = User::factory()->create();
+    UserPrivacy::factory()->create([
+        'user_id' => $user->id,
+        'name' => true,
+        'school' => true,
+        'ensemble_name' => true,
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->assertSet('privacyName', true)
+        ->assertSet('privacySchool', true)
+        ->assertSet('privacyEnsembleName', true)
+        ->call('resetPrivacySettings')
+        ->assertHasNoErrors()
+        ->assertSet('privacyName', false)
+        ->assertSet('privacySchool', false)
+        ->assertSet('privacyEnsembleName', false)
+        ->assertDispatched('privacy-updated');
+
+    $privacy = $user->fresh()->privacy;
+
+    expect($privacy->name)->toBeFalse();
+    expect($privacy->school)->toBeFalse();
+    expect($privacy->ensemble_name)->toBeFalse();
+});
+
 test('privacy settings default to false when not set', function () {
     $user = User::factory()->create();
 

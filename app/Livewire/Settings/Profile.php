@@ -108,4 +108,16 @@ class Profile extends Component
 
         $this->dispatch('privacy-updated');
     }
+
+    /**
+     * Reset privacy settings to share all information.
+     */
+    public function resetPrivacySettings(): void
+    {
+        $this->privacyName = false;
+        $this->privacySchool = false;
+        $this->privacyEnsembleName = false;
+
+        $this->updatePrivacySettings();
+    }
 }

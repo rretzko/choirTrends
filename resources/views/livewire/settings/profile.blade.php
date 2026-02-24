@@ -61,6 +61,10 @@
                     <flux:button variant="primary" type="submit" class="w-full">{{ __('Save') }}</flux:button>
                 </div>
 
+                <flux:button variant="ghost" type="button" wire:click="resetPrivacySettings">
+                    {{ __("I'm happy to share my information with other Choir Directors.") }}
+                </flux:button>
+
                 <x-action-message class="me-3" on="privacy-updated">
                     {{ __('Saved.') }}
                 </x-action-message>

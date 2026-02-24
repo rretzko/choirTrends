@@ -28,6 +28,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('feedback/create', App\Livewire\Feedback\Create::class)->name('feedback.create');
     Route::get('feedback', App\Livewire\Feedback\Index::class)->name('feedback.index');
 
+    Route::view('documentation/site-guide', 'documentation.site-guide')->name('documentation.site-guide');
+    Route::view('documentation/orientation-email', 'documentation.orientation-email')->name('documentation.orientation-email');
+
     Route::get('add-program', [App\Http\Controllers\AddProgramController::class, 'index'])->name('addProgram');
 
     Route::post('add-program', [App\Http\Controllers\AddProgramController::class, 'store'])->name('addProgram.store');

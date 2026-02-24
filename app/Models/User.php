@@ -52,6 +52,9 @@ class User extends Authenticatable
         'alpha_name',
         'email',
         'password',
+        'welcomed_at',
+        'onboarding_dismissed_at',
+        'orientation_email_sent_at',
     ];
 
     /**
@@ -76,6 +79,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'welcomed_at' => 'datetime',
+            'onboarding_dismissed_at' => 'datetime',
+            'orientation_email_sent_at' => 'datetime',
         ];
     }
 
