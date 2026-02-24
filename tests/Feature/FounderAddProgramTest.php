@@ -156,6 +156,14 @@ test('founder can confirm and save program attributed to target user', function 
             'event_date' => '2025-12-15',
             'school_name' => 'Target User High School',
             'director_name' => 'Target Director',
+            'ensembles' => [
+                [
+                    'name' => 'Concert Choir',
+                    'songs' => [
+                        ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
+                    ],
+                ],
+            ],
         ]);
 
     $response->assertRedirect(route('founder.addProgram'));
@@ -170,6 +178,13 @@ test('founder can confirm and save program attributed to target user', function 
 
     // Founder should not have a program
     expect(Program::where('user_id', $founder->id)->count())->toBe(0);
+
+    // Ensemble should be created for the school
+    $school = School::where('school_name', 'Target User High School')->first();
+    $this->assertDatabaseHas('ensembles', [
+        'school_id' => $school->id,
+        'ensemble_name' => 'Concert Choir',
+    ]);
 });
 
 test('target user is associated with school not the founder', function () {

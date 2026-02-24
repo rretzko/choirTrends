@@ -299,30 +299,19 @@ test('multiple programs for same school only create one school_user relationship
     expect($user->schools)->toHaveCount(1);
 });
 
-test('ensembles are created from uploaded program data', function () {
+test('ensembles are created from form submission data', function () {
     $user = User::factory()->withoutTwoFactor()->create();
-
-    // Set up cache with ensemble data
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Winter Concert',
-            'event_date' => '2025-12-15',
-            'school_name' => 'Ensemble Test High School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                ['name' => 'Concert Choir', 'songs' => []],
-                ['name' => 'Women\'s Ensemble', 'songs' => []],
-                ['name' => 'Jazz Choir', 'songs' => []],
-            ],
-        ],
-    ], now()->addHours(2));
 
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Winter Concert',
         'event_date' => '2025-12-15',
         'school_name' => 'Ensemble Test High School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            ['name' => 'Concert Choir', 'songs' => []],
+            ['name' => 'Women\'s Ensemble', 'songs' => []],
+            ['name' => 'Jazz Choir', 'songs' => []],
+        ],
     ]);
 
     $school = School::where('school_name', 'Ensemble Test High School')->first();
@@ -350,47 +339,27 @@ test('duplicate ensembles are not created for same school', function () {
     $user = User::factory()->withoutTwoFactor()->create();
 
     // First program with ensembles
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Winter Concert',
-            'event_date' => '2025-12-15',
-            'school_name' => 'Duplicate Ensemble School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                ['name' => 'Concert Choir', 'songs' => []],
-                ['name' => 'Jazz Choir', 'songs' => []],
-            ],
-        ],
-    ], now()->addHours(2));
-
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Winter Concert',
         'event_date' => '2025-12-15',
         'school_name' => 'Duplicate Ensemble School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            ['name' => 'Concert Choir', 'songs' => []],
+            ['name' => 'Jazz Choir', 'songs' => []],
+        ],
     ]);
 
     // Second program with overlapping ensembles
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Spring Concert',
-            'event_date' => '2025-05-20',
-            'school_name' => 'Duplicate Ensemble School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                ['name' => 'Concert Choir', 'songs' => []],
-                ['name' => 'Women\'s Ensemble', 'songs' => []],
-            ],
-        ],
-    ], now()->addHours(2));
-
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Spring Concert',
         'event_date' => '2025-05-20',
         'school_name' => 'Duplicate Ensemble School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            ['name' => 'Concert Choir', 'songs' => []],
+            ['name' => 'Women\'s Ensemble', 'songs' => []],
+        ],
     ]);
 
     $school = School::where('school_name', 'Duplicate Ensemble School')->first();
@@ -407,26 +376,16 @@ test('duplicate ensembles are not created for same school', function () {
 test('ensembles with empty names are not created', function () {
     $user = User::factory()->withoutTwoFactor()->create();
 
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Winter Concert',
-            'event_date' => '2025-12-15',
-            'school_name' => 'Empty Ensemble School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                ['name' => 'Concert Choir', 'songs' => []],
-                ['name' => '', 'songs' => []],
-                ['name' => 'Jazz Choir', 'songs' => []],
-            ],
-        ],
-    ], now()->addHours(2));
-
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Winter Concert',
         'event_date' => '2025-12-15',
         'school_name' => 'Empty Ensemble School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            ['name' => 'Concert Choir', 'songs' => []],
+            ['name' => '', 'songs' => []],
+            ['name' => 'Jazz Choir', 'songs' => []],
+        ],
     ]);
 
     $school = School::where('school_name', 'Empty Ensemble School')->first();
@@ -435,33 +394,23 @@ test('ensembles with empty names are not created', function () {
     expect(Ensemble::where('school_id', $school->id)->count())->toBe(2);
 });
 
-test('song titles are created from uploaded program data', function () {
+test('song titles are created from form submission data', function () {
     $user = User::factory()->withoutTwoFactor()->create();
-
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Winter Concert',
-            'event_date' => '2025-12-15',
-            'school_name' => 'Song Test High School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                [
-                    'name' => 'Concert Choir',
-                    'songs' => [
-                        ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
-                        ['title' => 'Lux Aurumque', 'composer' => 'Eric Whitacre', 'arranger' => null, 'notes' => null],
-                    ],
-                ],
-            ],
-        ],
-    ], now()->addHours(2));
 
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Winter Concert',
         'event_date' => '2025-12-15',
         'school_name' => 'Song Test High School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
+                    ['title' => 'Lux Aurumque', 'composer' => 'Eric Whitacre', 'arranger' => null, 'notes' => null],
+                ],
+            ],
+        ],
     ]);
 
     expect(SongTitle::count())->toBe(2);
@@ -474,82 +423,52 @@ test('duplicate song titles are not created', function () {
     $user = User::factory()->withoutTwoFactor()->create();
 
     // First program
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Winter Concert',
-            'event_date' => '2025-12-15',
-            'school_name' => 'Duplicate Song School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                ['name' => 'Concert Choir', 'songs' => [
-                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
-                ]],
-            ],
-        ],
-    ], now()->addHours(2));
-
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Winter Concert',
         'event_date' => '2025-12-15',
         'school_name' => 'Duplicate Song School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            ['name' => 'Concert Choir', 'songs' => [
+                ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
+            ]],
+        ],
     ]);
 
     // Second program with same song
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Spring Concert',
-            'event_date' => '2025-05-20',
-            'school_name' => 'Duplicate Song School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                ['name' => 'Concert Choir', 'songs' => [
-                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
-                ]],
-            ],
-        ],
-    ], now()->addHours(2));
-
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Spring Concert',
         'event_date' => '2025-05-20',
         'school_name' => 'Duplicate Song School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            ['name' => 'Concert Choir', 'songs' => [
+                ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
+            ]],
+        ],
     ]);
 
     // Should only have one song title
     expect(SongTitle::where('song_title', 'Ave Maria')->count())->toBe(1);
 });
 
-test('composers are created and parsed from uploaded program data', function () {
+test('composers are created and parsed from form submission data', function () {
     $user = User::factory()->withoutTwoFactor()->create();
-
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Winter Concert',
-            'event_date' => '2025-12-15',
-            'school_name' => 'Composer Test High School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                [
-                    'name' => 'Concert Choir',
-                    'songs' => [
-                        ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
-                        ['title' => 'Lux Aurumque', 'composer' => 'Eric Whitacre', 'arranger' => null, 'notes' => null],
-                    ],
-                ],
-            ],
-        ],
-    ], now()->addHours(2));
 
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Winter Concert',
         'event_date' => '2025-12-15',
         'school_name' => 'Composer Test High School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
+                    ['title' => 'Lux Aurumque', 'composer' => 'Eric Whitacre', 'arranger' => null, 'notes' => null],
+                ],
+            ],
+        ],
     ]);
 
     expect(Artist::count())->toBe(2);
@@ -567,32 +486,22 @@ test('composers are created and parsed from uploaded program data', function () 
     ]);
 });
 
-test('arrangers are created and parsed from uploaded program data', function () {
+test('arrangers are created and parsed from form submission data', function () {
     $user = User::factory()->withoutTwoFactor()->create();
-
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Winter Concert',
-            'event_date' => '2025-12-15',
-            'school_name' => 'Arranger Test High School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                [
-                    'name' => 'Concert Choir',
-                    'songs' => [
-                        ['title' => 'Ave Maria', 'composer' => 'Traditional', 'arranger' => 'John Smith', 'notes' => null],
-                    ],
-                ],
-            ],
-        ],
-    ], now()->addHours(2));
 
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Winter Concert',
         'event_date' => '2025-12-15',
         'school_name' => 'Arranger Test High School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => 'Traditional', 'arranger' => 'John Smith', 'notes' => null],
+                ],
+            ],
+        ],
     ]);
 
     expect(Artist::count())->toBe(2);
@@ -607,29 +516,19 @@ test('arrangers are created and parsed from uploaded program data', function () 
 test('single word artist names are parsed correctly', function () {
     $user = User::factory()->withoutTwoFactor()->create();
 
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Winter Concert',
-            'event_date' => '2025-12-15',
-            'school_name' => 'Single Word Artist School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                [
-                    'name' => 'Concert Choir',
-                    'songs' => [
-                        ['title' => 'Traditional Song', 'composer' => 'Traditional', 'arranger' => null, 'notes' => null],
-                    ],
-                ],
-            ],
-        ],
-    ], now()->addHours(2));
-
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Winter Concert',
         'event_date' => '2025-12-15',
         'school_name' => 'Single Word Artist School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Traditional Song', 'composer' => 'Traditional', 'arranger' => null, 'notes' => null],
+                ],
+            ],
+        ],
     ]);
 
     $this->assertDatabaseHas('artists', [
@@ -643,51 +542,154 @@ test('duplicate artists are not created', function () {
     $user = User::factory()->withoutTwoFactor()->create();
 
     // First program
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Winter Concert',
-            'event_date' => '2025-12-15',
-            'school_name' => 'Duplicate Artist School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                ['name' => 'Concert Choir', 'songs' => [
-                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
-                ]],
-            ],
-        ],
-    ], now()->addHours(2));
-
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Winter Concert',
         'event_date' => '2025-12-15',
         'school_name' => 'Duplicate Artist School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            ['name' => 'Concert Choir', 'songs' => [
+                ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
+            ]],
+        ],
     ]);
 
     // Second program with same composer
-    cache()->put("program_analysis_{$user->id}", [
-        'status' => 'completed',
-        'data' => [
-            'event_name' => 'Spring Concert',
-            'event_date' => '2025-05-20',
-            'school_name' => 'Duplicate Artist School',
-            'director_name' => 'John Doe',
-            'ensembles' => [
-                ['name' => 'Concert Choir', 'songs' => [
-                    ['title' => 'Another Song', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
-                ]],
-            ],
-        ],
-    ], now()->addHours(2));
-
     $this->actingAs($user)->post(route('addProgram.confirm'), [
         'event_name' => 'Spring Concert',
         'event_date' => '2025-05-20',
         'school_name' => 'Duplicate Artist School',
         'director_name' => 'John Doe',
+        'ensembles' => [
+            ['name' => 'Concert Choir', 'songs' => [
+                ['title' => 'Another Song', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
+            ]],
+        ],
     ]);
 
     // Should only have one artist named Franz Biebl
     expect(Artist::where('artist_name', 'Franz Biebl')->count())->toBe(1);
+});
+
+test('user correcting ensemble name to existing one merges correctly', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $school = School::factory()->create(['school_name' => 'Merge Test School']);
+
+    // Pre-existing ensemble for this school from a prior program
+    Ensemble::factory()->create([
+        'school_id' => $school->id,
+        'ensemble_name' => 'Chorus',
+    ]);
+
+    // User submits with corrected name matching existing ensemble
+    $response = $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Winter Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Merge Test School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Chorus',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
+                ],
+            ],
+        ],
+    ]);
+
+    $response->assertRedirect(route('dashboard'));
+    $response->assertSessionHas('success');
+
+    // Should still be just one "Chorus" ensemble for this school
+    expect(Ensemble::where('school_id', $school->id)
+        ->where('ensemble_name', 'Chorus')
+        ->count())->toBe(1);
+
+    // Song should be attached to the program with the existing ensemble
+    $program = Program::where('user_id', $user->id)->first();
+    expect($program->songTitles)->toHaveCount(1);
+    expect($program->songTitles->first()->pivot->ensemble_id)->not->toBeNull();
+});
+
+test('two ensembles corrected to same name in one submission merges into one', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $response = $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Winter Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Duplicate Name School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Chorus',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
+                ],
+            ],
+            [
+                'name' => 'Chorus',
+                'songs' => [
+                    ['title' => 'Lux Aurumque', 'composer' => 'Eric Whitacre', 'arranger' => null, 'notes' => null],
+                ],
+            ],
+        ],
+    ]);
+
+    $response->assertRedirect(route('dashboard'));
+
+    $school = School::where('school_name', 'Duplicate Name School')->first();
+
+    // Only one ensemble should exist
+    expect(Ensemble::where('school_id', $school->id)->count())->toBe(1);
+
+    // Both songs should be on the program, both linked to the same ensemble
+    $program = Program::where('user_id', $user->id)->first();
+    expect($program->songTitles)->toHaveCount(2);
+
+    $ensembleIds = $program->songTitles->pluck('pivot.ensemble_id')->unique();
+    expect($ensembleIds)->toHaveCount(1);
+});
+
+test('program with no ensembles submitted saves successfully', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $response = $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Winter Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'No Ensemble School',
+        'director_name' => 'John Doe',
+    ]);
+
+    $response->assertRedirect(route('dashboard'));
+    $response->assertSessionHas('success');
+
+    $this->assertDatabaseHas('programs', [
+        'user_id' => $user->id,
+        'event_name' => 'Winter Concert',
+    ]);
+});
+
+test('songs with empty titles are skipped', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Winter Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Empty Title School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null],
+                    ['title' => '', 'composer' => 'Unknown', 'arranger' => null, 'notes' => null],
+                    ['title' => 'Lux Aurumque', 'composer' => 'Eric Whitacre', 'arranger' => null, 'notes' => null],
+                ],
+            ],
+        ],
+    ]);
+
+    // Only 2 songs should be created (empty title skipped)
+    $program = Program::where('user_id', $user->id)->first();
+    expect($program->songTitles)->toHaveCount(2);
 });

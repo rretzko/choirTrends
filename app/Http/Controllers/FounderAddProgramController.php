@@ -15,6 +15,7 @@ use App\Models\SongTitle;
 use App\Models\User;
 use App\Services\ArtistNameParser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -139,45 +140,44 @@ class FounderAddProgramController extends Controller
 
         $targetUser = User::findOrFail($targetUserId);
 
+        // Check if a program with the same user_id, event_name, and event_date already exists
+        $exists = Program::where('user_id', $targetUser->id)
+            ->where('event_name', $validated['event_name'])
+            ->where('event_date', $validated['event_date'])
+            ->exists();
+
+        if ($exists) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors([
+                    'event_name' => 'A program for this event already exists for this user. Please use a different event name or date.',
+                ]);
+        }
+
         try {
-            // Check if a program with the same user_id, event_name, and event_date already exists
-            $exists = Program::where('user_id', $targetUser->id)
-                ->where('event_name', $validated['event_name'])
-                ->where('event_date', $validated['event_date'])
-                ->exists();
+            DB::transaction(function () use ($validated, $targetUser) {
+                // Find or create the school
+                $school = School::firstOrCreate(['school_name' => $validated['school_name']]);
 
-            if ($exists) {
-                return redirect()
-                    ->back()
-                    ->withInput()
-                    ->withErrors([
-                        'event_name' => 'A program for this event already exists for this user. Please use a different event name or date.',
-                    ]);
-            }
+                // Associate the school with the target user (not the founder)
+                $targetUser->schools()->syncWithoutDetaching([$school->id]);
 
-            // Find or create the school
-            $school = School::firstOrCreate(['school_name' => $validated['school_name']]);
+                // Create the program attributed to the target user
+                $program = Program::create([
+                    'user_id' => $targetUser->id,
+                    'event_name' => $validated['event_name'],
+                    'event_date' => $validated['event_date'],
+                    'school_id' => $school->id,
+                    'director_name' => $validated['director_name'],
+                ]);
 
-            // Associate the school with the target user (not the founder)
-            $targetUser->schools()->syncWithoutDetaching([$school->id]);
-
-            // Create the program attributed to the target user
-            $program = Program::create([
-                'user_id' => $targetUser->id,
-                'event_name' => $validated['event_name'],
-                'event_date' => $validated['event_date'],
-                'school_id' => $school->id,
-                'director_name' => $validated['director_name'],
-            ]);
-
-            // Get ensembles from the analysis cache and create them
-            $analysis = cache()->get("program_analysis_{$targetUser->id}");
-            $songTitleAttachments = [];
-
-            if ($analysis && isset($analysis['data']['ensembles'])) {
+                // Process ensembles and songs from user-submitted form data
+                $ensembles = $validated['ensembles'] ?? [];
+                $songTitleAttachments = [];
                 $artistNameParser = new ArtistNameParser;
 
-                foreach ($analysis['data']['ensembles'] as $ensembleData) {
+                foreach ($ensembles as $ensembleData) {
                     $ensemble = null;
                     if (! empty($ensembleData['name'])) {
                         $ensemble = Ensemble::firstOrCreate([
@@ -223,14 +223,14 @@ class FounderAddProgramController extends Controller
                         }
                     }
                 }
-            }
 
-            // Attach song titles to the program with ensemble information
-            if (! empty($songTitleAttachments)) {
-                $program->songTitles()->attach($songTitleAttachments);
-            }
+                // Attach song titles to the program with ensemble information
+                if (! empty($songTitleAttachments)) {
+                    $program->songTitles()->attach($songTitleAttachments);
+                }
+            });
 
-            // Clear the analysis cache and session
+            // Clear the analysis cache and session after successful transaction
             cache()->forget("program_analysis_{$targetUser->id}");
             $request->session()->forget('founder_target_user_id');
 
@@ -238,7 +238,7 @@ class FounderAddProgramController extends Controller
                 ->route('founder.addProgram')
                 ->with('success', "Program saved successfully for {$targetUser->name}!");
         } catch (\Illuminate\Database\QueryException $e) {
-            if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'UNIQUE constraint failed')) {
+            if ($e->getCode() === '23000' && str_contains($e->getMessage(), 'programs')) {
                 return redirect()
                     ->back()
                     ->withInput()
@@ -247,7 +247,10 @@ class FounderAddProgramController extends Controller
                     ]);
             }
 
-            throw $e;
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to save program: '.$e->getMessage()]);
         } catch (\Exception $e) {
             return redirect()
                 ->back()
