@@ -31,7 +31,7 @@ class SetupChecklist extends Component
             return;
         }
 
-        if ($user->orientation_email_sent_at === null) {
+        if ($user->orientation_email_sent_at === null && ! session()->has('impersonating_from')) {
             Mail::to($user->email)->send(new OrientationEmail($user));
             $user->update(['orientation_email_sent_at' => now()]);
         }

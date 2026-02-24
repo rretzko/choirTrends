@@ -162,6 +162,20 @@ test('orientation email is not sent on subsequent visits', function () {
     Mail::assertNotSent(OrientationEmail::class);
 });
 
+test('orientation email is not sent when impersonating a user', function () {
+    Mail::fake();
+
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->withSession(['impersonating_from' => 1]);
+
+    Livewire::test(SetupChecklist::class);
+
+    Mail::assertNotSent(OrientationEmail::class);
+    expect($user->fresh()->orientation_email_sent_at)->toBeNull();
+});
+
 test('orientation email is not sent when checklist is dismissed', function () {
     Mail::fake();
 
