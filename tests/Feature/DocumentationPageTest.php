@@ -47,3 +47,30 @@ test('orientation email page requires authentication', function () {
     $this->get('/documentation/orientation-email')
         ->assertRedirect('/login');
 });
+
+test('add program guide page is accessible to authenticated users', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/add-program-guide')
+        ->assertOk()
+        ->assertSee('Add Program Guide');
+});
+
+test('add program guide page requires authentication', function () {
+    $this->get('/documentation/add-program-guide')
+        ->assertRedirect('/login');
+});
+
+test('add program guide page contains key content sections', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/add-program-guide')
+        ->assertOk()
+        ->assertSee('Overview')
+        ->assertSee('Step 1: Upload Your Program')
+        ->assertSee('Step 2: Review & Confirm')
+        ->assertSee('Tips for Best Results')
+        ->assertSee('Privacy');
+});

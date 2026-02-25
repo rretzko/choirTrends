@@ -2,6 +2,21 @@
     <div class="flex h-full w-full flex-1 flex-col gap-6">
         <flux:heading size="xl">{{ __('Add Program') }}</flux:heading>
 
+        {{-- First-Time Orientation Callout --}}
+        <div x-data="{ dismissed: localStorage.getItem('addProgramOrientationDismissed') === 'true' }" x-show="! dismissed" x-collapse>
+            <div x-show="! dismissed" x-transition>
+                <flux:callout icon="light-bulb" color="sky">
+                    <flux:callout.heading>{{ __('How it works') }}</flux:callout.heading>
+                    <flux:callout.text>
+                        {{ __('Upload a concert program file or paste web addresses, and our AI will extract the event details, ensembles, and songs for you. Review and edit the results below before saving.') }}
+                    </flux:callout.text>
+                    <x-slot name="controls">
+                        <flux:button icon="x-mark" variant="ghost" x-on:click="dismissed = true; localStorage.setItem('addProgramOrientationDismissed', 'true')" />
+                    </x-slot>
+                </flux:callout>
+            </div>
+        </div>
+
         {{-- Display Success Message --}}
         @if(session('success'))
             <div class="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4">
@@ -443,14 +458,30 @@
                     </div>
                 </form>
             @else
-                {{-- Placeholder when no data --}}
-                <div class="min-h-[300px] rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center">
-                    <div class="text-center text-zinc-500 dark:text-zinc-400">
-                        <svg class="mx-auto h-12 w-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                        </svg>
-                        <p class="text-sm font-medium">{{ __('Confirmation dialog will appear here') }}</p>
-                        <p class="text-xs mt-1">{{ __('After processing, you\'ll review the extracted information') }}</p>
+                {{-- Instructive empty state --}}
+                <div class="min-h-[300px] rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center p-6">
+                    <div class="text-center text-zinc-500 dark:text-zinc-400 max-w-md">
+                        <flux:icon name="document-magnifying-glass" class="mx-auto size-12 mb-4 opacity-50" />
+                        <p class="text-sm font-medium mb-3">{{ __('Upload a program above to get started') }}</p>
+                        <p class="text-xs mb-4">{{ __('After processing, you\'ll be able to review and edit:') }}</p>
+                        <ul class="text-xs space-y-1.5 text-left inline-block">
+                            <li class="flex items-center gap-2">
+                                <flux:icon name="check" class="size-3.5 text-zinc-400 shrink-0" />
+                                {{ __('Event name and date') }}
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <flux:icon name="check" class="size-3.5 text-zinc-400 shrink-0" />
+                                {{ __('School and director') }}
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <flux:icon name="check" class="size-3.5 text-zinc-400 shrink-0" />
+                                {{ __('Ensembles with their repertoire') }}
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <flux:icon name="check" class="size-3.5 text-zinc-400 shrink-0" />
+                                {{ __('Song titles, composers, and arrangers') }}
+                            </li>
+                        </ul>
                     </div>
                 </div>
             @endif
