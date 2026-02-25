@@ -327,5 +327,6 @@
 
         @include('partials.footer')
 
+        @fluxScripts
     </body>
 </html>
