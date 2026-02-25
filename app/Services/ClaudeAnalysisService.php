@@ -315,19 +315,32 @@ PROMPT;
                 return $response->json();
             }
 
-            // Check if it's a rate limit error
+            // Check if it's a retryable error (rate limit or overloaded)
             $error = $response->json()['error'] ?? null;
-            $isRateLimit = $error && ($error['type'] ?? '') === 'rate_limit_error';
+            $errorType = $error['type'] ?? 'unknown';
+            $isRetryable = $error && in_array($errorType, [
+                'rate_limit_error',
+                'overloaded_error',
+            ]);
 
-            // If it's the last attempt or not a rate limit error, throw exception
-            if ($attempt === $maxRetries || ! $isRateLimit) {
-                throw new \Exception('Claude API request failed: '.$response->body());
+            // If it's the last attempt or not a retryable error, throw exception
+            if ($attempt === $maxRetries || ! $isRetryable) {
+                $message = match ($errorType) {
+                    'overloaded_error' => 'The AI service is temporarily busy. Please try again in a few minutes.',
+                    'rate_limit_error' => 'Too many requests. Please wait a moment and try again.',
+                    default => 'Failed to analyze program: '.($error['message'] ?? 'Unknown error'),
+                };
+
+                throw new \Exception($message);
             }
 
-            // Calculate exponential backoff delay
-            $delay = $baseDelay * pow(2, $attempt);
+            // Calculate exponential backoff delay (longer for overloaded errors)
+            $delay = $errorType === 'overloaded_error'
+                ? ($baseDelay * pow(2, $attempt)) + 3
+                : $baseDelay * pow(2, $attempt);
 
-            Log::info('Rate limit hit, retrying', [
+            Log::info('Retryable API error, retrying', [
+                'error_type' => $errorType,
                 'attempt' => $attempt + 1,
                 'max_retries' => $maxRetries,
                 'delay_seconds' => $delay,
@@ -338,7 +351,7 @@ PROMPT;
         }
 
         // This should never be reached, but just in case
-        throw new \Exception('Claude API request failed after '.$maxRetries.' retries');
+        throw new \Exception('The AI service is unavailable after multiple attempts. Please try again later.');
     }
 
     private function parseResponse(array $response): array
