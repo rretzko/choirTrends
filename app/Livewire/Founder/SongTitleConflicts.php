@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Founder;
 
 use App\Models\SongTitle;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -18,7 +18,7 @@ class SongTitleConflicts extends Component
     use WithPagination;
 
     /**
-     * @return LengthAwarePaginator<int, Collection<int, SongTitle>>
+     * @return LengthAwarePaginator<int|string, \Illuminate\Database\Eloquent\Collection<int, SongTitle>>
      */
     protected function getConflictGroups(): LengthAwarePaginator
     {
