@@ -26,7 +26,7 @@
         <div class="space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
             <p>{{ config('app.name') }} is my gift to the choral community.</p>
 
-            <p>My wife, Barbara, is a highly respected choral director&mdash;NJ All-State Chorus, CJMEA Region II, All-Eastern co-Director, and conductor of multiple international choirs. When we married in 1988, I became &ldquo;choir-adjacent&rdquo; in nearly every aspect of life. Over time, that led me to create TheDirectorsRoom.com to support Barbara&rsquo;s audition registration work for NJMEA and CJMEA, and eventually to assist other regional nonprofit choral organizations with similar needs.</p>
+            <p>My wife, <a href="https://www.highschoolchoralresources.com" class="text-yellow-50 hover:underline" target="_blank">Barbara</a>, is a highly respected choral director&mdash;NJ All-State Chorus, CJMEA Region II, All-Eastern co-Director, and conductor of multiple international choirs. When we married in 1988, I became &ldquo;choir-adjacent&rdquo; in nearly every aspect of life. Over time, that led me to create TheDirectorsRoom.com to support Barbara&rsquo;s audition registration work for NJMEA and CJMEA, and eventually to assist other regional nonprofit choral organizations with similar needs.</p>
 
             <p>Along the way&mdash;through long car rides listening to countless JW Pepper CDs and over many dinners with choral directors&mdash;I gained a deep appreciation for a persistent challenge: finding high-quality choral music that can realistically and successfully be brought into the classroom.</p>
 
