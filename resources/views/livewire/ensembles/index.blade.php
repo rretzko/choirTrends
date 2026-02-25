@@ -2,6 +2,21 @@
     <div class="mb-6 space-y-4">
         <flux:heading size="xl">{{ __('Ensembles') }}</flux:heading>
 
+        {{-- First-Time Orientation Callout --}}
+        <div x-data="{ dismissed: localStorage.getItem('ensemblesOrientationDismissed') === 'true' }" x-show="! dismissed" x-collapse>
+            <div x-show="! dismissed" x-transition>
+                <flux:callout icon="light-bulb" color="sky">
+                    <flux:callout.heading>{{ __('Understanding ensembles') }}</flux:callout.heading>
+                    <flux:callout.text>
+                        {{ __('Ensembles are grouped by school. For ensembles you own, you can change the voice type (SATB, Soprano/Alto, Tenor/Bass) and mark whether it primarily performs a cappella literature. Use the pencil icon to edit an ensemble\'s name. Toggle My/All to see community data.') }}
+                    </flux:callout.text>
+                    <x-slot name="controls">
+                        <flux:button icon="x-mark" variant="ghost" x-on:click="dismissed = true; localStorage.setItem('ensemblesOrientationDismissed', 'true')" />
+                    </x-slot>
+                </flux:callout>
+            </div>
+        </div>
+
         <div class="flex justify-center gap-2">
             <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('Ensembles from my programs') }}">
                 {{ __('My') }} ({{ $myCount }})
@@ -74,8 +89,13 @@
                 </div>
             </div>
         @empty
-            <div class="rounded-xl border border-neutral-200 px-6 py-12 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-                {{ __('No ensembles found.') }}
+            <div class="rounded-xl border border-neutral-200 px-6 py-12 text-center dark:border-neutral-700">
+                <flux:icon name="user-group" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
+                <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No ensembles found') }}</p>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">{{ __('Ensembles are created when you upload a concert program.') }}</p>
+                <flux:button href="{{ route('addProgram') }}" variant="primary" size="sm" icon="plus">
+                    {{ __('Add Program') }}
+                </flux:button>
             </div>
         @endforelse
     </div>
@@ -148,8 +168,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                            {{ __('No ensembles found.') }}
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="mx-auto max-w-sm">
+                                <flux:icon name="user-group" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
+                                <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No ensembles found') }}</p>
+                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">{{ __('Ensembles are created when you upload a concert program.') }}</p>
+                                <flux:button href="{{ route('addProgram') }}" variant="primary" size="sm" icon="plus">
+                                    {{ __('Add Program') }}
+                                </flux:button>
+                            </div>
                         </td>
                     </tr>
                 @endforelse

@@ -26,6 +26,10 @@
                     <flux:sidebar.item icon="map" :href="route('documentation.site-guide')" :current="request()->routeIs('documentation.site-guide')" wire:navigate>{{ __('Site Guide') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="arrow-up-tray" :href="route('documentation.add-program-guide')" :current="request()->routeIs('documentation.add-program-guide')" wire:navigate>{{ __('Add Program Guide') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="document-text" :href="route('documentation.programs-guide')" :current="request()->routeIs('documentation.programs-guide')" wire:navigate>{{ __('Programs Guide') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="musical-note" :href="route('documentation.composers-arrangers-guide')" :current="request()->routeIs('documentation.composers-arrangers-guide')" wire:navigate>{{ __('Composers/Arrangers Guide') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="user-group" :href="route('documentation.ensembles-guide')" :current="request()->routeIs('documentation.ensembles-guide')" wire:navigate>{{ __('Ensembles Guide') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="academic-cap" :href="route('documentation.schools-guide')" :current="request()->routeIs('documentation.schools-guide')" wire:navigate>{{ __('Schools Guide') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="queue-list" :href="route('documentation.song-titles-guide')" :current="request()->routeIs('documentation.song-titles-guide')" wire:navigate>{{ __('Song Titles Guide') }}</flux:sidebar.item>
                 </flux:sidebar.group>
                 <flux:sidebar.item icon="moon" x-data x-on:click.prevent="$flux.dark = ! $flux.dark">{{ __('Dark Mode') }}</flux:sidebar.item>
             </flux:sidebar.nav>

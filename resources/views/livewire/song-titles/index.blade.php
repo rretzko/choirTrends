@@ -2,6 +2,21 @@
     <div class="mb-6 space-y-4">
         <flux:heading size="xl">{{ __('Songs') }}</flux:heading>
 
+        {{-- First-Time Orientation Callout --}}
+        <div x-data="{ dismissed: localStorage.getItem('songTitlesOrientationDismissed') === 'true' }" x-show="! dismissed" x-collapse>
+            <div x-show="! dismissed" x-transition>
+                <flux:callout icon="light-bulb" color="sky">
+                    <flux:callout.heading>{{ __('Discovering repertoire') }}</flux:callout.heading>
+                    <flux:callout.text>
+                        {{ __('Browse every song title from submitted programs. The "Programmed" column shows how many times a piece has appeared across all programs. Click the YouTube icon to hear a sample performance. Use the search bar to find songs, composers, or arrangers by name.') }}
+                    </flux:callout.text>
+                    <x-slot name="controls">
+                        <flux:button icon="x-mark" variant="ghost" x-on:click="dismissed = true; localStorage.setItem('songTitlesOrientationDismissed', 'true')" />
+                    </x-slot>
+                </flux:callout>
+            </div>
+        </div>
+
         <div class="flex justify-center gap-2">
             <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('Songs from my programs') }}">
                 {{ __('My') }} ({{ $myCount }})
@@ -53,8 +68,13 @@
                 </div>
             </div>
         @empty
-            <div class="rounded-xl border border-neutral-200 px-6 py-12 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-                {{ __('No song titles found.') }}
+            <div class="rounded-xl border border-neutral-200 px-6 py-12 text-center dark:border-neutral-700">
+                <flux:icon name="queue-list" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
+                <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No song titles found') }}</p>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">{{ __('Song titles are extracted when you upload a concert program.') }}</p>
+                <flux:button href="{{ route('addProgram') }}" variant="primary" size="sm" icon="plus">
+                    {{ __('Add Program') }}
+                </flux:button>
             </div>
         @endforelse
     </div>
@@ -138,8 +158,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                            {{ __('No song titles found.') }}
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <div class="mx-auto max-w-sm">
+                                <flux:icon name="queue-list" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
+                                <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No song titles found') }}</p>
+                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">{{ __('Song titles are extracted when you upload a concert program.') }}</p>
+                                <flux:button href="{{ route('addProgram') }}" variant="primary" size="sm" icon="plus">
+                                    {{ __('Add Program') }}
+                                </flux:button>
+                            </div>
                         </td>
                     </tr>
                 @endforelse

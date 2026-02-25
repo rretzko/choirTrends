@@ -31,6 +31,10 @@ Route::middleware(['auth'])->group(function () {
     Route::view('documentation/site-guide', 'documentation.site-guide')->name('documentation.site-guide');
     Route::view('documentation/add-program-guide', 'documentation.add-program-guide')->name('documentation.add-program-guide');
     Route::view('documentation/programs-guide', 'documentation.programs-guide')->name('documentation.programs-guide');
+    Route::view('documentation/composers-arrangers-guide', 'documentation.composers-arrangers-guide')->name('documentation.composers-arrangers-guide');
+    Route::view('documentation/ensembles-guide', 'documentation.ensembles-guide')->name('documentation.ensembles-guide');
+    Route::view('documentation/schools-guide', 'documentation.schools-guide')->name('documentation.schools-guide');
+    Route::view('documentation/song-titles-guide', 'documentation.song-titles-guide')->name('documentation.song-titles-guide');
     Route::view('documentation/orientation-email', 'documentation.orientation-email')->name('documentation.orientation-email');
 
     Route::get('add-program', [App\Http\Controllers\AddProgramController::class, 'index'])->name('addProgram');

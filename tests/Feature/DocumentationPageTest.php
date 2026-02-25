@@ -101,3 +101,106 @@ test('programs guide page contains key content sections', function () {
         ->assertSee('Viewing Program Details')
         ->assertSee('Editing Your Programs');
 });
+
+test('composers arrangers guide page is accessible to authenticated users', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/composers-arrangers-guide')
+        ->assertOk()
+        ->assertSee('Composers & Arrangers Guide');
+});
+
+test('composers arrangers guide page requires authentication', function () {
+    $this->get('/documentation/composers-arrangers-guide')
+        ->assertRedirect('/login');
+});
+
+test('composers arrangers guide page contains key content sections', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/composers-arrangers-guide')
+        ->assertOk()
+        ->assertSee('Overview')
+        ->assertSee('My vs. All')
+        ->assertSee('Viewing Repertoire')
+        ->assertSee('Searching & Sorting');
+});
+
+test('ensembles guide page is accessible to authenticated users', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/ensembles-guide')
+        ->assertOk()
+        ->assertSee('Ensembles Guide');
+});
+
+test('ensembles guide page requires authentication', function () {
+    $this->get('/documentation/ensembles-guide')
+        ->assertRedirect('/login');
+});
+
+test('ensembles guide page contains key content sections', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/ensembles-guide')
+        ->assertOk()
+        ->assertSee('Overview')
+        ->assertSee('My vs. All')
+        ->assertSee('Ensemble Attributes')
+        ->assertSee('Editing Ensembles');
+});
+
+test('schools guide page is accessible to authenticated users', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/schools-guide')
+        ->assertOk()
+        ->assertSee('Schools Guide');
+});
+
+test('schools guide page requires authentication', function () {
+    $this->get('/documentation/schools-guide')
+        ->assertRedirect('/login');
+});
+
+test('schools guide page contains key content sections', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/schools-guide')
+        ->assertOk()
+        ->assertSee('Overview')
+        ->assertSee('My vs. All')
+        ->assertSee('Sorting Columns');
+});
+
+test('song titles guide page is accessible to authenticated users', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/song-titles-guide')
+        ->assertOk()
+        ->assertSee('Song Titles Guide');
+});
+
+test('song titles guide page requires authentication', function () {
+    $this->get('/documentation/song-titles-guide')
+        ->assertRedirect('/login');
+});
+
+test('song titles guide page contains key content sections', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/song-titles-guide')
+        ->assertOk()
+        ->assertSee('Overview')
+        ->assertSee('My vs. All')
+        ->assertSee('Understanding the Table')
+        ->assertSee('Searching & Sorting');
+});
