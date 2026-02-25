@@ -60,7 +60,11 @@
         </div>
     </a>
 
-    <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+    @if (auth()->user()->isFounder())
+        <a href="{{ route('founder.users') }}" class="block rounded-xl border border-neutral-200 bg-white p-6 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700">
+    @else
+        <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+    @endif
         <div class="flex items-center gap-4">
             <div class="flex size-12 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-900">
                 <flux:icon name="users" class="size-6 text-cyan-600 dark:text-cyan-400" />
@@ -70,7 +74,11 @@
                 <flux:heading size="xl">{{ number_format($usersCount) }}</flux:heading>
             </div>
         </div>
-    </div>
+    @if (auth()->user()->isFounder())
+        </a>
+    @else
+        </div>
+    @endif
 
     @if (! $compliance['isExempt'])
         <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
