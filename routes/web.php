@@ -30,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::view('documentation/site-guide', 'documentation.site-guide')->name('documentation.site-guide');
     Route::view('documentation/add-program-guide', 'documentation.add-program-guide')->name('documentation.add-program-guide');
+    Route::view('documentation/programs-guide', 'documentation.programs-guide')->name('documentation.programs-guide');
     Route::view('documentation/orientation-email', 'documentation.orientation-email')->name('documentation.orientation-email');
 
     Route::get('add-program', [App\Http\Controllers\AddProgramController::class, 'index'])->name('addProgram');

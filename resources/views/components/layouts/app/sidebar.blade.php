@@ -25,6 +25,7 @@
                 <flux:sidebar.group expandable :expanded="false" icon="book-open" heading="Documentation" class="grid">
                     <flux:sidebar.item icon="map" :href="route('documentation.site-guide')" :current="request()->routeIs('documentation.site-guide')" wire:navigate>{{ __('Site Guide') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="arrow-up-tray" :href="route('documentation.add-program-guide')" :current="request()->routeIs('documentation.add-program-guide')" wire:navigate>{{ __('Add Program Guide') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="document-text" :href="route('documentation.programs-guide')" :current="request()->routeIs('documentation.programs-guide')" wire:navigate>{{ __('Programs Guide') }}</flux:sidebar.item>
                 </flux:sidebar.group>
                 <flux:sidebar.item icon="moon" x-data x-on:click.prevent="$flux.dark = ! $flux.dark">{{ __('Dark Mode') }}</flux:sidebar.item>
             </flux:sidebar.nav>

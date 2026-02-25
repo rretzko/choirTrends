@@ -74,3 +74,30 @@ test('add program guide page contains key content sections', function () {
         ->assertSee('Tips for Best Results')
         ->assertSee('Privacy');
 });
+
+test('programs guide page is accessible to authenticated users', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/programs-guide')
+        ->assertOk()
+        ->assertSee('Programs Guide');
+});
+
+test('programs guide page requires authentication', function () {
+    $this->get('/documentation/programs-guide')
+        ->assertRedirect('/login');
+});
+
+test('programs guide page contains key content sections', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)
+        ->get('/documentation/programs-guide')
+        ->assertOk()
+        ->assertSee('Overview')
+        ->assertSee('Filtering by School')
+        ->assertSee('Sorting Columns')
+        ->assertSee('Viewing Program Details')
+        ->assertSee('Editing Your Programs');
+});

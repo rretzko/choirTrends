@@ -2,6 +2,21 @@
     <div class="mb-6 space-y-4">
         <flux:heading size="xl">{{ __('Programs') }}</flux:heading>
 
+        {{-- First-Time Orientation Callout --}}
+        <div x-data="{ dismissed: localStorage.getItem('programsOrientationDismissed') === 'true' }" x-show="! dismissed" x-collapse>
+            <div x-show="! dismissed" x-transition>
+                <flux:callout icon="light-bulb" color="sky">
+                    <flux:callout.heading>{{ __('Navigating your programs') }}</flux:callout.heading>
+                    <flux:callout.text>
+                        {{ __('Click a program name to view its ensembles and repertoire. Sort any column by clicking its header. Use the school drop-down to filter by one or more schools. The pencil icon on the far right lets you edit programs you own.') }}
+                    </flux:callout.text>
+                    <x-slot name="controls">
+                        <flux:button icon="x-mark" variant="ghost" x-on:click="dismissed = true; localStorage.setItem('programsOrientationDismissed', 'true')" />
+                    </x-slot>
+                </flux:callout>
+            </div>
+        </div>
+
         <div class="flex items-center justify-start space-x-2">
             <flux:button href="{{ route('addProgram') }}" variant="primary" size="sm" icon="plus">
                 {{ __('Add Program') }}
@@ -127,8 +142,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-4 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                            {{ __('No programs found.') }}
+                        <td colspan="5" class="px-4 py-12 text-center">
+                            <div class="mx-auto max-w-sm">
+                                <flux:icon name="document-text" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
+                                <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No programs found') }}</p>
+                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">{{ __('Upload your first concert program to start tracking repertoire trends.') }}</p>
+                                <flux:button href="{{ route('addProgram') }}" variant="primary" size="sm" icon="plus">
+                                    {{ __('Add Program') }}
+                                </flux:button>
+                            </div>
                         </td>
                     </tr>
                 @endforelse
