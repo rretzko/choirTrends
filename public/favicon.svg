@@ -1,23 +1,64 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
     <defs>
-        <linearGradient id="bg3b" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#006D77"/>
-            <stop offset="100%" style="stop-color:#83C5BE"/>
+        <linearGradient id="ctGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1B4A5C"/>
+            <stop offset="50%" stop-color="#2A8B8B"/>
+            <stop offset="100%" stop-color="#5FB8AD"/>
         </linearGradient>
+        <!-- Top arc for CHOIR TRENDS: r=170, semicircle through 12:00 -->
+        <path id="topArc" d="M 86,256 A 170,170 0 0,1 426,256" fill="none"/>
+        <!-- Bottom arc for PROGRAMMING TOGETHER: r=185, counter-clockwise through 6:00 -->
+        <path id="bottomArc" d="M 71,256 A 185,185 0 0,0 441,256" fill="none"/>
     </defs>
-    <circle cx="256" cy="256" r="240" fill="url(#bg3b)"/>
-    <!-- Curved staff lines along bottom arc -->
-    <path d="M80 340 Q256 420 432 340" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
-    <path d="M65 365 Q256 445 447 365" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
-    <path d="M55 390 Q256 470 457 390" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
-    <path d="M55 415 Q256 495 457 415" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
-    <path d="M70 438 Q256 515 442 438" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
-    <!-- CT Text -->
-    <text x="256" y="230" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="230" fill="white" text-anchor="middle" dominant-baseline="central" letter-spacing="-10">CT</text>
-    <!-- Small note on staff -->
-    <ellipse cx="200" cy="388" rx="16" ry="11" fill="rgba(255,255,255,0.6)" transform="rotate(-20, 200, 388)"/>
-    <line x1="214" y1="382" x2="214" y2="330" stroke="rgba(255,255,255,0.6)" stroke-width="3.5"/>
-    <!-- Another note -->
-    <ellipse cx="310" cy="375" rx="16" ry="11" fill="rgba(255,255,255,0.6)" transform="rotate(-20, 310, 375)"/>
-    <line x1="324" y1="369" x2="324" y2="317" stroke="rgba(255,255,255,0.6)" stroke-width="3.5"/>
+
+    <!-- White background -->
+    <circle cx="256" cy="256" r="255" fill="white"/>
+
+    <!-- Outer border circle -->
+    <circle cx="256" cy="256" r="220" fill="none" stroke="#1B2A4A" stroke-width="2.5"/>
+
+    <!-- Inner ring just inside outer border -->
+    <circle cx="256" cy="256" r="210" fill="none" stroke="#1B2A4A" stroke-width="1"/>
+
+    <!-- Inner circle surrounding CT -->
+    <circle cx="256" cy="256" r="125" fill="none" stroke="#1B2A4A" stroke-width="1.5"/>
+
+    <!-- CT Monogram -->
+    <text x="256" y="270" font-family="Georgia, 'Times New Roman', serif" font-weight="bold"
+          font-size="130" fill="url(#ctGrad)" text-anchor="middle"
+          dominant-baseline="central" letter-spacing="-6">CT</text>
+
+    <!-- CHOIR TRENDS at 12:00 -->
+    <text font-family="Georgia, 'Times New Roman', serif" font-size="38" font-weight="bold"
+          fill="#1B2A4A" letter-spacing="6" text-anchor="middle">
+        <textPath href="#topArc" startOffset="50%">CHOIR TRENDS</textPath>
+    </text>
+
+    <!-- PROGRAMMING TOGETHER at 6:00 -->
+    <text font-family="Georgia, 'Times New Roman', serif" font-size="20"
+          fill="#1B2A4A" letter-spacing="3" text-anchor="middle">
+        <textPath href="#bottomArc" startOffset="50%">PROGRAMMING TOGETHER</textPath>
+    </text>
+
+    <!-- G-Clef at 9:00 (left) — flipped upright with negative Y scale -->
+    <g transform="translate(72, 284) scale(0.8, -0.8)" fill="none" stroke="#C5A55A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M 15,55 C 5,48 0,36 5,26 C 10,16 22,18 22,28 C 22,36 12,38 12,32 C 12,26 18,24 20,28"/>
+        <path d="M 15,55 L 16,10"/>
+        <path d="M 16,10 C 16,4 22,2 24,6 C 26,10 22,14 18,12"/>
+        <path d="M 15,55 C 14,62 20,66 24,62 C 28,58 24,52 20,54"/>
+    </g>
+
+    <!-- G-Clef at 3:00 (right) — flipped upright with negative Y scale -->
+    <g transform="translate(416, 284) scale(0.8, -0.8)" fill="none" stroke="#C5A55A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M 15,55 C 5,48 0,36 5,26 C 10,16 22,18 22,28 C 22,36 12,38 12,32 C 12,26 18,24 20,28"/>
+        <path d="M 15,55 L 16,10"/>
+        <path d="M 16,10 C 16,4 22,2 24,6 C 26,10 22,14 18,12"/>
+        <path d="M 15,55 C 14,62 20,66 24,62 C 28,58 24,52 20,54"/>
+    </g>
+
+    <!-- Decorative dots at ~2:00, ~10:00, ~4:00, ~8:00 -->
+    <circle cx="107" cy="170" r="3.5" fill="#C5A55A"/>
+    <circle cx="405" cy="170" r="3.5" fill="#C5A55A"/>
+    <circle cx="107" cy="342" r="3.5" fill="#C5A55A"/>
+    <circle cx="405" cy="342" r="3.5" fill="#C5A55A"/>
 </svg>
