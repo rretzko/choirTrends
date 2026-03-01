@@ -149,6 +149,41 @@ test('users page can sort by programs count', function () {
         ->assertSet('sortDirection', 'asc');
 });
 
+test('users page can sort by last login', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    Livewire::actingAs($founder)
+        ->test(Users::class)
+        ->call('sort', 'last_login_at')
+        ->assertSet('sortBy', 'last_login_at')
+        ->assertSet('sortDirection', 'asc')
+        ->call('sort', 'last_login_at')
+        ->assertSet('sortDirection', 'desc');
+});
+
+test('users page can apply sort via mobile dropdown', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    Livewire::actingAs($founder)
+        ->test(Users::class)
+        ->call('applySort', 'last_login_at:desc')
+        ->assertSet('sortBy', 'last_login_at')
+        ->assertSet('sortDirection', 'desc')
+        ->call('applySort', 'programs_count:asc')
+        ->assertSet('sortBy', 'programs_count')
+        ->assertSet('sortDirection', 'asc');
+});
+
+test('users page mobile sort ignores invalid values', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    Livewire::actingAs($founder)
+        ->test(Users::class)
+        ->call('applySort', 'invalid_column:asc')
+        ->assertSet('sortBy', 'alpha_name')
+        ->assertSet('sortDirection', 'asc');
+});
+
 test('users page shows empty state when search has no results', function () {
     $founder = User::factory()->withoutTwoFactor()->founder()->create();
 

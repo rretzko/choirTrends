@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Founder;
 
 use App\Models\User;
+use App\Models\UserLogin;
 use Illuminate\View\View;
 use Livewire\Component;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,6 +28,17 @@ class Users extends Component
         }
     }
 
+    public function applySort(string $value): void
+    {
+        [$column, $direction] = explode(':', $value);
+
+        if (in_array($column, ['alpha_name', 'email', 'programs_count', 'schools_count', 'last_login_at', 'created_at'])
+            && in_array($direction, ['asc', 'desc'])) {
+            $this->sortBy = $column;
+            $this->sortDirection = $direction;
+        }
+    }
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -43,6 +55,10 @@ class Users extends Component
 
         $query = User::query()
             ->withCount(['programs', 'schools'])
+            ->addSelect(['last_login_at' => UserLogin::query()
+                ->selectRaw('MAX(created_at)')
+                ->whereColumn('user_id', 'users.id'),
+            ])
             ->with(['userLogins' => function ($q) {
                 $q->latest('created_at')->limit(1);
             }]);
@@ -56,7 +72,7 @@ class Users extends Component
             });
         }
 
-        if (in_array($this->sortBy, ['alpha_name', 'email', 'programs_count', 'schools_count', 'created_at'])) {
+        if (in_array($this->sortBy, ['alpha_name', 'email', 'programs_count', 'schools_count', 'last_login_at', 'created_at'])) {
             $query->orderBy($this->sortBy, $this->sortDirection);
         }
 
