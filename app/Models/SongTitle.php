@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property-read \Illuminate\Database\Eloquent\Relations\Pivot|null $pivot
+ */
 class SongTitle extends Model
 {
     /** @use HasFactory<\Database\Factories\SongTitleFactory> */

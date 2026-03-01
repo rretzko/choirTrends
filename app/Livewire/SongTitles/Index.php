@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Livewire\SongTitles;
 
+use App\Enums\VideoVisibility;
 use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\SongTitle;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Livewire\Component;
 
@@ -26,6 +29,14 @@ class Index extends Component
 
     public int $allCount = 0;
 
+    public ?int $videoSongTitleId = null;
+
+    public ?int $videoProgramId = null;
+
+    public string $videoSongName = '';
+
+    public bool $isAudio = false;
+
     public function sort(string $column): void
     {
         if ($this->sortBy === $column) {
@@ -34,6 +45,49 @@ class Index extends Component
             $this->sortBy = $column;
             $this->sortDirection = 'asc';
         }
+    }
+
+    public function playVideo(int $songTitleId, int $programId, string $songName, bool $isAudio = false): void
+    {
+        $this->videoSongTitleId = $songTitleId;
+        $this->videoProgramId = $programId;
+        $this->videoSongName = $songName;
+        $this->isAudio = $isAudio;
+
+        $this->modal('song-video-player')->show();
+    }
+
+    /**
+     * Build a map of song_title_id => [{program_id, program_name, is_audio}] for songs with viewable videos.
+     *
+     * @return Collection<int|string, array{program_id: int, program_name: string, is_audio: bool}>
+     */
+    private function getViewableVideoMap(): Collection
+    {
+        $userId = Auth::id();
+
+        $rows = DB::table('program_song_title')
+            ->join('programs', 'programs.id', '=', 'program_song_title.program_id')
+            ->whereNotNull('program_song_title.video_path')
+            ->where(function ($q) use ($userId) {
+                $q->where('programs.user_id', $userId)
+                    ->orWhere('program_song_title.video_visibility', VideoVisibility::Public->value);
+            })
+            ->select('program_song_title.song_title_id', 'programs.id as program_id', 'programs.event_name', 'program_song_title.video_path')
+            ->get();
+
+        return $rows->groupBy('song_title_id')->map(function ($items) {
+            /** @var object{program_id: int, event_name: string, video_path: string} $row */
+            $row = $items->first();
+
+            $ext = strtolower(pathinfo((string) $row->video_path, PATHINFO_EXTENSION));
+
+            return [
+                'program_id' => (int) $row->program_id,
+                'program_name' => (string) $row->event_name,
+                'is_audio' => in_array($ext, ['mp3', 'wav', 'm4a', 'ogg', 'flac', 'aac', 'wma']),
+            ];
+        });
     }
 
     public function render(): View
@@ -91,8 +145,11 @@ class Index extends Component
 
         $songTitles = $query->get();
 
+        $viewableVideoMap = $this->getViewableVideoMap();
+
         return view('livewire.song-titles.index', [
             'songTitles' => $songTitles,
+            'viewableVideoMap' => $viewableVideoMap,
         ])->layout('components.layouts.app', ['title' => __('Song Titles')]);
     }
 }

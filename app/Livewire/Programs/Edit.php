@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Programs;
 
+use App\Enums\VideoVisibility;
 use App\Models\Artist;
 use App\Models\Ensemble;
 use App\Models\Program;
@@ -12,11 +13,16 @@ use App\Models\SongTitle;
 use App\Services\ArtistNameParser;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 
 class Edit extends Component
 {
+    use WithFileUploads;
+
     public Program $program;
 
     public string $eventName = '';
@@ -29,7 +35,17 @@ class Edit extends Component
 
     public bool $schoolEditable = true;
 
-    /** @var array<int, array{id: int|null, name: string, editable: bool, songs: list<array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int}>}> */
+    /** @var TemporaryUploadedFile|null */
+    public $programVideo;
+
+    public string $programVideoVisibility = 'Private';
+
+    public bool $hasProgramVideo = false;
+
+    /** @var array<string, TemporaryUploadedFile|null> */
+    public array $songVideos = [];
+
+    /** @var array<int, array{id: int|null, name: string, editable: bool, songs: list<array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int, videoPath: string|null, videoVisibility: string}>}> */
     public array $ensembles = [];
 
     public function mount(Program $program): void
@@ -42,6 +58,11 @@ class Edit extends Component
         $this->eventDate = Carbon::parse($program->event_date)->format('Y-m-d');
         $this->directorName = $program->director_name ?? '';
         $this->schoolName = $program->school->school_name ?? '';
+
+        $this->hasProgramVideo = $program->hasVideo();
+        $this->programVideoVisibility = $program->video_visibility instanceof VideoVisibility
+            ? $program->video_visibility->value
+            : 'Private';
 
         $this->computeEditability();
     }
@@ -64,6 +85,8 @@ class Edit extends Component
                     'composerId' => null,
                     'arrangerId' => null,
                     'sortOrder' => 1,
+                    'videoPath' => null,
+                    'videoVisibility' => 'Private',
                 ],
             ],
         ];
@@ -90,6 +113,8 @@ class Edit extends Component
             'composerId' => null,
             'arrangerId' => null,
             'sortOrder' => $maxSortOrder + 1,
+            'videoPath' => null,
+            'videoVisibility' => 'Private',
         ];
     }
 
@@ -97,6 +122,113 @@ class Edit extends Component
     {
         unset($this->ensembles[$ensembleIndex]['songs'][$songIndex]);
         $this->ensembles[$ensembleIndex]['songs'] = array_values($this->ensembles[$ensembleIndex]['songs']);
+    }
+
+    public function updatedProgramVideo(): void
+    {
+        $this->validate([
+            'programVideo' => ['file', 'mimes:mp4,mov,avi,wmv', 'max:512000'],
+        ]);
+
+        $path = $this->programVideo->store('mp4s/programs');
+
+        $this->program->update([
+            'video_path' => $path,
+            'video_visibility' => VideoVisibility::from($this->programVideoVisibility),
+            'video_uploaded_at' => now(),
+        ]);
+
+        $this->hasProgramVideo = true;
+        $this->programVideo = null;
+    }
+
+    public function removeProgramVideo(): void
+    {
+        if ($this->program->video_path) {
+            Storage::delete($this->program->video_path);
+        }
+
+        $this->program->update([
+            'video_path' => null,
+            'video_visibility' => null,
+            'video_uploaded_at' => null,
+        ]);
+
+        $this->hasProgramVideo = false;
+    }
+
+    public function toggleProgramVideoVisibility(): void
+    {
+        $newVisibility = $this->program->video_visibility === VideoVisibility::Private
+            ? VideoVisibility::Public
+            : VideoVisibility::Private;
+
+        $this->program->update(['video_visibility' => $newVisibility]);
+        $this->programVideoVisibility = $newVisibility->value;
+    }
+
+    public function uploadSongVideo(int $eIndex, int $sIndex): void
+    {
+        $key = "{$eIndex}-{$sIndex}";
+
+        $this->validate([
+            "songVideos.{$key}" => ['file', 'mimes:mp4,mov,avi,wmv,mp3,wav,m4a,ogg,flac,aac,wma', 'max:512000'],
+        ]);
+
+        $file = $this->songVideos[$key];
+        $path = $file->store('mp4s/songs');
+
+        $songTitleId = $this->ensembles[$eIndex]['songs'][$sIndex]['songTitleId'] ?? null;
+
+        if ($songTitleId) {
+            $this->program->songTitles()->updateExistingPivot($songTitleId, [
+                'video_path' => $path,
+                'video_visibility' => 'Private',
+                'video_uploaded_at' => now(),
+            ]);
+        }
+
+        $this->ensembles[$eIndex]['songs'][$sIndex]['videoPath'] = $path;
+        $this->ensembles[$eIndex]['songs'][$sIndex]['videoVisibility'] = 'Private';
+        unset($this->songVideos[$key]);
+    }
+
+    public function removeSongVideo(int $eIndex, int $sIndex): void
+    {
+        $videoPath = $this->ensembles[$eIndex]['songs'][$sIndex]['videoPath'] ?? null;
+
+        if ($videoPath) {
+            Storage::delete($videoPath);
+        }
+
+        $songTitleId = $this->ensembles[$eIndex]['songs'][$sIndex]['songTitleId'] ?? null;
+
+        if ($songTitleId) {
+            $this->program->songTitles()->updateExistingPivot($songTitleId, [
+                'video_path' => null,
+                'video_visibility' => null,
+                'video_uploaded_at' => null,
+            ]);
+        }
+
+        $this->ensembles[$eIndex]['songs'][$sIndex]['videoPath'] = null;
+        $this->ensembles[$eIndex]['songs'][$sIndex]['videoVisibility'] = 'Private';
+    }
+
+    public function toggleSongVideoVisibility(int $eIndex, int $sIndex): void
+    {
+        $current = $this->ensembles[$eIndex]['songs'][$sIndex]['videoVisibility'] ?? 'Private';
+        $new = $current === 'Private' ? 'Public' : 'Private';
+
+        $songTitleId = $this->ensembles[$eIndex]['songs'][$sIndex]['songTitleId'] ?? null;
+
+        if ($songTitleId) {
+            $this->program->songTitles()->updateExistingPivot($songTitleId, [
+                'video_visibility' => $new,
+            ]);
+        }
+
+        $this->ensembles[$eIndex]['songs'][$sIndex]['videoVisibility'] = $new;
     }
 
     public function save(): void
@@ -211,6 +343,9 @@ class Edit extends Component
                     $songTitleAttachments[$songTitle->id] = [
                         'ensemble_id' => $ensemble?->id,
                         'sort_order' => (int) $songData['sortOrder'],
+                        'video_path' => $songData['videoPath'] ?? null,
+                        'video_visibility' => ($songData['videoPath'] ?? null) ? ($songData['videoVisibility'] ?? 'Private') : null,
+                        'video_uploaded_at' => ($songData['videoPath'] ?? null) ? now() : null,
                     ];
                 }
             }
@@ -285,6 +420,9 @@ class Edit extends Component
                         ->exists();
                 }
 
+                /** @var object{sort_order: int, video_path: string|null, video_visibility: string|null} $pivot */
+                $pivot = $songTitle->pivot;
+
                 $songsArray[] = [
                     'songTitleId' => $songTitle->id,
                     'title' => $songTitle->song_title,
@@ -295,7 +433,9 @@ class Edit extends Component
                     'arrangerEditable' => $arrangerEditable,
                     'composerId' => $songTitle->composer_id,
                     'arrangerId' => $songTitle->arranger_id,
-                    'sortOrder' => $songTitle->pivot->sort_order ?? 0,
+                    'sortOrder' => $pivot->sort_order ?? 0,
+                    'videoPath' => $pivot->video_path,
+                    'videoVisibility' => $pivot->video_visibility ?? 'Private',
                 ];
             }
 

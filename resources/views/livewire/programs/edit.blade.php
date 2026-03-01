@@ -36,6 +36,45 @@
             </flux:field>
         </div>
 
+        {{-- Concert Video --}}
+        <div class="rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
+            <flux:heading size="sm" class="mb-3">{{ __('Concert Video') }}</flux:heading>
+
+            @if ($hasProgramVideo)
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 text-sm text-teal-600 dark:text-teal-400">
+                        <flux:icon name="video-camera" class="size-5" />
+                        <span>{{ __('Video uploaded') }}</span>
+                    </div>
+                    <flux:button wire:click="toggleProgramVideoVisibility" type="button" variant="ghost" size="sm">
+                        <flux:icon name="{{ $programVideoVisibility === 'Public' ? 'eye' : 'eye-slash' }}" class="size-4" />
+                        {{ $programVideoVisibility === 'Public' ? __('Public') : __('Private') }}
+                    </flux:button>
+                    <flux:button wire:click="removeProgramVideo" wire:confirm="{{ __('Remove this video?') }}" type="button" variant="ghost" size="sm" class="text-red-600 hover:text-red-500">
+                        <flux:icon name="trash" class="size-4" />
+                    </flux:button>
+                </div>
+            @else
+                <div
+                    x-data="{ uploading: false, progress: 0 }"
+                    x-on:livewire-upload-start="uploading = true"
+                    x-on:livewire-upload-finish="uploading = false"
+                    x-on:livewire-upload-cancel="uploading = false"
+                    x-on:livewire-upload-error="uploading = false"
+                    x-on:livewire-upload-progress="progress = $event.detail.progress"
+                >
+                    <input type="file" wire:model="programVideo" accept=".mp4,.mov,.avi,.wmv" class="block w-full text-sm text-neutral-500 file:mr-4 file:rounded file:border-0 file:bg-neutral-100 file:px-4 file:py-2 file:text-sm file:font-medium hover:file:bg-neutral-200 dark:text-neutral-400 dark:file:bg-neutral-700 dark:hover:file:bg-neutral-600" />
+                    <div x-show="uploading" x-cloak class="mt-2">
+                        <div class="h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
+                            <div class="h-2 rounded-full bg-teal-500 transition-all" x-bind:style="'width: ' + progress + '%'"></div>
+                        </div>
+                        <p class="mt-1 text-xs text-neutral-500" x-text="progress + '% uploaded'"></p>
+                    </div>
+                    @error('programVideo') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+            @endif
+        </div>
+
         {{-- Ensembles --}}
         @foreach ($ensembles as $eIndex => $ensemble)
             <div wire:key="ensemble-{{ $eIndex }}" class="rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
@@ -99,6 +138,51 @@
                         </div>
 
                         <flux:button wire:click="removeSong({{ $eIndex }}, {{ $sIndex }})" type="button" variant="ghost" size="sm" icon="trash" title="{{ __('Remove Song') }}" class="mt-6 shrink-0" />
+
+                        {{-- Song Video --}}
+                        @if ($song['songTitleId'])
+                            <div class="mt-2 w-full border-t border-neutral-100 pt-2 dark:border-neutral-800">
+                                @if ($song['videoPath'])
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex items-center gap-1 text-xs text-teal-600 dark:text-teal-400">
+                                            @if (in_array(pathinfo($song['videoPath'], PATHINFO_EXTENSION), ['mp3', 'wav', 'm4a', 'ogg', 'flac', 'aac', 'wma']))
+                                                <flux:icon name="musical-note" class="size-4" />
+                                                <span>{{ __('Audio') }}</span>
+                                            @else
+                                                <flux:icon name="video-camera" class="size-4" />
+                                                <span>{{ __('Video') }}</span>
+                                            @endif
+                                        </div>
+                                        <flux:button wire:click="toggleSongVideoVisibility({{ $eIndex }}, {{ $sIndex }})" type="button" variant="ghost" size="xs">
+                                            <flux:icon name="{{ $song['videoVisibility'] === 'Public' ? 'eye' : 'eye-slash' }}" class="size-3" />
+                                            {{ $song['videoVisibility'] === 'Public' ? __('Public') : __('Private') }}
+                                        </flux:button>
+                                        <flux:button wire:click="removeSongVideo({{ $eIndex }}, {{ $sIndex }})" wire:confirm="{{ __('Remove this file?') }}" type="button" variant="ghost" size="xs" class="text-red-600 hover:text-red-500">
+                                            <flux:icon name="trash" class="size-3" />
+                                        </flux:button>
+                                    </div>
+                                @else
+                                    <div
+                                        x-data="{ uploading: false, progress: 0 }"
+                                        x-on:livewire-upload-start="uploading = true"
+                                        x-on:livewire-upload-finish="uploading = false"
+                                        x-on:livewire-upload-cancel="uploading = false"
+                                        x-on:livewire-upload-error="uploading = false"
+                                        x-on:livewire-upload-progress="progress = $event.detail.progress"
+                                        class="flex items-center gap-2"
+                                    >
+                                        <input type="file" wire:model="songVideos.{{ $eIndex }}-{{ $sIndex }}" accept=".mp4,.mov,.avi,.wmv,.mp3,.wav,.m4a,.ogg,.flac,.aac,.wma" class="block w-full text-xs text-neutral-500 file:mr-2 file:rounded file:border-0 file:bg-neutral-100 file:px-2 file:py-1 file:text-xs dark:text-neutral-400 dark:file:bg-neutral-700" />
+                                        <flux:button wire:click="uploadSongVideo({{ $eIndex }}, {{ $sIndex }})" type="button" variant="ghost" size="xs" icon="arrow-up-tray" title="{{ __('Upload') }}" />
+                                        <div x-show="uploading" x-cloak class="flex items-center gap-1">
+                                            <div class="h-1.5 w-16 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
+                                                <div class="h-1.5 rounded-full bg-teal-500 transition-all" x-bind:style="'width: ' + progress + '%'"></div>
+                                            </div>
+                                        </div>
+                                        @error("songVideos.{$eIndex}-{$sIndex}") <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 @endforeach
 

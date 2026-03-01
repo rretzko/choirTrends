@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\VideoVisibility;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,12 +25,17 @@ class Program extends Model
         'event_name',
         'event_date',
         'director_name',
+        'video_path',
+        'video_visibility',
+        'video_uploaded_at',
     ];
 
     protected function casts(): array
     {
         return [
             'event_date' => 'date',
+            'video_visibility' => VideoVisibility::class,
+            'video_uploaded_at' => 'datetime',
         ];
     }
 
@@ -46,8 +52,13 @@ class Program extends Model
     public function songTitles(): BelongsToMany
     {
         return $this->belongsToMany(SongTitle::class)
-            ->withPivot('ensemble_id', 'sort_order')
+            ->withPivot('ensemble_id', 'sort_order', 'video_path', 'video_visibility', 'video_uploaded_at')
             ->orderByPivot('sort_order');
+    }
+
+    public function hasVideo(): bool
+    {
+        return $this->video_path !== null;
     }
 
     public function ensembles(): BelongsToMany

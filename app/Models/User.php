@@ -55,6 +55,8 @@ class User extends Authenticatable
         'welcomed_at',
         'onboarding_dismissed_at',
         'orientation_email_sent_at',
+        'catalog_token',
+        'catalog_enabled_at',
     ];
 
     /**
@@ -82,6 +84,7 @@ class User extends Authenticatable
             'welcomed_at' => 'datetime',
             'onboarding_dismissed_at' => 'datetime',
             'orientation_email_sent_at' => 'datetime',
+            'catalog_enabled_at' => 'datetime',
         ];
     }
 
@@ -138,5 +141,32 @@ class User extends Authenticatable
         $lastName = array_pop($parts);
 
         return $lastName.', '.implode(' ', $parts);
+    }
+
+    public function isCatalogEnabled(): bool
+    {
+        return $this->catalog_enabled_at !== null;
+    }
+
+    public function enableCatalog(): void
+    {
+        if (! $this->catalog_token) {
+            $this->catalog_token = Str::uuid()->toString();
+        }
+
+        $this->catalog_enabled_at = now();
+        $this->save();
+    }
+
+    public function disableCatalog(): void
+    {
+        $this->catalog_enabled_at = null;
+        $this->save();
+    }
+
+    public function regenerateCatalogToken(): void
+    {
+        $this->catalog_token = Str::uuid()->toString();
+        $this->save();
     }
 }

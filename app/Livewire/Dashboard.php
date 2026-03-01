@@ -11,6 +11,7 @@ use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class Dashboard extends Component
@@ -29,14 +30,40 @@ class Dashboard extends Component
 
     public int $usersCount = 0;
 
+    public bool $catalogEnabled = false;
+
+    public string $catalogUrl = '';
+
     public function mount(): void
     {
+        /** @var User $user */
+        $user = Auth::user();
+        $this->catalogEnabled = $user->isCatalogEnabled();
+        $this->catalogUrl = $user->catalog_token
+            ? route('catalog.show', $user->catalog_token)
+            : '';
+
         $this->artistsCount = Artist::query()->count();
         $this->ensemblesCount = Ensemble::query()->count();
         $this->programsCount = Program::query()->count();
         $this->schoolsCount = School::query()->count();
         $this->songTitlesCount = SongTitle::query()->count();
         $this->usersCount = User::query()->count();
+    }
+
+    public function toggleCatalog(): void
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        if ($user->isCatalogEnabled()) {
+            $user->disableCatalog();
+            $this->catalogEnabled = false;
+        } else {
+            $user->enableCatalog();
+            $this->catalogEnabled = true;
+            $this->catalogUrl = route('catalog.show', $user->catalog_token);
+        }
     }
 
     public function render(): \Illuminate\View\View

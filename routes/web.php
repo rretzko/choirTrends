@@ -11,7 +11,14 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+Route::get('catalog/{token}', App\Livewire\Catalog\Index::class)->name('catalog.show');
+Route::get('catalog/{token}/video/program/{program}', [App\Http\Controllers\VideoController::class, 'catalogProgramVideo'])->name('catalog.videos.program');
+Route::get('catalog/{token}/video/song/{program}/{songTitle}', [App\Http\Controllers\VideoController::class, 'catalogSongVideo'])->name('catalog.videos.song');
+
 Route::middleware(['auth'])->group(function () {
+
+    Route::get('videos/program/{program}', [App\Http\Controllers\VideoController::class, 'programVideo'])->name('videos.program');
+    Route::get('videos/song/{program}/{songTitle}', [App\Http\Controllers\VideoController::class, 'songVideo'])->name('videos.song');
 
     Route::get('add-program/status', [App\Http\Controllers\AddProgramController::class, 'status'])->name('addProgram.status');
 

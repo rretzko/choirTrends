@@ -80,6 +80,47 @@
         </div>
     @endif
 
+    <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="flex size-12 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-900">
+                <flux:icon name="share" class="size-6 text-teal-600 dark:text-teal-400" />
+            </div>
+            <div>
+                <flux:heading size="lg">{{ __('Share Your Catalog') }}</flux:heading>
+                <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">
+                    {{ __('Share a read-only link to your programs with alumni or colleagues.') }}
+                </flux:text>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <flux:switch wire:click="toggleCatalog" :checked="$catalogEnabled" />
+            <flux:text class="text-sm">
+                {{ $catalogEnabled ? __('Catalog sharing is on') : __('Catalog sharing is off') }}
+            </flux:text>
+        </div>
+
+        @if ($catalogEnabled && $catalogUrl)
+            <div class="mt-4" x-data="{ copied: false }">
+                <div class="flex items-center gap-2">
+                    <input
+                        type="text"
+                        readonly
+                        value="{{ $catalogUrl }}"
+                        class="flex-1 rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-700 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-300"
+                    >
+                    <flux:button
+                        variant="primary"
+                        size="sm"
+                        icon="clipboard-document"
+                        x-on:click="navigator.clipboard.writeText('{{ $catalogUrl }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                        x-text="copied ? '{{ __('Copied!') }}' : '{{ __('Copy') }}'"
+                    />
+                </div>
+            </div>
+        @endif
+    </div>
+
     @if (! $compliance['isExempt'])
         <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
             <div class="flex items-center gap-4">

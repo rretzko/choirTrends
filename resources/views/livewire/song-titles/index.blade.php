@@ -60,11 +60,22 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
+                        @if ($viewableVideoMap->has($songTitle->id))
+                            @php $mapEntry = $viewableVideoMap->get($songTitle->id); @endphp
+                            <button
+                                wire:click="playVideo({{ $songTitle->id }}, {{ $mapEntry['program_id'] }}, '{{ addslashes($songTitle->song_title) }}', {{ $mapEntry['is_audio'] ? 'true' : 'false' }})"
+                                title="{{ $mapEntry['is_audio'] ? __('Listen') : __('Watch Video') }}"
+                                class="cursor-pointer"
+                            >
+                                <flux:icon name="{{ $mapEntry['is_audio'] ? 'musical-note' : 'video-camera' }}" class="size-5 text-teal-600 hover:text-teal-500" />
+                            </button>
+                        @endif
                         <a href="https://www.youtube.com/results?search_query={{ urlencode($songTitle->song_title . ' ' . ($songTitle->composer?->artist_name ?? '')) }}" target="_blank" rel="noopener noreferrer" title="{{ __('Search YouTube') }}">
                             <svg class="size-5 text-red-600 hover:text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                         </a>
                         <flux:badge size="sm" variant="pill">{{ $songTitle->performed_count }}</flux:badge>
                     </div>
+
                 </div>
             </div>
         @empty
@@ -127,8 +138,11 @@
                             @endif
                         </div>
                     </th>
-                    <th class="w-20 px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        {{ __('Samples') }}
+                    <th class="w-16 px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        {{ __('Media') }}
+                    </th>
+                    <th class="w-16 px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        {{ __('YouTube') }}
                     </th>
                 </tr>
             </thead>
@@ -151,6 +165,18 @@
                             {{ $songTitle->performed_count }}
                         </td>
                         <td class="whitespace-nowrap px-6 py-2 text-center">
+                            @if ($viewableVideoMap->has($songTitle->id))
+                                @php $mapEntry = $viewableVideoMap->get($songTitle->id); @endphp
+                                <button
+                                    wire:click="playVideo({{ $songTitle->id }}, {{ $mapEntry['program_id'] }}, '{{ addslashes($songTitle->song_title) }}', {{ $mapEntry['is_audio'] ? 'true' : 'false' }})"
+                                    title="{{ $mapEntry['is_audio'] ? __('Listen') : __('Watch Video') }}"
+                                    class="cursor-pointer"
+                                >
+                                    <flux:icon name="{{ $mapEntry['is_audio'] ? 'musical-note' : 'video-camera' }}" class="size-5 text-teal-600 hover:text-teal-500" />
+                                </button>
+                            @endif
+                        </td>
+                        <td class="whitespace-nowrap px-6 py-2 text-center">
                             <a href="https://www.youtube.com/results?search_query={{ urlencode($songTitle->song_title . ' ' . ($songTitle->composer?->artist_name ?? '')) }}" target="_blank" rel="noopener noreferrer" title="{{ __('Search YouTube') }}">
                                 <svg class="inline size-5 text-red-600 hover:text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                             </a>
@@ -158,7 +184,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
+                        <td colspan="7" class="px-6 py-12 text-center">
                             <div class="mx-auto max-w-sm">
                                 <flux:icon name="queue-list" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
                                 <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No song titles found') }}</p>
@@ -173,4 +199,35 @@
             </tbody>
         </table>
     </div>
+
+    {{-- Media Player Modal --}}
+    <flux:modal name="song-video-player" class="max-w-3xl">
+        @if ($videoSongTitleId && $videoProgramId)
+            <div class="space-y-4">
+                <flux:heading size="lg">{{ $videoSongName }}</flux:heading>
+                @if ($isAudio)
+                    <audio
+                        controls
+                        class="w-full"
+                        src="{{ route('videos.song', [$videoProgramId, $videoSongTitleId]) }}"
+                    >
+                        {{ __('Your browser does not support the audio tag.') }}
+                    </audio>
+                @else
+                    <video
+                        controls
+                        class="w-full rounded-lg"
+                        src="{{ route('videos.song', [$videoProgramId, $videoSongTitleId]) }}"
+                    >
+                        {{ __('Your browser does not support the video tag.') }}
+                    </video>
+                @endif
+                <div class="flex justify-end">
+                    <flux:modal.close>
+                        <flux:button variant="filled">{{ __('Close') }}</flux:button>
+                    </flux:modal.close>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
 </div>

@@ -102,4 +102,15 @@ class UserFactory extends Factory
             'orientation_email_sent_at' => now(),
         ]);
     }
+
+    /**
+     * Indicate that the user has catalog sharing enabled.
+     */
+    public function withCatalog(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'catalog_token' => Str::uuid()->toString(),
+            'catalog_enabled_at' => now(),
+        ]);
+    }
 }
