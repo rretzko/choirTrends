@@ -31,6 +31,7 @@ class Feedback extends Model
         'body',
         'file_path',
         'status',
+        'is_private',
     ];
 
     protected function casts(): array
@@ -38,6 +39,7 @@ class Feedback extends Model
         return [
             'type' => FeedbackType::class,
             'status' => FeedbackStatus::class,
+            'is_private' => 'boolean',
         ];
     }
 

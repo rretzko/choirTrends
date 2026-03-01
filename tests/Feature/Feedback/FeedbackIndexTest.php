@@ -202,6 +202,38 @@ test('feedback index displays type badges', function () {
         ->assertSee('Kudo');
 });
 
+// Private feedback tests
+
+test('private feedback is hidden from history tab', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    Feedback::factory()->for($user)->create(['body' => 'Public feedback visible', 'is_private' => false]);
+    Feedback::factory()->for($user)->create(['body' => 'Private feedback hidden', 'is_private' => true]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->assertSee('Public feedback visible')
+        ->assertDontSee('Private feedback hidden');
+});
+
+test('private feedback from other users is hidden in all scope', function () {
+    config(['app.founder' => 'founder@example.com']);
+
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    Feedback::factory()->for($founder)->create(['body' => 'Founder private note', 'is_private' => true]);
+    Feedback::factory()->for($user)->create(['body' => 'User public feedback', 'is_private' => false]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('filterScope', 'all')
+        ->assertSee('User public feedback')
+        ->assertDontSee('Founder private note');
+});
+
 // Inline editing tests
 
 test('user can start editing own feedback', function () {

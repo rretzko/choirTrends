@@ -62,6 +62,15 @@
                 @endif
             </flux:field>
 
+            @if (auth()->user()->isFounder())
+                <flux:field>
+                    <div class="flex items-center gap-2">
+                        <flux:checkbox wire:model="isPrivate" />
+                        <flux:label>{{ __('Private (visible only on Issues page)') }}</flux:label>
+                    </div>
+                </flux:field>
+            @endif
+
             <div class="flex items-center gap-4">
                 <flux:button type="submit" variant="primary">{{ __('Submit Feedback') }}</flux:button>
             </div>

@@ -39,6 +39,8 @@ class Index extends Component
 
     public string $body = '';
 
+    public bool $isPrivate = false;
+
     /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
     public $file = null;
 
@@ -94,6 +96,7 @@ class Index extends Component
             'type' => FeedbackType::from($this->type),
             'body' => $this->body,
             'file_path' => $filePath,
+            'is_private' => $user->isFounder() && $this->isPrivate,
         ]);
 
         $founderEmail = config('app.founder');
@@ -101,7 +104,7 @@ class Index extends Component
             Mail::to($founderEmail)->send(new FeedbackSubmitted($feedback));
         }
 
-        $this->reset(['fromPage', 'type', 'body', 'file']);
+        $this->reset(['fromPage', 'type', 'body', 'file', 'isPrivate']);
         $this->type = 'Bug';
 
         session()->flash('success', __('Feedback submitted successfully!'));
@@ -228,6 +231,9 @@ class Index extends Component
 
         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
+
+        // Hide private feedback from the history tab
+        $query->where('is_private', false);
 
         if ($this->filterScope === 'my') {
             $query->where('user_id', $currentUser->id);

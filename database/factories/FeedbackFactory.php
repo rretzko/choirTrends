@@ -28,6 +28,7 @@ class FeedbackFactory extends Factory
             'body' => fake()->paragraph(),
             'file_path' => null,
             'status' => FeedbackStatus::Open,
+            'is_private' => false,
         ];
     }
 
@@ -49,6 +50,13 @@ class FeedbackFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => FeedbackType::Kudo,
+        ]);
+    }
+
+    public function private(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_private' => true,
         ]);
     }
 

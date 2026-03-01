@@ -165,6 +165,65 @@ test('all feedback types can be submitted', function (string $type) {
     expect($feedback->type)->toBe(FeedbackType::from($type));
 })->with(['Bug', 'Enhancement', 'Kudo', 'Comment']);
 
+test('founder can submit private feedback', function () {
+    Mail::fake();
+    config(['app.founder' => 'founder@example.com']);
+
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $this->actingAs($founder);
+
+    Livewire::test(Index::class, ['tab' => 'report'])
+        ->set('type', 'Bug')
+        ->set('body', 'This is a private note from the founder')
+        ->set('isPrivate', true)
+        ->call('submit')
+        ->assertSet('tab', 'history');
+
+    $feedback = Feedback::first();
+
+    expect($feedback)->not->toBeNull()
+        ->and($feedback->is_private)->toBeTrue();
+});
+
+test('non-founder cannot submit private feedback', function () {
+    Mail::fake();
+
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class, ['tab' => 'report'])
+        ->set('type', 'Bug')
+        ->set('body', 'Trying to make this private')
+        ->set('isPrivate', true)
+        ->call('submit');
+
+    $feedback = Feedback::first();
+
+    expect($feedback->is_private)->toBeFalse();
+});
+
+test('private checkbox is not visible to non-founder', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class, ['tab' => 'report'])
+        ->assertDontSee('Private (visible only on Issues page)');
+});
+
+test('private checkbox is visible to founder', function () {
+    config(['app.founder' => 'founder@example.com']);
+
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $this->actingAs($founder);
+
+    Livewire::test(Index::class, ['tab' => 'report'])
+        ->assertSee('Private (visible only on Issues page)');
+});
+
 test('from page is optional and can be empty', function () {
     Mail::fake();
 
