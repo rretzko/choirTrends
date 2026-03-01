@@ -135,8 +135,8 @@ test('impersonation banner is visible during impersonation', function () {
     $this->actingAs($target)
         ->withSession(['impersonating_from' => $founder->id])
         ->get(route('dashboard'))
-        ->assertSee('Impersonating Jane Target')
-        ->assertSee('Stop Impersonating');
+        ->assertSee('Impersonating')
+        ->assertSee('Jane Target');
 });
 
 test('impersonation banner is hidden when not impersonating', function () {
@@ -144,7 +144,7 @@ test('impersonation banner is hidden when not impersonating', function () {
 
     $this->actingAs($user)
         ->get(route('dashboard'))
-        ->assertDontSee('Stop Impersonating');
+        ->assertDontSee('Impersonating');
 });
 
 test('founder sidebar links are hidden during impersonation', function () {

@@ -12,6 +12,19 @@
                 <flux:sidebar.collapse class="in-data-flux-sidebar-collapsed-desktop:!opacity-100 in-data-flux-sidebar-collapsed-desktop:!relative" />
             </flux:sidebar.header>
 
+            @if (session()->has('impersonating_from'))
+                <div class="rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-black in-data-flux-sidebar-collapsed-desktop:hidden">
+                    <div>{{ __('Impersonating') }}</div>
+                    <div class="font-semibold">{{ auth()->user()->name }}</div>
+                    <form method="POST" action="{{ route('founder.impersonate.stop') }}" class="mt-2">
+                        @csrf
+                        <flux:button type="submit" variant="filled" size="sm" class="!bg-amber-700 !text-white hover:!bg-amber-800">
+                            {{ __('Stop') }}
+                        </flux:button>
+                    </form>
+                </div>
+            @endif
+
             <flux:sidebar.nav>
                 <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate class="mb-4">{{ __('Dashboard') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="document-text" :href="route('programs.index')" :current="request()->routeIs('programs.*')" wire:navigate>{{ __('Programs') }}</flux:sidebar.item>
@@ -100,6 +113,16 @@
         <flux:header class="lg:hidden">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
+            @if (session()->has('impersonating_from'))
+                <form method="POST" action="{{ route('founder.impersonate.stop') }}" class="flex items-center gap-2">
+                    @csrf
+                    <flux:badge color="amber" size="sm">{{ __('Impersonating :name', ['name' => auth()->user()->name]) }}</flux:badge>
+                    <flux:button type="submit" variant="filled" size="xs" class="!bg-amber-700 !text-white hover:!bg-amber-800">
+                        {{ __('Stop') }}
+                    </flux:button>
+                </form>
+            @endif
+
             <flux:spacer />
 
             <flux:dropdown position="top" align="end">
@@ -145,18 +168,6 @@
                 </flux:menu>
             </flux:dropdown>
         </flux:header>
-
-        @if (session()->has('impersonating_from'))
-            <div class="flex items-center justify-between bg-amber-500 px-4 py-2 text-sm font-medium text-black">
-                <span>{{ __('Impersonating :name', ['name' => auth()->user()->name]) }}</span>
-                <form method="POST" action="{{ route('founder.impersonate.stop') }}">
-                    @csrf
-                    <flux:button type="submit" variant="filled" size="sm" class="!bg-amber-700 !text-white hover:!bg-amber-800">
-                        {{ __('Stop Impersonating') }}
-                    </flux:button>
-                </form>
-            </div>
-        @endif
 
         {{ $slot }}
 

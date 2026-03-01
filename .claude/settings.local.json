@@ -47,7 +47,8 @@
       "Bash(composer install:*)",
       "Bash(php vendor/bin/phpstan:*)",
       "Bash(php:*)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "Bash(grep:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
