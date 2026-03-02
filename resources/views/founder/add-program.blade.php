@@ -137,10 +137,19 @@
                 const submitButton = document.getElementById('submit-button');
 
                 const useVaporUpload = {{ config('filesystems.default') === 's3' ? 'true' : 'false' }};
+                const allowedExtensions = ['pdf', 'txt', 'png', 'jpg', 'jpeg', 'gif', 'webp'];
 
                 form.addEventListener('submit', async (e) => {
                     if (fileInput.files.length > 0) {
                         const file = fileInput.files[0];
+
+                        const extension = file.name.split('.').pop().toLowerCase();
+                        if (!allowedExtensions.includes(extension)) {
+                            e.preventDefault();
+                            alert('{{ __("This file type is not supported. Please save your document as a PDF and try again.") }}' + '\n\n' + '{{ __("Accepted formats: PDF, TXT, PNG, JPG, JPEG, GIF, WEBP") }}');
+                            fileInput.value = '';
+                            return;
+                        }
 
                         const maxSize = 20 * 1024 * 1024;
                         if (file.size > maxSize) {

@@ -303,6 +303,19 @@ test('page passes empty collection when no target user in session', function () 
     expect($schools)->toBeEmpty();
 });
 
+test('validation rejects unsupported file types', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+    $targetUser = User::factory()->withoutTwoFactor()->create();
+    $file = UploadedFile::fake()->create('program.docx', 500, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+
+    $response = $this->actingAs($founder)->post(route('founder.addProgram.store'), [
+        'target_user_id' => $targetUser->id,
+        'program_file' => $file,
+    ]);
+
+    $response->assertSessionHasErrors('program_file');
+});
+
 test('page shows all users in dropdown', function () {
     $founder = User::factory()->withoutTwoFactor()->founder()->create();
     $user1 = User::factory()->withoutTwoFactor()->create(['name' => 'Alice Smith']);

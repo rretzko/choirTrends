@@ -129,21 +129,24 @@
 
                 // Only use Vapor.store() when running on Vapor (S3 filesystem)
                 const useVaporUpload = {{ config('filesystems.default') === 's3' ? 'true' : 'false' }};
+                const allowedExtensions = ['pdf', 'txt', 'png', 'jpg', 'jpeg', 'gif', 'webp'];
 
                 form.addEventListener('submit', async (e) => {
-                    console.log('Form submit triggered', {
-                        useVaporUpload: useVaporUpload,
-                        hasVapor: !!window.Vapor,
-                        hasFiles: fileInput.files.length > 0,
-                        submitButtonDisabled: submitButton.disabled
-                    });
-
                     // Check if there's a file to upload
                     if (fileInput.files.length > 0) {
                         const file = fileInput.files[0];
 
+                        // Validate file type
+                        const extension = file.name.split('.').pop().toLowerCase();
+                        if (!allowedExtensions.includes(extension)) {
+                            e.preventDefault();
+                            alert('{{ __("This file type is not supported. Please save your document as a PDF and try again.") }}' + '\n\n' + '{{ __("Accepted formats: PDF, TXT, PNG, JPG, JPEG, GIF, WEBP") }}');
+                            fileInput.value = '';
+                            return;
+                        }
+
                         // Validate file size (20MB max)
-                        const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+                        const maxSize = 20 * 1024 * 1024;
                         if (file.size > maxSize) {
                             e.preventDefault();
                             const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
