@@ -95,9 +95,8 @@
         <table class="w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
             <colgroup>
                 <col class="w-[5%]" />
+                <col class="w-[35%]" />
                 <col class="w-[30%]" />
-                <col class="w-[20%]" />
-                <col class="w-[15%]" />
                 <col class="w-[12%]" />
                 <col class="w-[9%]" />
                 <col class="w-[9%]" />
@@ -117,24 +116,24 @@
                             @endif
                         </div>
                     </th>
-                    <th wire:click="sort('composer')" class="cursor-pointer px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
-                        <div class="flex items-center gap-1">
-                            {{ __('Composer') }}
-                            @if ($sortBy === 'composer')
-                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
-                            @else
-                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
-                            @endif
-                        </div>
-                    </th>
-                    <th wire:click="sort('arranger')" class="cursor-pointer px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
-                        <div class="flex items-center gap-1">
-                            {{ __('Arranger') }}
-                            @if ($sortBy === 'arranger')
-                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
-                            @else
-                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
-                            @endif
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <div class="space-y-0.5">
+                            <div wire:click="sort('composer')" class="flex cursor-pointer items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
+                                {{ __('Composer') }}
+                                @if ($sortBy === 'composer')
+                                    <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                                @else
+                                    <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                                @endif
+                            </div>
+                            <div wire:click="sort('arranger')" class="flex cursor-pointer items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
+                                {{ __('Arranger') }}
+                                @if ($sortBy === 'arranger')
+                                    <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                                @else
+                                    <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                                @endif
+                            </div>
                         </div>
                     </th>
                     <th wire:click="sort('performed')" class="cursor-pointer px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
@@ -164,11 +163,13 @@
                         <td class="truncate px-4 py-2 text-sm text-neutral-900 dark:text-neutral-100">
                             {{ $songTitle->song_title }}
                         </td>
-                        <td class="truncate px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
-                            {{ $songTitle->composer?->artist_name }}
-                        </td>
-                        <td class="truncate px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
-                            {{ $songTitle->arranger?->artist_name }}
+                        <td class="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                            @if ($songTitle->composer)
+                                <div class="truncate">{{ $songTitle->composer->artist_name }}</div>
+                            @endif
+                            @if ($songTitle->arranger)
+                                <div class="truncate text-xs">arr. {{ $songTitle->arranger->artist_name }}</div>
+                            @endif
                         </td>
                         <td class="whitespace-nowrap px-4 py-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $songTitle->performed_count }}
@@ -197,7 +198,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center">
+                        <td colspan="6" class="px-6 py-12 text-center">
                             <div class="mx-auto max-w-sm">
                                 <flux:icon name="queue-list" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
                                 <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No song titles found') }}</p>
