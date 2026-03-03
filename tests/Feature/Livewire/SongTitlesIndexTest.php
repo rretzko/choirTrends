@@ -17,9 +17,13 @@ test('song titles index page can be rendered', function () {
         ->assertSeeLivewire(Index::class);
 });
 
-test('song titles index displays all song titles', function () {
+test('song titles index displays all song titles that have programs', function () {
     $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->create(['user_id' => $user->id, 'school_id' => $school->id]);
+
     $songTitles = SongTitle::factory()->count(3)->create();
+    $program->songTitles()->attach($songTitles->pluck('id'));
 
     $this->actingAs($user);
 
@@ -88,5 +92,22 @@ test('song titles index displays correct counts', function () {
 
     Livewire::test(Index::class)
         ->assertSet('myCount', 2)
-        ->assertSet('allCount', 3);
+        ->assertSet('allCount', 2);
+});
+
+test('song titles without programs are excluded from the index', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->create(['user_id' => $user->id, 'school_id' => $school->id]);
+
+    $attachedSong = SongTitle::factory()->create(['song_title' => 'Attached Song']);
+    $orphanedSong = SongTitle::factory()->create(['song_title' => 'Orphaned Song']);
+
+    $program->songTitles()->attach($attachedSong->id);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->assertSee('Attached Song')
+        ->assertDontSee('Orphaned Song');
 });

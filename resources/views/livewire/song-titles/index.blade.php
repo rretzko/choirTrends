@@ -93,12 +93,21 @@
     {{-- Desktop table layout --}}
     <div class="hidden overflow-hidden rounded-xl border border-neutral-200 md:block dark:border-neutral-700">
         <table class="w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
+            <colgroup>
+                <col class="w-[5%]" />
+                <col class="w-[30%]" />
+                <col class="w-[20%]" />
+                <col class="w-[15%]" />
+                <col class="w-[12%]" />
+                <col class="w-[9%]" />
+                <col class="w-[9%]" />
+            </colgroup>
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
-                    <th class="w-16 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         #
                     </th>
-                    <th wire:click="sort('song_title')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                    <th wire:click="sort('song_title')" class="cursor-pointer px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
                         <div class="flex items-center gap-1">
                             {{ __('Song Title') }}
                             @if ($sortBy === 'song_title')
@@ -108,7 +117,7 @@
                             @endif
                         </div>
                     </th>
-                    <th wire:click="sort('composer')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                    <th wire:click="sort('composer')" class="cursor-pointer px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
                         <div class="flex items-center gap-1">
                             {{ __('Composer') }}
                             @if ($sortBy === 'composer')
@@ -118,7 +127,7 @@
                             @endif
                         </div>
                     </th>
-                    <th wire:click="sort('arranger')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                    <th wire:click="sort('arranger')" class="cursor-pointer px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
                         <div class="flex items-center gap-1">
                             {{ __('Arranger') }}
                             @if ($sortBy === 'arranger')
@@ -128,7 +137,7 @@
                             @endif
                         </div>
                     </th>
-                    <th wire:click="sort('performed')" class="cursor-pointer px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                    <th wire:click="sort('performed')" class="cursor-pointer px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
                         <div class="flex items-center justify-center gap-1">
                             {{ __('Programmed') }}
                             @if ($sortBy === 'performed')
@@ -138,10 +147,10 @@
                             @endif
                         </div>
                     </th>
-                    <th class="w-16 px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         {{ __('Media') }}
                     </th>
-                    <th class="w-16 px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         {{ __('YouTube') }}
                     </th>
                 </tr>
@@ -149,37 +158,41 @@
             <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
                 @forelse ($songTitles as $songTitle)
                     <tr wire:key="song-title-{{ $songTitle->id }}">
-                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="whitespace-nowrap px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $loop->iteration }}
                         </td>
-                        <td class="px-6 py-2 text-sm text-neutral-900 dark:text-neutral-100">
+                        <td class="truncate px-4 py-2 text-sm text-neutral-900 dark:text-neutral-100">
                             {{ $songTitle->song_title }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="truncate px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $songTitle->composer?->artist_name }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="truncate px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $songTitle->arranger?->artist_name }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="whitespace-nowrap px-4 py-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $songTitle->performed_count }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-center">
-                            @if ($viewableVideoMap->has($songTitle->id))
-                                @php $mapEntry = $viewableVideoMap->get($songTitle->id); @endphp
-                                <button
-                                    wire:click="playVideo({{ $songTitle->id }}, {{ $mapEntry['program_id'] }}, '{{ addslashes($songTitle->song_title) }}', {{ $mapEntry['is_audio'] ? 'true' : 'false' }})"
-                                    title="{{ $mapEntry['is_audio'] ? __('Listen') : __('Watch Video') }}"
-                                    class="cursor-pointer"
-                                >
-                                    <flux:icon name="{{ $mapEntry['is_audio'] ? 'musical-note' : 'video-camera' }}" class="size-5 text-teal-600 hover:text-teal-500" />
-                                </button>
-                            @endif
+                        <td class="px-2 py-2">
+                            <div class="flex items-center justify-center">
+                                @if ($viewableVideoMap->has($songTitle->id))
+                                    @php $mapEntry = $viewableVideoMap->get($songTitle->id); @endphp
+                                    <button
+                                        wire:click="playVideo({{ $songTitle->id }}, {{ $mapEntry['program_id'] }}, '{{ addslashes($songTitle->song_title) }}', {{ $mapEntry['is_audio'] ? 'true' : 'false' }})"
+                                        title="{{ $mapEntry['is_audio'] ? __('Listen') : __('Watch Video') }}"
+                                        class="cursor-pointer"
+                                    >
+                                        <flux:icon name="{{ $mapEntry['is_audio'] ? 'musical-note' : 'video-camera' }}" class="size-5 text-teal-600 hover:text-teal-500" />
+                                    </button>
+                                @endif
+                            </div>
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-center">
-                            <a href="https://www.youtube.com/results?search_query={{ urlencode($songTitle->song_title . ' ' . ($songTitle->composer?->artist_name ?? '')) }}" target="_blank" rel="noopener noreferrer" title="{{ __('Search YouTube') }}">
-                                <svg class="inline size-5 text-red-600 hover:text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                            </a>
+                        <td class="px-2 py-2">
+                            <div class="flex items-center justify-center">
+                                <a href="https://www.youtube.com/results?search_query={{ urlencode($songTitle->song_title . ' ' . ($songTitle->composer?->artist_name ?? '')) }}" target="_blank" rel="noopener noreferrer" title="{{ __('Search YouTube') }}">
+                                    <svg class="size-5 text-red-600 hover:text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 @empty

@@ -96,8 +96,8 @@ class Index extends Component
             $this->filter = 'my';
         }
 
-        // Calculate counts for filters
-        $this->allCount = SongTitle::query()->count();
+        // Calculate counts for filters (exclude orphaned song titles with no programs)
+        $this->allCount = SongTitle::query()->whereHas('programs')->count();
         $this->myCount = SongTitle::query()
             ->whereHas('programs', function ($q) {
                 $q->where('user_id', Auth::id());
@@ -120,6 +120,7 @@ class Index extends Component
             });
         } else {
             $query->withCount('programs as performed_count');
+            $query->whereHas('programs');
         }
 
         if ($this->search !== '') {
