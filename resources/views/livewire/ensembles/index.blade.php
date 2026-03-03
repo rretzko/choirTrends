@@ -102,22 +102,29 @@
 
     {{-- Desktop table layout --}}
     <div class="hidden overflow-hidden rounded-xl border border-neutral-200 md:block dark:border-neutral-700">
-        <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+        <table class="w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
+            <colgroup>
+                <col class="w-[24%]" />
+                <col class="w-[33%]" />
+                <col class="w-[18%]" />
+                <col class="w-[12%]" />
+                <col class="w-[13%]" />
+            </colgroup>
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         {{ __('School') }}
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         {{ __('Ensemble Name') }}
                     </th>
-                    <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         {{ __('Type') }}
                     </th>
-                    <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         {{ __('A Cappella') }}
                     </th>
-                    <th class="w-16 px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         {{ __('Actions') }}
                     </th>
                 </tr>
@@ -130,13 +137,13 @@
                         if ($currentSchool !== $prevSchool) { $band = ! $band; $prevSchool = $currentSchool; }
                     @endphp
                     <tr wire:key="ensemble-{{ $ensemble->id }}" class="border-t {{ $band ? 'border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900' : 'border-neutral-200/80 bg-neutral-50/60 dark:border-neutral-700/50 dark:bg-neutral-800/40' }}">
-                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="truncate px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $schoolDisplayNames[$ensemble->id] }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-900 dark:text-neutral-100">
+                        <td class="truncate px-4 py-2 text-sm text-neutral-900 dark:text-neutral-100">
                             {{ $displayNames[$ensemble->id] }}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="whitespace-nowrap px-4 py-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
                             @if ($ownedEnsembleIds[$ensemble->id])
                                 <select
                                     wire:change="updateType({{ $ensemble->id }}, $event.target.value)"
@@ -150,17 +157,19 @@
                                 {{ $ensemble->type->label() }}
                             @endif
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                            @if ($ownedEnsembleIds[$ensemble->id])
-                                <flux:checkbox
-                                    wire:click="updateACappella({{ $ensemble->id }}, {{ $ensemble->a_cappella ? 'false' : 'true' }})"
-                                    :checked="$ensemble->a_cappella"
-                                />
-                            @elseif ($ensemble->a_cappella)
-                                <flux:icon name="check" class="mx-auto size-4 text-green-600 dark:text-green-400" />
-                            @endif
+                        <td class="whitespace-nowrap px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                            <div class="flex items-center justify-center">
+                                @if ($ownedEnsembleIds[$ensemble->id])
+                                    <flux:checkbox
+                                        wire:click="updateACappella({{ $ensemble->id }}, {{ $ensemble->a_cappella ? 'false' : 'true' }})"
+                                        :checked="$ensemble->a_cappella"
+                                    />
+                                @elseif ($ensemble->a_cappella)
+                                    <flux:icon name="check" class="size-4 text-green-600 dark:text-green-400" />
+                                @endif
+                            </div>
                         </td>
-                        <td class="whitespace-nowrap px-6 py-2 text-right text-sm">
+                        <td class="whitespace-nowrap px-4 py-2 text-right text-sm">
                             @if ($ownedEnsembleIds[$ensemble->id])
                                 <flux:button href="{{ route('ensembles.edit', $ensemble) }}" variant="ghost" size="sm" icon="pencil-square" title="{{ __('Edit Ensemble') }}" />
                             @endif
@@ -168,7 +177,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center">
+                        <td colspan="5" class="px-4 py-12 text-center">
                             <div class="mx-auto max-w-sm">
                                 <flux:icon name="user-group" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
                                 <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No ensembles found') }}</p>

@@ -1,4 +1,4 @@
-<div class="max-w-full overflow-hidden">
+<div>
     <div class="mb-6 space-y-4">
         <flux:heading size="xl">{{ __('Programs') }}</flux:heading>
 
@@ -60,11 +60,60 @@
         </div>
     </div>
 
-    <div class="overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-700">
+    {{-- Mobile card layout --}}
+    <div class="space-y-2 md:hidden">
+        @forelse ($programs as $program)
+            <div wire:key="program-card-{{ $program->id }}" class="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                            <flux:button
+                                wire:click="showProgramDetails({{ $program->id }})"
+                                variant="filled"
+                                size="sm"
+                                class="!whitespace-normal text-left max-w-full"
+                            >
+                                {{ $program->event_name }}
+                            </flux:button>
+                        </div>
+                        <div class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                            {{ $displayData[$program->id]['school'] }}
+                        </div>
+                        <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-neutral-500 dark:text-neutral-400">
+                            <span>{{ $program->event_date->format('M j, Y') }}</span>
+                            <span>{{ $displayData[$program->id]['director'] }}</span>
+                        </div>
+                    </div>
+                    @if ($program->user_id === auth()->id())
+                        <flux:button href="{{ route('programs.edit', $program) }}" variant="ghost" size="sm" icon="pencil-square" title="{{ __('Edit Program') }}" />
+                    @endif
+                </div>
+            </div>
+        @empty
+            <div class="rounded-xl border border-neutral-200 px-6 py-12 text-center dark:border-neutral-700">
+                <flux:icon name="document-text" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
+                <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No programs found') }}</p>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">{{ __('Upload your first concert program to start tracking repertoire trends.') }}</p>
+                <flux:button href="{{ route('addProgram') }}" variant="primary" size="sm" icon="plus">
+                    {{ __('Add Program') }}
+                </flux:button>
+            </div>
+        @endforelse
+    </div>
+
+    {{-- Desktop table layout --}}
+    <div class="hidden overflow-hidden rounded-xl border border-neutral-200 md:block dark:border-neutral-700">
         <table class="w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
+            <colgroup>
+                <col class="w-[22%]" />
+                <col class="w-[30%]" />
+                <col class="w-[15%]" />
+                <col class="w-[20%]" />
+                <col class="w-[13%]" />
+            </colgroup>
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
-                    <th wire:click="sort('school')" class="w-1/4 cursor-pointer px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                    <th wire:click="sort('school')" class="cursor-pointer px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
                         <div class="flex items-center gap-1">
                             {{ __('School') }}
                             @if ($sortBy === 'school')
@@ -74,7 +123,7 @@
                             @endif
                         </div>
                     </th>
-                    <th wire:click="sort('event_name')" class="w-1/4 cursor-pointer px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                    <th wire:click="sort('event_name')" class="cursor-pointer px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
                         <div class="flex items-center gap-1">
                             <div>
                                 {{ __('Program Name') }}
@@ -107,7 +156,7 @@
                             @endif
                         </div>
                     </th>
-                    <th class="w-16 px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         {{ __('Actions') }}
                     </th>
                 </tr>
@@ -115,7 +164,7 @@
             <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
                 @forelse ($programs as $program)
                     <tr wire:key="program-{{ $program->id }}">
-                        <td class="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="truncate px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $displayData[$program->id]['school'] }}
                         </td>
                         <td class="px-4 py-2 text-sm text-neutral-900 dark:text-neutral-100">
@@ -131,7 +180,7 @@
                         <td class="whitespace-nowrap px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $program->event_date->format('M j, Y') }}
                         </td>
-                        <td class="whitespace-nowrap px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+                        <td class="truncate px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $displayData[$program->id]['director'] }}
                         </td>
                         <td class="whitespace-nowrap px-4 py-2 text-right text-sm">
