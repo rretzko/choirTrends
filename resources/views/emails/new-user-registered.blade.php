@@ -16,7 +16,12 @@
     </div>
 
     <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
+        <p>Hi {{ $user->name }} - Thanks for registering on ChoirTrends.com!</p>
+        <p>Don't hesitate to reach out if you hit any bugs or have suggestions to improve the app!  Simply click the Feedback link & you'll get to me.</p>
         <p>Thank you for using ChoirTrends!</p>
+        <p>Best - </p>
+        <p>Rick Retzko</p>
+        <p>{{ config('app.founder') }}</p>
     </div>
 
 </body>

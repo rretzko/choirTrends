@@ -24,111 +24,44 @@
                 </select>
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                {{-- Desktop table --}}
-                <table class="hidden min-w-full divide-y divide-neutral-200 md:table dark:divide-neutral-700">
-                    <thead class="bg-neutral-50 dark:bg-neutral-800">
-                        <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                                {{ __('ID') }}
-                            </th>
-                            <th wire:click="sort('created_at')" class="cursor-pointer px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
-                                <div class="flex items-center gap-1">
-                                    {{ __('Date') }}
-                                    @if ($sortBy === 'created_at')
-                                        <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-3" />
-                                    @else
-                                        <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
-                                    @endif
-                                </div>
-                            </th>
-                            <th wire:click="sort('type')" class="cursor-pointer px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
-                                <div class="flex items-center gap-1">
-                                    {{ __('Type') }}
-                                    @if ($sortBy === 'type')
-                                        <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-3" />
-                                    @else
-                                        <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
-                                    @endif
-                                </div>
-                            </th>
-                            <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                                {{ __('Submitter') }}
-                            </th>
-                            <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                                {{ __('Request') }}
-                            </th>
-                            <th wire:click="sort('status')" class="cursor-pointer px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
-                                <div class="flex items-center gap-1">
-                                    {{ __('Status') }}
-                                    @if ($sortBy === 'status')
-                                        <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-3" />
-                                    @else
-                                        <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
-                                    @endif
-                                </div>
-                            </th>
-                            <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                                {{ __('Effort') }}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
-                        @forelse ($feedbacks as $feedback)
-                            <tr
-                                wire:key="issue-{{ $feedback->id }}"
-                                wire:click="selectFeedback({{ $feedback->id }})"
-                                class="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 {{ $selectedFeedbackId === $feedback->id ? 'bg-blue-50 dark:bg-blue-900/20' : '' }}"
-                            >
-                                <td class="whitespace-nowrap px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
-                                    {{ $feedback->id }}
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
-                                    {{ $feedback->created_at->format('M j') }}
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-2 text-sm">
-                                    <flux:badge size="sm" :color="match($feedback->type->value) { 'Bug' => 'red', 'Enhancement' => 'blue', 'Kudo' => 'green', default => 'zinc' }">
-                                        {{ $feedback->type->value }}
-                                    </flux:badge>
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
-                                    {{ $feedback->user->name }}
-                                </td>
-                                <td class="max-w-[200px] truncate px-4 py-2 text-sm text-neutral-900 dark:text-neutral-100">
-                                    {{ Str::limit($feedback->body, 40) }}
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-2 text-sm">
-                                    <flux:badge size="sm" :color="match($feedback->status->value) { 'Open' => 'blue', 'Pending' => 'amber', 'Wip' => 'purple', 'Closed' => 'green', default => 'zinc' }">
-                                        {{ $feedback->status->value }}
-                                    </flux:badge>
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
-                                    @php
-                                        $totalMinutes = $feedback->totalEffortMinutes();
-                                        $hours = intdiv($totalMinutes, 60);
-                                        $minutes = $totalMinutes % 60;
-                                    @endphp
-                                    {{ $totalMinutes > 0 ? sprintf('%d:%02d', $hours, $minutes) : '—' }}
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="px-4 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                                    {{ __('No issues found.') }}
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            {{-- Sort controls --}}
+            <div class="mb-3 flex items-center gap-4 text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                <span>{{ __('Sort by:') }}</span>
+                <button wire:click="sort('created_at')" class="flex cursor-pointer items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
+                    {{ __('Date') }}
+                    @if ($sortBy === 'created_at')
+                        <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-3" />
+                    @else
+                        <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
+                    @endif
+                </button>
+                <button wire:click="sort('type')" class="flex cursor-pointer items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
+                    {{ __('Type') }}
+                    @if ($sortBy === 'type')
+                        <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-3" />
+                    @else
+                        <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
+                    @endif
+                </button>
+                <button wire:click="sort('status')" class="flex cursor-pointer items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200">
+                    {{ __('Status') }}
+                    @if ($sortBy === 'status')
+                        <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-3" />
+                    @else
+                        <flux:icon name="arrows-up-down" class="size-3 opacity-30" />
+                    @endif
+                </button>
+            </div>
 
-                {{-- Mobile card layout --}}
-                <div class="divide-y divide-neutral-200 md:hidden dark:divide-neutral-700">
-                    @forelse ($feedbacks as $feedback)
-                        <div
-                            wire:key="issue-card-{{ $feedback->id }}"
-                            wire:click="selectFeedback({{ $feedback->id }})"
-                            class="cursor-pointer bg-white p-4 hover:bg-neutral-50 dark:bg-neutral-900 dark:hover:bg-neutral-800 {{ $selectedFeedbackId === $feedback->id ? 'bg-blue-50 dark:bg-blue-900/20' : '' }}"
-                        >
+            {{-- Card list --}}
+            <div class="space-y-3">
+                @forelse ($feedbacks as $feedback)
+                    <div
+                        wire:key="issue-{{ $feedback->id }}"
+                        wire:click="selectFeedback({{ $feedback->id }})"
+                        class="cursor-pointer rounded-xl border p-4 transition hover:bg-neutral-50 dark:hover:bg-neutral-800 {{ $selectedFeedbackId === $feedback->id ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20' : 'border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900' }}"
+                    >
+                        <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <flux:badge size="sm" :color="match($feedback->type->value) { 'Bug' => 'red', 'Enhancement' => 'blue', 'Kudo' => 'green', default => 'zinc' }">
                                     {{ $feedback->type->value }}
@@ -137,17 +70,27 @@
                                     {{ $feedback->status->value }}
                                 </flux:badge>
                             </div>
-                            <flux:text class="mt-1 text-sm text-neutral-900 dark:text-neutral-100">{{ Str::limit($feedback->body, 80) }}</flux:text>
-                            <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">
-                                #{{ $feedback->id }} &middot; {{ $feedback->user->name }} &middot; {{ $feedback->created_at->format('M j, Y') }}
-                            </flux:text>
+                            <div class="flex items-center gap-3 text-xs text-neutral-500 dark:text-neutral-400">
+                                <span>#{{ $feedback->id }}</span>
+                                <span>{{ $feedback->created_at->format('M j') }}</span>
+                                @php
+                                    $totalMinutes = $feedback->totalEffortMinutes();
+                                    $hours = intdiv($totalMinutes, 60);
+                                    $minutes = $totalMinutes % 60;
+                                @endphp
+                                @if ($totalMinutes > 0)
+                                    <span>{{ sprintf('%d:%02d', $hours, $minutes) }}</span>
+                                @endif
+                            </div>
                         </div>
-                    @empty
-                        <div class="px-4 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                            {{ __('No issues found.') }}
-                        </div>
-                    @endforelse
-                </div>
+                        <flux:text class="mt-2 text-sm text-neutral-900 dark:text-neutral-100">{{ Str::limit($feedback->body, 80) }}</flux:text>
+                        <flux:text class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{{ $feedback->user->name }}</flux:text>
+                    </div>
+                @empty
+                    <div class="rounded-xl border border-neutral-200 px-4 py-12 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+                        {{ __('No issues found.') }}
+                    </div>
+                @endforelse
             </div>
         </div>
 
