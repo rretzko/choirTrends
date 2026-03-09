@@ -8,6 +8,7 @@ environments:
     cli-timeout: 900
     timeout: 30
     runtime: 'php-8.4:al2'
+    database: mfr-prod
     queues:
       - default
     queue-memory: 1024
@@ -26,6 +27,7 @@ environments:
     cli-memory: 1024
     cli-timeout: 900
     runtime: 'php-8.4:al2'
+    database: mfr-staging
     storage: choirtrends
     queues:
       - default
