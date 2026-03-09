@@ -15,6 +15,8 @@ Route::get('catalog/{token}', App\Livewire\Catalog\Index::class)->name('catalog.
 Route::get('catalog/{token}/video/program/{program}', [App\Http\Controllers\VideoController::class, 'catalogProgramVideo'])->name('catalog.videos.program');
 Route::get('catalog/{token}/video/song/{program}/{songTitle}', [App\Http\Controllers\VideoController::class, 'catalogSongVideo'])->name('catalog.videos.song');
 
+Route::get('quick-tips/unsubscribe', App\Http\Controllers\QuickTipUnsubscribeController::class)->name('quick-tips.unsubscribe');
+
 Route::middleware(['auth'])->group(function () {
 
     Route::get('videos/program/{program}', [App\Http\Controllers\VideoController::class, 'programVideo'])->name('videos.program');
@@ -34,6 +36,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('feedback', App\Livewire\Feedback\Index::class)->name('feedback.index');
     Route::redirect('feedback/create', '/feedback?tab=report');
+
+    Route::get('quick-tips', App\Livewire\QuickTips\Index::class)->name('quick-tips.index');
 
     Route::view('documentation/site-guide', 'documentation.site-guide')->name('documentation.site-guide');
     Route::view('documentation/add-program-guide', 'documentation.add-program-guide')->name('documentation.add-program-guide');
@@ -62,6 +66,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('issues', App\Livewire\Founder\Issues::class)->name('founder.issues');
         Route::get('song-title-conflicts', App\Livewire\Founder\SongTitleConflicts::class)->name('founder.songTitleConflicts');
         Route::get('users', App\Livewire\Founder\Users::class)->name('founder.users');
+        Route::get('quick-tips', App\Livewire\Founder\QuickTips::class)->name('founder.quickTips');
+        Route::get('quick-tips/create', App\Livewire\Founder\QuickTipForm::class)->name('founder.quickTips.create');
+        Route::get('quick-tips/{quickTip}/edit', App\Livewire\Founder\QuickTipForm::class)->name('founder.quickTips.edit');
     });
 
     // Stop impersonation (must be accessible while impersonating)

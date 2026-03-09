@@ -2,6 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
         @include('partials.head')
+        @stack('styles')
     </head>
     <body class="min-h-screen bg-blue-100 dark:bg-zinc-800">
         <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900">
@@ -35,6 +36,7 @@
                 <flux:sidebar.item icon="queue-list" :href="route('song-titles.index')" :current="request()->routeIs('song-titles.*')" wire:navigate>{{ __('Song Titles') }}</flux:sidebar.item>
                 <flux:separator class="my-2"/>
                 <flux:sidebar.item icon="bug-ant" :href="route('feedback.index') . '?tab=report'" :current="request()->routeIs('feedback.*')" wire:navigate>{{ __('Feedback') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="light-bulb" :href="route('quick-tips.index')" :current="request()->routeIs('quick-tips.*')" wire:navigate>{{ __('Quick Tips') }}</flux:sidebar.item>
                 <flux:sidebar.group expandable :expanded="false" icon="book-open" heading="Documentation" class="grid">
                     <flux:sidebar.item icon="map" :href="route('documentation.site-guide')" :current="request()->routeIs('documentation.site-guide')" wire:navigate>{{ __('Site Guide') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="arrow-up-tray" :href="route('documentation.add-program-guide')" :current="request()->routeIs('documentation.add-program-guide')" wire:navigate>{{ __('Add Program Guide') }}</flux:sidebar.item>
@@ -58,6 +60,7 @@
                         <flux:sidebar.item icon="identification" :href="route('founder.impersonate')" :current="request()->routeIs('founder.impersonate')" wire:navigate>{{ __('Impersonate User') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="clipboard-document-list" :href="route('founder.issues')" :current="request()->routeIs('founder.issues')" wire:navigate>{{ __('Issues') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="magnifying-glass" :href="route('founder.songTitleConflicts')" :current="request()->routeIs('founder.songTitleConflicts')" wire:navigate>{{ __('Song Title Conflicts') }}</flux:sidebar.item>
+                        <flux:sidebar.item icon="light-bulb" :href="route('founder.quickTips')" :current="request()->routeIs('founder.quickTips')" wire:navigate>{{ __('Quick Tips') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="users" :href="route('founder.users')" :current="request()->routeIs('founder.users')" wire:navigate>{{ __('Users') }}</flux:sidebar.item>
                     </flux:sidebar.group>
                 </flux:sidebar.nav>
@@ -172,5 +175,6 @@
         {{ $slot }}
 
         @fluxScripts
+        @stack('scripts')
     </body>
 </html>

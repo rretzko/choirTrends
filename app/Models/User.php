@@ -17,6 +17,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 /**
  * @property-read Collection<int, Program> $programs
  * @property-read UserPrivacy|null $privacy
+ * @property-read Collection<int, QuickTip> $quickTips
  * @property-read Collection<int, School> $schools
  * @property-read Collection<int, UserLogin> $userLogins
  */
@@ -57,6 +58,7 @@ class User extends Authenticatable
         'orientation_email_sent_at',
         'catalog_token',
         'catalog_enabled_at',
+        'quick_tip_emails_enabled',
     ];
 
     /**
@@ -85,6 +87,7 @@ class User extends Authenticatable
             'onboarding_dismissed_at' => 'datetime',
             'orientation_email_sent_at' => 'datetime',
             'catalog_enabled_at' => 'datetime',
+            'quick_tip_emails_enabled' => 'boolean',
         ];
     }
 
@@ -118,6 +121,13 @@ class User extends Authenticatable
     public function userLogins(): HasMany
     {
         return $this->hasMany(UserLogin::class);
+    }
+
+    public function quickTips(): BelongsToMany
+    {
+        return $this->belongsToMany(QuickTip::class)
+            ->withPivot('emailed_at', 'viewed_at')
+            ->withCasts(['emailed_at' => 'datetime', 'viewed_at' => 'datetime']);
     }
 
     public function isFounder(): bool

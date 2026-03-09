@@ -48,7 +48,11 @@
       "Bash(php vendor/bin/phpstan:*)",
       "Bash(php:*)",
       "Bash(git status:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "WebFetch(domain:laravel-livewire.com)",
+      "WebFetch(domain:mahmoudalhabash.com)",
+      "WebFetch(domain:fluxui.dev)",
+      "WebFetch(domain:gist.github.com)"
     ]
   },
   "enableAllProjectMcpServers": true,
