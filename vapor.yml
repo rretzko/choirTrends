@@ -3,6 +3,7 @@ name: choirTrends
 environments:
   production:
     domain: choirtrends.com
+    scheduler: true
     memory: 1024
     cli-memory: 1024
     cli-timeout: 900
