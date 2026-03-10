@@ -13,6 +13,12 @@
         <p style="margin: 8px 0;"><strong>Name:</strong> {{ $user->name }}</p>
         <p style="margin: 8px 0;"><strong>Email:</strong> {{ $user->email }}</p>
         <p style="margin: 8px 0;"><strong>Registered:</strong> {{ $user->created_at?->format('M j, Y g:i A') ?? 'N/A' }}</p>
+        @if($user->referral_source)
+            <p style="margin: 8px 0;"><strong>Found us via:</strong> {{ $user->referral_source->label() }}</p>
+            @if($user->referral_detail)
+                <p style="margin: 8px 0;"><strong>Detail:</strong> {{ $user->referral_detail }}</p>
+            @endif
+        @endif
     </div>
 
     <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">

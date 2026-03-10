@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ReferralSource;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -59,6 +60,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'catalog_token',
         'catalog_enabled_at',
         'quick_tip_emails_enabled',
+        'referral_source',
+        'referral_detail',
     ];
 
     /**
@@ -88,6 +91,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'orientation_email_sent_at' => 'datetime',
             'catalog_enabled_at' => 'datetime',
             'quick_tip_emails_enabled' => 'boolean',
+            'referral_source' => ReferralSource::class,
         ];
     }
 

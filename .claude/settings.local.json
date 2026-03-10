@@ -52,7 +52,11 @@
       "WebFetch(domain:laravel-livewire.com)",
       "WebFetch(domain:mahmoudalhabash.com)",
       "WebFetch(domain:fluxui.dev)",
-      "WebFetch(domain:gist.github.com)"
+      "WebFetch(domain:gist.github.com)",
+      "Bash(find /c/xampp/htdocs/dev/choirTrends -path \"*/database/migrations/*user*\" -type f 2>/dev/null | head -10)",
+      "Bash(find /c/xampp/htdocs/dev/choirTrends -name \"*Fortify*\" -o -name \"*fortify*\" 2>/dev/null | grep -v vendor | grep -v node_modules)",
+      "Bash(find /c/xampp/htdocs/dev/choirTrends/resources/views/components -name \"*auth*\" -o -name \"*header*\" -o -name \"*session*\" 2>/dev/null | head -20)",
+      "Bash(find /c/xampp/htdocs/dev/choirTrends -name \"*honeypot*\" -type f 2>/dev/null | grep -v vendor | grep -v node_modules)"
     ]
   },
   "enableAllProjectMcpServers": true,

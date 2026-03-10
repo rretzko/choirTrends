@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Enums\ReferralSource;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -28,12 +29,16 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::unique(User::class),
             ],
             'password' => $this->passwordRules(),
+            'referral_source' => ['nullable', Rule::enum(ReferralSource::class)],
+            'referral_detail' => ['nullable', 'string', 'max:255'],
         ])->validate();
 
         return User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
+            'referral_source' => $input['referral_source'] ?? null,
+            'referral_detail' => $input['referral_detail'] ?? null,
         ]);
     }
 }

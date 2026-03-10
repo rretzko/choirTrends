@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ReferralSource;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -111,6 +112,17 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'catalog_token' => Str::uuid()->toString(),
             'catalog_enabled_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate how the user found the application.
+     */
+    public function withReferralSource(ReferralSource $source, ?string $detail = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'referral_source' => $source->value,
+            'referral_detail' => $detail,
         ]);
     }
 }
