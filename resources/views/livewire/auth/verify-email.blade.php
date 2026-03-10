@@ -4,6 +4,10 @@
             {{ __('Please verify your email address by clicking on the link we just emailed to you.') }}
         </flux:text>
 
+        <flux:text class="text-center text-xs text-zinc-500 dark:text-zinc-400">
+            {{ __('If the verification email has not appeared within five minutes, please check your junk or spam folder.') }}
+        </flux:text>
+
         @if (session('status') == 'verification-link-sent')
             <flux:text class="text-center font-medium !dark:text-green-400 !text-green-600">
                 {{ __('A new verification link has been sent to the email address you provided during registration.') }}

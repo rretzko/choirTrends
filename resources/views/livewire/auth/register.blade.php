@@ -61,6 +61,10 @@
 
             <input type="hidden" name="viewport" id="register-viewport-field">
 
+            <flux:text class="text-xs text-zinc-500 dark:text-zinc-400">
+                {{ __('A verification email will be sent to the address above. If it has not appeared within five minutes, please check your junk or spam folder.') }}
+            </flux:text>
+
             <div class="flex items-center justify-end">
                 <flux:button type="submit" variant="primary" class="w-full">
                     {{ __('Create account') }}

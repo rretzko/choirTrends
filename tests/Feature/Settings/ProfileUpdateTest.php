@@ -11,6 +11,21 @@ test('profile page is displayed', function () {
     $this->get('/settings/profile')->assertOk();
 });
 
+test('profile page shows verified badge for verified users', function () {
+    $this->actingAs(User::factory()->create());
+
+    Livewire::test(Profile::class)
+        ->assertSee('Verified');
+});
+
+test('profile page shows unverified badge for unverified users', function () {
+    $this->actingAs(User::factory()->unverified()->create());
+
+    Livewire::test(Profile::class)
+        ->assertSee('Unverified')
+        ->assertSee('Your email address is unverified.');
+});
+
 test('profile information can be updated', function () {
     $user = User::factory()->create();
 

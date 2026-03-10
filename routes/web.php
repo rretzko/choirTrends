@@ -17,7 +17,7 @@ Route::get('catalog/{token}/video/song/{program}/{songTitle}', [App\Http\Control
 
 Route::get('quick-tips/unsubscribe', App\Http\Controllers\QuickTipUnsubscribeController::class)->name('quick-tips.unsubscribe');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('videos/program/{program}', [App\Http\Controllers\VideoController::class, 'programVideo'])->name('videos.program');
     Route::get('videos/song/{program}/{songTitle}', [App\Http\Controllers\VideoController::class, 'songVideo'])->name('videos.song');
