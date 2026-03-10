@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
-        @include('partials.head')
+        @include('partials.head', [
+            'title' => null,
+            'description' => 'Upload your choral concert programs and discover what\'s trending in repertoire, composers, and arrangers across the choral community. Free for choral directors.',
+        ])
     </head>
     <body class="flex min-h-screen flex-col bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased">
 
