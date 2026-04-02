@@ -116,10 +116,7 @@ class Index extends Component
                 'songs' => $songs,
             ];
         })->sortBy(function ($group) {
-            /** @var Ensemble|null $ensemble */
-            $ensemble = $group['ensemble'];
-
-            return $ensemble ? $ensemble->ensemble_name : 'zzz';
+            return $group['songs']->min('pivot.sort_order') ?? PHP_INT_MAX;
         })->values();
 
         return $result;
