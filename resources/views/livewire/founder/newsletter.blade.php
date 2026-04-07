@@ -32,7 +32,7 @@
                     <table class="w-full text-left text-sm">
                         <thead class="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
                             <tr>
-                                <th class="px-4 py-2">{{ __('Subject') }}</th>
+                                <th class="px-4 py-2">{{ __('Newsletter Title') }}</th>
                                 <th class="px-4 py-2 text-center">{{ __('Status') }}</th>
                                 <th class="px-4 py-2 text-center">{{ __('Recipients') }}</th>
                                 <th class="px-4 py-2 text-center">{{ __('Actions') }}</th>
@@ -51,7 +51,7 @@
                                     </td>
                                     <td class="px-4 py-2 text-center font-mono text-xs">{{ $nl->recipient_count ?: '—' }}</td>
                                     <td class="px-4 py-2 text-center">
-                                        <flux:button wire:click="loadExisting({{ $nl->id }})" variant="ghost" size="xs" icon="{{ $nl->sent_at ? 'eye' : 'pencil' }}" />
+                                        <flux:button wire:click="loadExisting({{ $nl->id }})" x-on:click="$nextTick(() => document.getElementById('newsletter-editor').scrollIntoView({ behavior: 'smooth' }))" variant="ghost" size="xs" icon="{{ $nl->sent_at ? 'eye' : 'pencil' }}" />
                                     </td>
                                 </tr>
                             @endforeach
@@ -62,7 +62,7 @@
         @endif
 
         {{-- Editor --}}
-        <div class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+        <div id="newsletter-editor" class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
             <div class="mb-4 flex items-center justify-between">
                 <flux:heading size="lg">
                     @if ($newsletterId)
