@@ -61,6 +61,7 @@
                         <flux:sidebar.item icon="clipboard-document-list" :href="route('founder.issues')" :current="request()->routeIs('founder.issues')" wire:navigate>{{ __('Issues') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="magnifying-glass" :href="route('founder.songTitleConflicts')" :current="request()->routeIs('founder.songTitleConflicts')" wire:navigate>{{ __('Song Title Conflicts') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="light-bulb" :href="route('founder.quickTips')" :current="request()->routeIs('founder.quickTips')" wire:navigate>{{ __('Quick Tips') }}</flux:sidebar.item>
+                        <flux:sidebar.item icon="envelope" :href="route('founder.newsletter')" :current="request()->routeIs('founder.newsletter')" wire:navigate>{{ __('Newsletter') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="users" :href="route('founder.users')" :current="request()->routeIs('founder.users')" wire:navigate>{{ __('Users') }}</flux:sidebar.item>
                     </flux:sidebar.group>
                 </flux:sidebar.nav>

@@ -69,6 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('quick-tips', App\Livewire\Founder\QuickTips::class)->name('founder.quickTips');
         Route::get('quick-tips/create', App\Livewire\Founder\QuickTipForm::class)->name('founder.quickTips.create');
         Route::get('quick-tips/{quickTip}/edit', App\Livewire\Founder\QuickTipForm::class)->name('founder.quickTips.edit');
+        Route::get('newsletter', App\Livewire\Founder\Newsletter::class)->name('founder.newsletter');
     });
 
     // Stop impersonation (must be accessible while impersonating)
