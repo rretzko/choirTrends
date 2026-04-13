@@ -91,9 +91,17 @@
                         </flux:field>
                     </div>
 
-                    <flux:button wire:click="removeEnsemble({{ $eIndex }})" type="button" variant="danger" size="sm" icon="trash">
-                        {{ __('Remove') }}
-                    </flux:button>
+                    <div class="flex items-center gap-1">
+                        @if ($eIndex > 0)
+                            <flux:button wire:click="moveEnsembleUp({{ $eIndex }})" type="button" variant="ghost" size="sm" icon="chevron-up" title="{{ __('Move Up') }}" />
+                        @endif
+                        @if ($eIndex < count($ensembles) - 1)
+                            <flux:button wire:click="moveEnsembleDown({{ $eIndex }})" type="button" variant="ghost" size="sm" icon="chevron-down" title="{{ __('Move Down') }}" />
+                        @endif
+                        <flux:button wire:click="removeEnsemble({{ $eIndex }})" type="button" variant="danger" size="sm" icon="trash">
+                            {{ __('Remove') }}
+                        </flux:button>
+                    </div>
                 </div>
 
                 {{-- Songs --}}

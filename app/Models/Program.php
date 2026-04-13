@@ -52,7 +52,8 @@ class Program extends Model
     public function songTitles(): BelongsToMany
     {
         return $this->belongsToMany(SongTitle::class)
-            ->withPivot('ensemble_id', 'sort_order', 'video_path', 'video_visibility', 'video_uploaded_at')
+            ->withPivot('ensemble_id', 'sort_order', 'ensemble_sort_order', 'video_path', 'video_visibility', 'video_uploaded_at')
+            ->orderByPivot('ensemble_sort_order')
             ->orderByPivot('sort_order');
     }
 

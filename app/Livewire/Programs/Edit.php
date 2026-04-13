@@ -92,6 +92,26 @@ class Edit extends Component
         ];
     }
 
+    public function moveEnsembleUp(int $index): void
+    {
+        if ($index <= 0) {
+            return;
+        }
+
+        [$this->ensembles[$index - 1], $this->ensembles[$index]] = [$this->ensembles[$index], $this->ensembles[$index - 1]];
+        $this->ensembles = array_values($this->ensembles);
+    }
+
+    public function moveEnsembleDown(int $index): void
+    {
+        if ($index >= count($this->ensembles) - 1) {
+            return;
+        }
+
+        [$this->ensembles[$index], $this->ensembles[$index + 1]] = [$this->ensembles[$index + 1], $this->ensembles[$index]];
+        $this->ensembles = array_values($this->ensembles);
+    }
+
     public function removeEnsemble(int $index): void
     {
         unset($this->ensembles[$index]);
@@ -278,7 +298,7 @@ class Edit extends Component
             // Rebuild song title attachments
             $songTitleAttachments = [];
 
-            foreach ($this->ensembles as $ensembleData) {
+            foreach ($this->ensembles as $ensembleSortOrder => $ensembleData) {
                 $ensemble = null;
 
                 if (! empty($ensembleData['name'])) {
@@ -343,6 +363,7 @@ class Edit extends Component
                     $songTitleAttachments[$songTitle->id] = [
                         'ensemble_id' => $ensemble?->id,
                         'sort_order' => (int) $songData['sortOrder'],
+                        'ensemble_sort_order' => $ensembleSortOrder + 1,
                         'video_path' => $songData['videoPath'] ?? null,
                         'video_visibility' => ($songData['videoPath'] ?? null) ? ($songData['videoVisibility'] ?? 'Private') : null,
                         'video_uploaded_at' => ($songData['videoPath'] ?? null) ? now() : null,
@@ -373,8 +394,10 @@ class Edit extends Component
             ->where('user_id', '!=', $userId)
             ->exists();
 
-        // Group songs by ensemble
-        $songsByEnsemble = $this->program->songTitles->groupBy('pivot.ensemble_id');
+        // Group songs by ensemble, ordered by ensemble_sort_order
+        $songsByEnsemble = $this->program->songTitles
+            ->sortBy('pivot.ensemble_sort_order')
+            ->groupBy('pivot.ensemble_id');
 
         $this->ensembles = [];
 

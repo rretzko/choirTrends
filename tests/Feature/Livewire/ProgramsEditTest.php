@@ -584,3 +584,122 @@ test('sort_order resets per ensemble within a program', function () {
     $jazzSongs = $songs->filter(fn ($s) => str_starts_with($s->song_title, 'Jazz'));
     expect($jazzSongs->pluck('pivot.sort_order')->sort()->values()->all())->toBe([1, 2]);
 });
+
+test('moveEnsembleUp swaps ensemble with the one above', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $ensemble1 = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'First Choir']);
+    $ensemble2 = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'Second Choir']);
+
+    $song1 = SongTitle::factory()->create(['song_title' => 'Song A']);
+    $song2 = SongTitle::factory()->create(['song_title' => 'Song B']);
+
+    $program->songTitles()->attach($song1->id, ['ensemble_id' => $ensemble1->id, 'sort_order' => 1, 'ensemble_sort_order' => 1]);
+    $program->songTitles()->attach($song2->id, ['ensemble_id' => $ensemble2->id, 'sort_order' => 1, 'ensemble_sort_order' => 2]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Edit::class, ['program' => $program]);
+
+    // Verify initial order
+    expect($component->get('ensembles.0.name'))->toBe('First Choir');
+    expect($component->get('ensembles.1.name'))->toBe('Second Choir');
+
+    // Move second ensemble up
+    $component->call('moveEnsembleUp', 1);
+
+    expect($component->get('ensembles.0.name'))->toBe('Second Choir');
+    expect($component->get('ensembles.1.name'))->toBe('First Choir');
+});
+
+test('moveEnsembleDown swaps ensemble with the one below', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $ensemble1 = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'First Choir']);
+    $ensemble2 = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'Second Choir']);
+
+    $song1 = SongTitle::factory()->create(['song_title' => 'Song A']);
+    $song2 = SongTitle::factory()->create(['song_title' => 'Song B']);
+
+    $program->songTitles()->attach($song1->id, ['ensemble_id' => $ensemble1->id, 'sort_order' => 1, 'ensemble_sort_order' => 1]);
+    $program->songTitles()->attach($song2->id, ['ensemble_id' => $ensemble2->id, 'sort_order' => 1, 'ensemble_sort_order' => 2]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Edit::class, ['program' => $program]);
+
+    // Move first ensemble down
+    $component->call('moveEnsembleDown', 0);
+
+    expect($component->get('ensembles.0.name'))->toBe('Second Choir');
+    expect($component->get('ensembles.1.name'))->toBe('First Choir');
+});
+
+test('moveEnsembleUp does nothing when already first', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $ensemble = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'Only Choir']);
+    $song = SongTitle::factory()->create(['song_title' => 'Song A']);
+    $program->songTitles()->attach($song->id, ['ensemble_id' => $ensemble->id, 'sort_order' => 1, 'ensemble_sort_order' => 1]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Edit::class, ['program' => $program]);
+    $component->call('moveEnsembleUp', 0);
+
+    expect($component->get('ensembles.0.name'))->toBe('Only Choir');
+});
+
+test('moveEnsembleDown does nothing when already last', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $ensemble = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'Only Choir']);
+    $song = SongTitle::factory()->create(['song_title' => 'Song A']);
+    $program->songTitles()->attach($song->id, ['ensemble_id' => $ensemble->id, 'sort_order' => 1, 'ensemble_sort_order' => 1]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Edit::class, ['program' => $program]);
+    $component->call('moveEnsembleDown', 0);
+
+    expect($component->get('ensembles.0.name'))->toBe('Only Choir');
+});
+
+test('ensemble order is persisted after save', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $ensemble1 = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'Alpha Choir']);
+    $ensemble2 = Ensemble::factory()->create(['school_id' => $school->id, 'ensemble_name' => 'Beta Choir']);
+
+    $song1 = SongTitle::factory()->create(['song_title' => 'Alpha Song']);
+    $song2 = SongTitle::factory()->create(['song_title' => 'Beta Song']);
+
+    $program->songTitles()->attach($song1->id, ['ensemble_id' => $ensemble1->id, 'sort_order' => 1, 'ensemble_sort_order' => 1]);
+    $program->songTitles()->attach($song2->id, ['ensemble_id' => $ensemble2->id, 'sort_order' => 1, 'ensemble_sort_order' => 2]);
+
+    $this->actingAs($user);
+
+    // Swap: move Beta up to first position
+    Livewire::test(Edit::class, ['program' => $program])
+        ->call('moveEnsembleUp', 1)
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('programs.index'));
+
+    // Reload and verify the order persisted
+    $program->refresh();
+
+    $component = Livewire::test(Edit::class, ['program' => $program]);
+    expect($component->get('ensembles.0.name'))->toBe('Beta Choir');
+    expect($component->get('ensembles.1.name'))->toBe('Alpha Choir');
+});
