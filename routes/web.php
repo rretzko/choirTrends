@@ -34,6 +34,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('schools', App\Livewire\Schools\Index::class)->name('schools.index');
     Route::get('song-titles', App\Livewire\SongTitles\Index::class)->name('song-titles.index');
 
+    Route::get('user-guide/{section?}', App\Livewire\UserGuide\Index::class)->name('user-guide.index');
+    Route::get('user-guide-pdf', App\Http\Controllers\UserGuidePdfController::class)->name('user-guide.pdf');
+
     Route::get('feedback', App\Livewire\Feedback\Index::class)->name('feedback.index');
     Route::redirect('feedback/create', '/feedback?tab=report');
 
@@ -70,6 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('quick-tips/create', App\Livewire\Founder\QuickTipForm::class)->name('founder.quickTips.create');
         Route::get('quick-tips/{quickTip}/edit', App\Livewire\Founder\QuickTipForm::class)->name('founder.quickTips.edit');
         Route::get('newsletter', App\Livewire\Founder\Newsletter::class)->name('founder.newsletter');
+        Route::get('user-guide', App\Livewire\Founder\UserGuideEditor::class)->name('founder.userGuide');
     });
 
     // Stop impersonation (must be accessible while impersonating)

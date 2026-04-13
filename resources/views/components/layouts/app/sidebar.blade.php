@@ -35,6 +35,8 @@
                 <flux:sidebar.item icon="academic-cap" :href="route('schools.index')" :current="request()->routeIs('schools.*')" wire:navigate>{{ __('Schools') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="queue-list" :href="route('song-titles.index')" :current="request()->routeIs('song-titles.*')" wire:navigate>{{ __('Song Titles') }}</flux:sidebar.item>
                 <flux:separator class="my-2"/>
+                <flux:sidebar.item icon="book-open" :href="route('user-guide.index')" :current="request()->routeIs('user-guide.*')" wire:navigate>{{ __("User's Guide") }}</flux:sidebar.item>
+                <flux:separator class="my-2"/>
                 <flux:sidebar.item icon="bug-ant" :href="route('feedback.index') . '?tab=report'" :current="request()->routeIs('feedback.*')" wire:navigate>{{ __('Feedback') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="light-bulb" :href="route('quick-tips.index')" :current="request()->routeIs('quick-tips.*')" wire:navigate>{{ __('Quick Tips') }}</flux:sidebar.item>
                 <flux:sidebar.group expandable :expanded="false" icon="book-open" heading="Documentation" class="grid">
@@ -62,6 +64,7 @@
                         <flux:sidebar.item icon="magnifying-glass" :href="route('founder.songTitleConflicts')" :current="request()->routeIs('founder.songTitleConflicts')" wire:navigate>{{ __('Song Title Conflicts') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="light-bulb" :href="route('founder.quickTips')" :current="request()->routeIs('founder.quickTips')" wire:navigate>{{ __('Quick Tips') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="envelope" :href="route('founder.newsletter')" :current="request()->routeIs('founder.newsletter')" wire:navigate>{{ __('Newsletter') }}</flux:sidebar.item>
+                        <flux:sidebar.item icon="book-open" :href="route('founder.userGuide')" :current="request()->routeIs('founder.userGuide')" wire:navigate>{{ __("User's Guide") }}</flux:sidebar.item>
                         <flux:sidebar.item icon="users" :href="route('founder.users')" :current="request()->routeIs('founder.users')" wire:navigate>{{ __('Users') }}</flux:sidebar.item>
                     </flux:sidebar.group>
                 </flux:sidebar.nav>
