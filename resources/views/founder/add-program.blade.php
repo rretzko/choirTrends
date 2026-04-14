@@ -222,9 +222,15 @@
                 {{-- Processing State --}}
                 <div class="min-h-[300px] rounded-lg border border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center">
                     <div class="text-center text-zinc-500 dark:text-zinc-400">
-                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-zinc-300 dark:border-zinc-600 border-t-zinc-600 dark:border-t-zinc-300 mb-3"></div>
-                        <p class="text-sm font-medium">{{ __('Processing program...') }}</p>
-                        <p class="text-xs mt-1">{{ __('This may take a minute for larger files') }}</p>
+                        <div id="processing-spinner" class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-zinc-300 dark:border-zinc-600 border-t-zinc-600 dark:border-t-zinc-300 mb-3"></div>
+                        <p id="processing-message" class="text-sm font-medium">{{ __('Processing program...') }}</p>
+                        <p id="processing-submessage" class="text-xs mt-1">{{ __('This may take a minute for larger files') }}</p>
+                        <form action="{{ route('founder.addProgram.reset') }}" method="POST" class="mt-4">
+                            @csrf
+                            <flux:button type="submit" variant="ghost" size="sm">
+                                {{ __('Start Over') }}
+                            </flux:button>
+                        </form>
                     </div>
                 </div>
             @elseif(isset($analysis['status']) && $analysis['status'] === 'failed')
@@ -451,7 +457,21 @@
 
     @if(isset($analysis['status']) && $analysis['status'] === 'processing')
         <script>
+            const pollStartTime = Date.now();
+            const pollTimeoutMs = 5 * 60 * 1000; // 5 minutes
+
             const pollInterval = setInterval(async () => {
+                if (Date.now() - pollStartTime > pollTimeoutMs) {
+                    clearInterval(pollInterval);
+                    const msg = document.getElementById('processing-message');
+                    const sub = document.getElementById('processing-submessage');
+                    const spinner = document.getElementById('processing-spinner');
+                    if (msg) msg.textContent = '{{ __("Processing is taking longer than expected.") }}';
+                    if (sub) sub.textContent = '{{ __("You can wait or start over and try again.") }}';
+                    if (spinner) spinner.classList.remove('animate-spin');
+                    return;
+                }
+
                 try {
                     const response = await fetch('{{ route("founder.addProgram.status") }}');
                     const data = await response.json();

@@ -251,9 +251,15 @@
                 {{-- Processing State --}}
                 <div class="min-h-[300px] rounded-lg border border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center">
                     <div class="text-center text-zinc-500 dark:text-zinc-400">
-                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-zinc-300 dark:border-zinc-600 border-t-zinc-600 dark:border-t-zinc-300 mb-3"></div>
-                        <p class="text-sm font-medium">{{ __('Processing your program...') }}</p>
-                        <p class="text-xs mt-1">{{ __('This may take a minute for larger files') }}</p>
+                        <div id="processing-spinner" class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-zinc-300 dark:border-zinc-600 border-t-zinc-600 dark:border-t-zinc-300 mb-3"></div>
+                        <p id="processing-message" class="text-sm font-medium">{{ __('Processing your program...') }}</p>
+                        <p id="processing-submessage" class="text-xs mt-1">{{ __('This may take a minute for larger files') }}</p>
+                        <form action="{{ route('addProgram.reset') }}" method="POST" class="mt-4">
+                            @csrf
+                            <flux:button type="submit" variant="ghost" size="sm">
+                                {{ __('Start Over') }}
+                            </flux:button>
+                        </form>
                     </div>
                 </div>
             @elseif(isset($analysis['status']) && $analysis['status'] === 'failed')
@@ -366,14 +372,31 @@
                                                 />
                                             </flux:field>
                                         </div>
-                                        <flux:button
-                                            variant="ghost"
-                                            type="button"
-                                            onclick="this.closest('.ensemble-group').remove()"
-                                            class="mt-7"
-                                        >
-                                            {{ __('Remove Ensemble') }}
-                                        </flux:button>
+                                        <div class="mt-7 flex items-center gap-1">
+                                            <flux:button
+                                                variant="ghost"
+                                                type="button"
+                                                onclick="moveEnsemble(this.closest('.ensemble-group'), 'up')"
+                                                size="sm"
+                                                icon="chevron-up"
+                                                title="{{ __('Move Up') }}"
+                                            />
+                                            <flux:button
+                                                variant="ghost"
+                                                type="button"
+                                                onclick="moveEnsemble(this.closest('.ensemble-group'), 'down')"
+                                                size="sm"
+                                                icon="chevron-down"
+                                                title="{{ __('Move Down') }}"
+                                            />
+                                            <flux:button
+                                                variant="ghost"
+                                                type="button"
+                                                onclick="this.closest('.ensemble-group').remove(); reindexEnsembles()"
+                                            >
+                                                {{ __('Remove Ensemble') }}
+                                            </flux:button>
+                                        </div>
                                     </div>
 
                                     {{-- Songs for this Ensemble --}}
@@ -494,7 +517,22 @@
     @if(isset($analysis['status']) && $analysis['status'] === 'processing')
         <script>
             // Poll for status updates every 3 seconds when processing
+            const pollStartTime = Date.now();
+            const pollTimeoutMs = 5 * 60 * 1000; // 5 minutes
+
             const pollInterval = setInterval(async () => {
+                // Stop polling after timeout
+                if (Date.now() - pollStartTime > pollTimeoutMs) {
+                    clearInterval(pollInterval);
+                    const msg = document.getElementById('processing-message');
+                    const sub = document.getElementById('processing-submessage');
+                    const spinner = document.getElementById('processing-spinner');
+                    if (msg) msg.textContent = '{{ __("Processing is taking longer than expected.") }}';
+                    if (sub) sub.textContent = '{{ __("You can wait or start over and try again.") }}';
+                    if (spinner) spinner.classList.remove('animate-spin');
+                    return;
+                }
+
                 try {
                     const response = await fetch('{{ route("addProgram.status") }}');
                     const data = await response.json();
@@ -516,6 +554,27 @@
     @endif
 
     <script>
+        function moveEnsemble(ensembleEl, direction) {
+            const container = document.getElementById('ensembles-container');
+            if (direction === 'up' && ensembleEl.previousElementSibling) {
+                container.insertBefore(ensembleEl, ensembleEl.previousElementSibling);
+            } else if (direction === 'down' && ensembleEl.nextElementSibling) {
+                container.insertBefore(ensembleEl.nextElementSibling, ensembleEl);
+            }
+            reindexEnsembles();
+        }
+
+        function reindexEnsembles() {
+            const container = document.getElementById('ensembles-container');
+            container.querySelectorAll('.ensemble-group').forEach((group, eIdx) => {
+                group.setAttribute('data-ensemble-index', eIdx);
+                // Re-index all inputs/textareas/selects whose name starts with "ensembles["
+                group.querySelectorAll('[name^="ensembles["]').forEach(input => {
+                    input.name = input.name.replace(/ensembles\[\d+\]/, `ensembles[${eIdx}]`);
+                });
+            });
+        }
+
         function addEnsemble() {
             const container = document.getElementById('ensembles-container');
 
@@ -545,13 +604,31 @@
                             />
                         </div>
                     </div>
-                    <button
-                        type="button"
-                        onclick="this.closest('.ensemble-group').remove()"
-                        class="mt-7 rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                    >
-                        {{ __('Remove Ensemble') }}
-                    </button>
+                    <div class="mt-7 flex items-center gap-1">
+                        <button
+                            type="button"
+                            onclick="moveEnsemble(this.closest('.ensemble-group'), 'up')"
+                            class="rounded-lg p-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                            title="{{ __('Move Up') }}"
+                        >
+                            <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
+                        </button>
+                        <button
+                            type="button"
+                            onclick="moveEnsemble(this.closest('.ensemble-group'), 'down')"
+                            class="rounded-lg p-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                            title="{{ __('Move Down') }}"
+                        >
+                            <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                        </button>
+                        <button
+                            type="button"
+                            onclick="this.closest('.ensemble-group').remove(); reindexEnsembles()"
+                            class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                        >
+                            {{ __('Remove Ensemble') }}
+                        </button>
+                    </div>
                 </div>
                 <div class="ml-4 space-y-3">
                     <div class="flex items-center justify-between lg:w-1/2">

@@ -127,6 +127,18 @@ class FounderAddProgramController extends Controller
         return response()->json($analysis ?? ['status' => 'not_found']);
     }
 
+    public function reset(Request $request)
+    {
+        $targetUserId = $request->session()->get('founder_target_user_id');
+
+        if ($targetUserId) {
+            cache()->forget("program_analysis_{$targetUserId}");
+            $request->session()->forget('founder_target_user_id');
+        }
+
+        return redirect()->route('founder.addProgram');
+    }
+
     public function confirm(ConfirmProgramRequest $request)
     {
         $validated = $request->validated();

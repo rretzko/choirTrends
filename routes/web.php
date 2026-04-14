@@ -60,6 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('add-program', [App\Http\Controllers\AddProgramController::class, 'store'])->name('addProgram.store');
 
     Route::post('add-program/confirm', [App\Http\Controllers\AddProgramController::class, 'confirm'])->name('addProgram.confirm');
+    Route::post('add-program/reset', [App\Http\Controllers\AddProgramController::class, 'reset'])->name('addProgram.reset');
 
     // Founder-only routes
     Route::middleware(App\Http\Middleware\EnsureUserIsFounder::class)->prefix('founder')->group(function () {
@@ -68,6 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('add-program', [App\Http\Controllers\FounderAddProgramController::class, 'store'])->name('founder.addProgram.store');
         Route::get('add-program/status', [App\Http\Controllers\FounderAddProgramController::class, 'status'])->name('founder.addProgram.status');
         Route::post('add-program/confirm', [App\Http\Controllers\FounderAddProgramController::class, 'confirm'])->name('founder.addProgram.confirm');
+        Route::post('add-program/reset', [App\Http\Controllers\FounderAddProgramController::class, 'reset'])->name('founder.addProgram.reset');
         Route::get('impersonate', App\Livewire\Founder\ImpersonateUser::class)->name('founder.impersonate');
         Route::get('duplicates', App\Livewire\Founder\Duplicates::class)->name('founder.duplicates');
         Route::get('issues', App\Livewire\Founder\Issues::class)->name('founder.issues');

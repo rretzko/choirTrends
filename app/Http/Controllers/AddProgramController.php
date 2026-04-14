@@ -118,6 +118,13 @@ class AddProgramController extends Controller
         return response()->json($analysis ?? ['status' => 'not_found']);
     }
 
+    public function reset(Request $request)
+    {
+        cache()->forget("program_analysis_{$request->user()->id}");
+
+        return redirect()->route('addProgram');
+    }
+
     public function confirm(ConfirmProgramRequest $request)
     {
         $validated = $request->validated();

@@ -187,3 +187,20 @@ test('user can submit via vapor file key', function () {
             && $job->uris === null;
     });
 });
+
+test('reset clears processing cache and redirects to add program', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    cache()->put("program_analysis_{$user->id}", ['status' => 'processing'], now()->addHours(2));
+
+    $response = $this->actingAs($user)->post(route('addProgram.reset'));
+
+    $response->assertRedirect(route('addProgram'));
+    expect(cache()->get("program_analysis_{$user->id}"))->toBeNull();
+});
+
+test('guest cannot access reset route', function () {
+    $response = $this->post(route('addProgram.reset'));
+
+    $response->assertRedirect(route('login'));
+});
