@@ -8,6 +8,7 @@ use App\Models\Artist;
 use App\Models\Ensemble;
 use App\Models\School;
 use App\Models\SongTitle;
+use App\Models\User;
 use Flux;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -70,6 +71,7 @@ class Duplicates extends Component
         match ($this->activeTab) {
             'artists' => $this->mergeArtists($this->keeperId, (string) $this->duplicateId),
             'song-titles' => $this->mergeSongTitles($this->keeperId, (string) $this->duplicateId),
+            'users' => $this->mergeUsers($this->keeperId, (string) $this->duplicateId),
             default => $this->mergeSchools($this->keeperId, (string) $this->duplicateId),
         };
 
@@ -233,6 +235,89 @@ class Duplicates extends Component
         }
     }
 
+    public function mergeUsers(int $keeperId, string $duplicateIds): void
+    {
+        abort_unless(auth()->user()?->isFounder(), Response::HTTP_FORBIDDEN);
+
+        /** @var list<int> $ids */
+        $ids = array_map('intval', explode(',', $duplicateIds));
+
+        $keeper = User::findOrFail($keeperId);
+
+        DB::transaction(function () use ($keeper, $ids): void {
+            foreach ($ids as $duplicateId) {
+                $duplicate = User::findOrFail($duplicateId);
+
+                // Reassign programs (skip those that would violate unique constraint)
+                foreach ($duplicate->programs as $program) {
+                    $conflict = $keeper->programs()
+                        ->where('event_name', $program->event_name)
+                        ->where('event_date', $program->event_date)
+                        ->exists();
+
+                    if (! $conflict) {
+                        $program->update(['user_id' => $keeper->id]);
+                    }
+                    // If conflict, leave the duplicate program to be deleted with the user (cascade)
+                    // The user said they will handle duplicate programs manually
+                }
+
+                // Reassign school_user pivot entries (skip existing)
+                $existingSchoolIds = $keeper->schools()->pluck('schools.id');
+                foreach ($duplicate->schools as $school) {
+                    if (! $existingSchoolIds->contains($school->id)) {
+                        $keeper->schools()->attach($school->id);
+                    }
+                }
+                $duplicate->schools()->detach();
+
+                // Reassign user_logins
+                DB::table('user_logins')
+                    ->where('user_id', $duplicate->id)
+                    ->update(['user_id' => $keeper->id]);
+
+                // Reassign feedbacks
+                DB::table('feedbacks')
+                    ->where('user_id', $duplicate->id)
+                    ->update(['user_id' => $keeper->id]);
+
+                // Reassign feedback_comments
+                DB::table('feedback_comments')
+                    ->where('user_id', $duplicate->id)
+                    ->update(['user_id' => $keeper->id]);
+
+                // Reassign quick_tip_user pivot entries (skip existing)
+                $existingQuickTipIds = $keeper->quickTips()->pluck('quick_tips.id');
+                DB::table('quick_tip_user')
+                    ->where('user_id', $duplicate->id)
+                    ->whereNotIn('quick_tip_id', $existingQuickTipIds)
+                    ->update(['user_id' => $keeper->id]);
+                DB::table('quick_tip_user')
+                    ->where('user_id', $duplicate->id)
+                    ->delete();
+
+                // Reassign survey_responses
+                DB::table('survey_responses')
+                    ->where('user_id', $duplicate->id)
+                    ->update(['user_id' => $keeper->id]);
+
+                // Delete duplicate's privacy record (keeper keeps theirs)
+                DB::table('user_privacies')
+                    ->where('user_id', $duplicate->id)
+                    ->delete();
+
+                // Clear sessions for duplicate
+                DB::table('sessions')
+                    ->where('user_id', $duplicate->id)
+                    ->update(['user_id' => null]);
+
+                $duplicate->delete();
+            }
+        });
+
+        $this->successMessage = __('Users merged successfully.');
+    }
+
     public function editArtist(int $id): void
     {
         abort_unless(auth()->user()?->isFounder(), Response::HTTP_FORBIDDEN);
@@ -338,6 +423,7 @@ class Duplicates extends Component
         $records = match ($this->activeTab) {
             'artists' => Artist::query()->orderBy('artist_last_name')->orderBy('artist_first_name')->get(),
             'song-titles' => SongTitle::query()->with(['composer', 'arranger'])->orderBy('song_title')->get(),
+            'users' => User::query()->withCount(['programs', 'schools'])->orderBy('alpha_name')->get(),
             default => School::query()->orderBy('school_name')->get(),
         };
 

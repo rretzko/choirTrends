@@ -58,6 +58,53 @@
             </div>
         </div>
 
+        {{-- Program Distribution --}}
+        <div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+            <div class="mb-2 flex items-center justify-between">
+                <flux:heading size="sm">{{ __('Users by Program Count') }} (n={{ $this->userProgramDetails->count() }})</flux:heading>
+                <flux:button variant="subtle" size="sm" wire:click="$set('showProgramModal', true)">
+                    <flux:icon.information-circle class="size-5" />
+                </flux:button>
+            </div>
+            <div class="grid grid-cols-3 gap-3 sm:grid-cols-6">
+                @foreach($this->programDistribution as $bucket)
+                    <div class="text-center">
+                        <flux:text class="text-xs">{{ $bucket->label }} @if($bucket->label === "0")Programs @endif</flux:text>
+                        <div class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{{ $bucket->count }}</div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Program Detail Modal --}}
+        <flux:modal wire:model="showProgramModal" class="max-w-3xl">
+            <flux:heading size="lg">{{ __('User Program Details') }}</flux:heading>
+            <flux:text class="mb-4">{{ __('Ordered by program count and latest program update.') }}</flux:text>
+
+            <div class="max-h-96 overflow-y-auto">
+                <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
+                    <thead class="sticky top-0 bg-zinc-50 dark:bg-zinc-800">
+                        <tr>
+                            <th class="px-4 py-2 text-start text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ __('User') }}</th>
+                            <th class="px-4 py-2 text-start text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ __('Last Login') }}</th>
+                            <th class="px-4 py-2 text-end text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ __('Programs') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                        @foreach($this->userProgramDetails as $user)
+                            <tr wire:key="prog-user-{{ $user->id }}" class="text-sm">
+                                <td class="whitespace-nowrap px-4 py-2 text-zinc-900 dark:text-zinc-100">{{ $user->alpha_name }} ({{ $user->id }})</td>
+                                <td class="whitespace-nowrap px-4 py-2 text-zinc-600 dark:text-zinc-400">
+                                    {{ $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->diffForHumans() : __('Never') }}
+                                </td>
+                                <td class="whitespace-nowrap px-4 py-2 text-end text-zinc-600 dark:text-zinc-400">{{ $user->programs_count }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </flux:modal>
+
         {{-- Recent Logins Table --}}
         <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
             <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">

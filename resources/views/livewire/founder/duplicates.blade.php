@@ -27,6 +27,13 @@
             >
                 {{ __('Songs') }}
             </flux:button>
+            <flux:button
+                wire:click="switchTab('users')"
+                :variant="$activeTab === 'users' ? 'primary' : 'ghost'"
+                size="sm"
+            >
+                {{ __('Users') }}
+            </flux:button>
         </div>
 
         @if ($successMessage)
@@ -51,6 +58,8 @@
                                     {{ $record->school_name }} — {{ $record->postal_code ?: __('No postal code') }}, {{ $record->geo_state ?: __('No state') }}
                                 @elseif ($activeTab === 'artists')
                                     {{ $record->artist_name }}
+                                @elseif ($activeTab === 'users')
+                                    {{ $record->alpha_name }} — {{ $record->email }}
                                 @else
                                     {{ $record->song_title }} — {{ $record->composer?->artist_name ?? __('No composer') }}
                                 @endif
@@ -75,6 +84,8 @@
                                         {{ $record->school_name }} — {{ $record->postal_code ?: __('No postal code') }}, {{ $record->geo_state ?: __('No state') }}
                                     @elseif ($activeTab === 'artists')
                                         {{ $record->artist_name }}
+                                    @elseif ($activeTab === 'users')
+                                        {{ $record->alpha_name }} — {{ $record->email }}
                                     @else
                                         {{ $record->song_title }} — {{ $record->composer?->artist_name ?? __('No composer') }}
                                     @endif
@@ -251,6 +262,34 @@
                     </div>
                 </form>
             </flux:modal>
+        @endif
+
+        {{-- Users reference table --}}
+        @if ($activeTab === 'users')
+            <div class="rounded-lg border border-zinc-200 dark:border-zinc-700">
+                <table class="w-full text-left text-sm">
+                    <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
+                        <tr>
+                            <th class="px-4 py-2 font-medium text-zinc-500 dark:text-zinc-400">{{ __('ID') }}</th>
+                            <th class="px-4 py-2 font-medium text-zinc-500 dark:text-zinc-400">{{ __('Name') }}</th>
+                            <th class="px-4 py-2 font-medium text-zinc-500 dark:text-zinc-400">{{ __('Email') }}</th>
+                            <th class="px-4 py-2 font-medium text-zinc-500 dark:text-zinc-400">{{ __('Programs') }}</th>
+                            <th class="px-4 py-2 font-medium text-zinc-500 dark:text-zinc-400">{{ __('Schools') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                        @foreach ($records as $record)
+                            <tr wire:key="user-row-{{ $record->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                                <td class="px-4 py-2 text-zinc-500 dark:text-zinc-400">{{ $record->id }}</td>
+                                <td class="px-4 py-2 text-zinc-900 dark:text-zinc-100">{{ $record->alpha_name }}</td>
+                                <td class="px-4 py-2 text-zinc-700 dark:text-zinc-300">{{ $record->email }}</td>
+                                <td class="px-4 py-2 text-zinc-700 dark:text-zinc-300">{{ $record->programs_count }}</td>
+                                <td class="px-4 py-2 text-zinc-700 dark:text-zinc-300">{{ $record->schools_count }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         @endif
     </div>
 </div>

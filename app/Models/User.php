@@ -20,6 +20,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read UserPrivacy|null $privacy
  * @property-read Collection<int, QuickTip> $quickTips
  * @property-read Collection<int, School> $schools
+ * @property-read Collection<int, SurveyResponse> $surveyResponses
  * @property-read Collection<int, UserLogin> $userLogins
  */
 class User extends Authenticatable implements MustVerifyEmail
@@ -60,6 +61,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'catalog_token',
         'catalog_enabled_at',
         'quick_tip_emails_enabled',
+        'survey_emails_sent_count',
         'referral_source',
         'referral_detail',
     ];
@@ -91,6 +93,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'orientation_email_sent_at' => 'datetime',
             'catalog_enabled_at' => 'datetime',
             'quick_tip_emails_enabled' => 'boolean',
+            'survey_emails_sent_count' => 'integer',
             'referral_source' => ReferralSource::class,
         ];
     }
@@ -120,6 +123,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function privacy(): HasOne
     {
         return $this->hasOne(UserPrivacy::class);
+    }
+
+    public function surveyResponses(): HasMany
+    {
+        return $this->hasMany(SurveyResponse::class);
     }
 
     public function userLogins(): HasMany

@@ -9,6 +9,8 @@ use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
 use App\Models\User;
+use App\Models\UserLogin;
+use App\Models\UserPrivacy;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -782,5 +784,205 @@ test('non-founder cannot remove a song', function () {
     Livewire::actingAs($user)
         ->test(Duplicates::class)
         ->call('removeSong', $song->id)
+        ->assertForbidden();
+});
+
+// --- Users Tab ---
+
+test('users tab shows all users', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $userA = User::factory()->withoutTwoFactor()->create(['name' => 'Alice Smith']);
+    $userB = User::factory()->withoutTwoFactor()->create(['name' => 'Bob Jones']);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'users')
+        ->assertSee('Smith, Alice')
+        ->assertSee('Jones, Bob')
+        ->assertSee('Users');
+});
+
+test('users tab shows reference table with program and school counts', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $user = User::factory()->withoutTwoFactor()->create(['name' => 'Test User']);
+    $school = School::factory()->create();
+    $user->schools()->attach($school);
+    Program::factory()->create(['user_id' => $user->id]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'users')
+        ->assertSee('User, Test')
+        ->assertSee('Name')
+        ->assertSee('Email')
+        ->assertSee('Programs')
+        ->assertSee('Schools');
+});
+
+// --- User Merge ---
+
+test('merging users migrates programs to keeper', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = User::factory()->withoutTwoFactor()->create(['name' => 'Keeper User']);
+    $duplicate = User::factory()->withoutTwoFactor()->create(['name' => 'Duplicate User']);
+
+    $program = Program::factory()->create(['user_id' => $duplicate->id]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'users')
+        ->call('mergeUsers', $keeper->id, (string) $duplicate->id);
+
+    expect(Program::find($program->id)->user_id)->toBe($keeper->id);
+    expect(User::find($duplicate->id))->toBeNull();
+});
+
+test('merging users skips programs that would violate unique constraint', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = User::factory()->withoutTwoFactor()->create(['name' => 'Keeper User']);
+    $duplicate = User::factory()->withoutTwoFactor()->create(['name' => 'Duplicate User']);
+
+    // Both users have a program with same event_name and event_date
+    $keeperProgram = Program::factory()->create([
+        'user_id' => $keeper->id,
+        'event_name' => 'Spring Concert',
+        'event_date' => '2026-05-01',
+    ]);
+    $duplicateProgram = Program::factory()->create([
+        'user_id' => $duplicate->id,
+        'event_name' => 'Spring Concert',
+        'event_date' => '2026-05-01',
+    ]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'users')
+        ->call('mergeUsers', $keeper->id, (string) $duplicate->id);
+
+    // Keeper's program untouched
+    expect(Program::find($keeperProgram->id))->not->toBeNull();
+    // Duplicate user deleted (cascade deletes the conflicting program)
+    expect(User::find($duplicate->id))->toBeNull();
+});
+
+test('merging users reassigns school pivot entries', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = User::factory()->withoutTwoFactor()->create(['name' => 'Keeper User']);
+    $duplicate = User::factory()->withoutTwoFactor()->create(['name' => 'Duplicate User']);
+
+    $school = School::factory()->create();
+    $duplicate->schools()->attach($school);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'users')
+        ->call('mergeUsers', $keeper->id, (string) $duplicate->id);
+
+    expect($keeper->fresh()->schools->pluck('id'))->toContain($school->id);
+    expect(User::find($duplicate->id))->toBeNull();
+});
+
+test('merging users skips existing school pivot entries', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = User::factory()->withoutTwoFactor()->create(['name' => 'Keeper User']);
+    $duplicate = User::factory()->withoutTwoFactor()->create(['name' => 'Duplicate User']);
+
+    $school = School::factory()->create();
+    $keeper->schools()->attach($school);
+    $duplicate->schools()->attach($school);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'users')
+        ->call('mergeUsers', $keeper->id, (string) $duplicate->id);
+
+    expect($keeper->fresh()->schools->count())->toBe(1);
+    expect(User::find($duplicate->id))->toBeNull();
+});
+
+test('merging users reassigns user logins', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = User::factory()->withoutTwoFactor()->create(['name' => 'Keeper User']);
+    $duplicate = User::factory()->withoutTwoFactor()->create(['name' => 'Duplicate User']);
+
+    $login = UserLogin::factory()->create(['user_id' => $duplicate->id]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'users')
+        ->call('mergeUsers', $keeper->id, (string) $duplicate->id);
+
+    expect(UserLogin::find($login->id)->user_id)->toBe($keeper->id);
+    expect(User::find($duplicate->id))->toBeNull();
+});
+
+test('merging users deletes duplicate privacy record', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = User::factory()->withoutTwoFactor()->create(['name' => 'Keeper User']);
+    $duplicate = User::factory()->withoutTwoFactor()->create(['name' => 'Duplicate User']);
+
+    $keeperPrivacy = UserPrivacy::factory()->create(['user_id' => $keeper->id]);
+    $duplicatePrivacy = UserPrivacy::factory()->create(['user_id' => $duplicate->id]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'users')
+        ->call('mergeUsers', $keeper->id, (string) $duplicate->id);
+
+    expect(UserPrivacy::find($keeperPrivacy->id))->not->toBeNull();
+    expect(UserPrivacy::find($duplicatePrivacy->id))->toBeNull();
+    expect(User::find($duplicate->id))->toBeNull();
+});
+
+test('merging users shows success message', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = User::factory()->withoutTwoFactor()->create(['name' => 'Keeper User']);
+    $duplicate = User::factory()->withoutTwoFactor()->create(['name' => 'Duplicate User']);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'users')
+        ->call('mergeUsers', $keeper->id, (string) $duplicate->id)
+        ->assertSet('successMessage', 'Users merged successfully.')
+        ->assertSee('Users merged successfully.');
+});
+
+test('manual merge calls correct merge method for users', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = User::factory()->withoutTwoFactor()->create(['name' => 'Keeper User']);
+    $duplicate = User::factory()->withoutTwoFactor()->create(['name' => 'Duplicate User']);
+
+    $program = Program::factory()->create(['user_id' => $duplicate->id]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'users')
+        ->set('keeperId', $keeper->id)
+        ->set('duplicateId', $duplicate->id)
+        ->call('manualMerge');
+
+    expect(Program::find($program->id)->user_id)->toBe($keeper->id);
+    expect(User::find($duplicate->id))->toBeNull();
+});
+
+test('non-founder cannot merge users', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $userA = User::factory()->withoutTwoFactor()->create(['name' => 'User A']);
+    $userB = User::factory()->withoutTwoFactor()->create(['name' => 'User B']);
+
+    Livewire::actingAs($user)
+        ->test(Duplicates::class)
+        ->call('mergeUsers', $userA->id, (string) $userB->id)
         ->assertForbidden();
 });

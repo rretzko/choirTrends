@@ -17,6 +17,10 @@ Route::get('catalog/{token}/video/song/{program}/{songTitle}', [App\Http\Control
 
 Route::get('quick-tips/unsubscribe', App\Http\Controllers\QuickTipUnsubscribeController::class)->name('quick-tips.unsubscribe');
 
+Route::get('survey/{user}', App\Livewire\Survey\Show::class)
+    ->name('survey.show')
+    ->middleware('signed');
+
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('videos/program/{program}', [App\Http\Controllers\VideoController::class, 'programVideo'])->name('videos.program');

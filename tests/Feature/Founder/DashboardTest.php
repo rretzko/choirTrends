@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Livewire\Founder\Dashboard;
+use App\Models\Program;
 use App\Models\User;
 use App\Models\UserLogin;
 use Livewire\Livewire;
@@ -127,4 +128,79 @@ test('dashboard shows empty state when no logins exist', function () {
     Livewire::actingAs($founder)
         ->test(Dashboard::class)
         ->assertSee('No login records yet.');
+});
+
+// --- Program Distribution ---
+
+test('dashboard shows program distribution card with user count', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+    User::factory()->withoutTwoFactor()->count(3)->create();
+
+    Livewire::actingAs($founder)
+        ->test(Dashboard::class)
+        ->assertSee('Users by Program Count')
+        ->assertSee('(n=4)');
+});
+
+test('dashboard distributes users into correct program count buckets', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    // User with 0 programs (founder + this user = 2 in the "0" bucket)
+    User::factory()->withoutTwoFactor()->create();
+
+    // User with 3 programs → "1–5" bucket
+    $userWith3 = User::factory()->withoutTwoFactor()->create();
+    Program::factory()->count(3)->create(['user_id' => $userWith3->id]);
+
+    // User with 10 programs → "6–15" bucket
+    $userWith10 = User::factory()->withoutTwoFactor()->create();
+    Program::factory()->count(10)->create(['user_id' => $userWith10->id]);
+
+    $component = Livewire::actingAs($founder)->test(Dashboard::class);
+
+    $distribution = $component->get('programDistribution');
+
+    expect($distribution[0]->label)->toBe('0')
+        ->and($distribution[0]->count)->toBe(2)
+        ->and($distribution[1]->label)->toBe('1–5')
+        ->and($distribution[1]->count)->toBe(1)
+        ->and($distribution[2]->label)->toBe('6–15')
+        ->and($distribution[2]->count)->toBe(1)
+        ->and($distribution[3]->count)->toBe(0)
+        ->and($distribution[4]->count)->toBe(0)
+        ->and($distribution[5]->count)->toBe(0);
+});
+
+test('dashboard modal shows user program details ordered by program count descending', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $userFew = User::factory()->withoutTwoFactor()->create(['name' => 'Alice Few']);
+    Program::factory()->count(2)->create(['user_id' => $userFew->id]);
+
+    $userMany = User::factory()->withoutTwoFactor()->create(['name' => 'Bob Many']);
+    Program::factory()->count(8)->create(['user_id' => $userMany->id]);
+
+    UserLogin::factory()->create(['user_id' => $userMany->id]);
+
+    $component = Livewire::actingAs($founder)
+        ->test(Dashboard::class)
+        ->set('showProgramModal', true);
+
+    $details = $component->get('userProgramDetails');
+
+    expect($details->first()->name)->toBe('Bob Many')
+        ->and($details->first()->programs_count)->toBe(8);
+
+    $component->assertSee('Many, Bob')
+        ->assertSee('Few, Alice');
+});
+
+test('dashboard modal shows "Never" for users who have not logged in', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+    User::factory()->withoutTwoFactor()->create(['name' => 'No Login User']);
+
+    Livewire::actingAs($founder)
+        ->test(Dashboard::class)
+        ->set('showProgramModal', true)
+        ->assertSee('Never');
 });
