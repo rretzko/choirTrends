@@ -13,6 +13,8 @@ class ClaudeAnalysisService
 
     private string $model;
 
+    private bool $useThinking = false;
+
     public function __construct()
     {
         $this->apiKey = config('services.anthropic.api_key');
@@ -51,7 +53,7 @@ class ClaudeAnalysisService
         // Check content type and select appropriate model
         if (str_starts_with($content, 'PDF_DATA|||')) {
             // Use Sonnet 4.6 for PDFs - has native document support
-            $this->model = 'claude-sonnet-4-6-20250620';
+            $this->model = 'claude-sonnet-4-6';
         } elseif (str_starts_with($content, 'IMAGE_DATA|||')) {
             // Use Haiku 4.5 for images - better vision performance
             $this->model = 'claude-haiku-4-5-20251001';
@@ -88,14 +90,20 @@ class ClaudeAnalysisService
 
     private function buildDocumentMessages(string $documentData): array
     {
-        // Parse PDF_DATA|||mime_type|||base64_data
-        $parts = explode('|||', $documentData, 3);
+        // Parse PDF_DATA|||mime_type|||base64_data|||orientation
+        $parts = explode('|||', $documentData, 4);
 
-        if (count($parts) !== 3) {
+        if (count($parts) < 3) {
             throw new \Exception('Invalid document data format');
         }
 
         [, $mimeType, $base64Data] = $parts;
+        $orientation = isset($parts[3]) ? trim($parts[3]) : 'unknown';
+
+        // Enable extended thinking for landscape PDFs to improve column-reading accuracy
+        if ($orientation === 'landscape') {
+            $this->useThinking = true;
+        }
 
         // Trim any whitespace that might have been introduced
         $base64Data = trim($base64Data);
@@ -124,9 +132,10 @@ class ClaudeAnalysisService
             'mime_type' => $mimeType,
             'base64_length' => strlen($base64Data),
             'decoded_size_bytes' => strlen($decoded),
+            'orientation' => $orientation,
         ]);
 
-        $prompt = $this->buildPrompt();
+        $prompt = $this->buildPrompt($orientation);
 
         return [
             [
@@ -193,11 +202,57 @@ class ClaudeAnalysisService
         ];
     }
 
-    private function buildPrompt(): string
+    private function buildPrompt(string $orientation = 'unknown'): string
     {
-        return <<<'PROMPT'
-You are analyzing a concert program document that may have text extracted in an unusual order due to PDF layout issues.
+        $landscapeInstructions = '';
 
+        if ($orientation === 'landscape') {
+            $landscapeInstructions = <<<'LANDSCAPE'
+
+CRITICAL LAYOUT INSTRUCTION — LANDSCAPE BIFOLD PROGRAM:
+This PDF is in LANDSCAPE orientation, which means it is a bifold/booklet-style concert program.
+Each page displays TWO COLUMNS of content side by side (a left panel and a right panel).
+
+You MUST read each page in this order:
+1. LEFT column — read top to bottom completely
+2. RIGHT column — read top to bottom completely
+3. Then move to the next page
+
+SONG-TO-ENSEMBLE ASSIGNMENT RULES:
+- A song belongs to the most recent ensemble header encountered in the left-then-right reading order.
+- An ensemble's songs may CONTINUE from the left column into the right column of the same page.
+- A song at the TOP of the right column (before any new ensemble header appears in that column) still
+  belongs to the LAST ensemble from the left column. Do NOT skip it or reassign it to a later ensemble.
+- Only assign a song to a new ensemble when you encounter that ensemble's header ABOVE the song
+  in reading order (left column top-to-bottom, then right column top-to-bottom).
+- Do NOT assign songs based on musical style, genre, or performer names — assign ONLY by position
+  relative to ensemble headers in the reading order.
+- Ignore italic quotes, poetry lines, and thematic text interspersed between songs — these are
+  decorative program notes, NOT ensemble headers or song titles.
+
+BIFOLD LAYOUT EXAMPLE:
+If a page has this layout:
+  LEFT COLUMN:              RIGHT COLUMN:
+  [Ensemble A header]       [Song 3 title + credits]
+  [Song 1]                  [divider symbol]
+  [Song 2]                  [Ensemble B header]
+                            [Song 4]
+
+The correct reading order is: Ensemble A → Song 1 → Song 2 → Song 3 → Ensemble B → Song 4
+So Song 3 belongs to Ensemble A (NOT Ensemble B), because Ensemble A is the last header before Song 3.
+
+Look for decorative divider symbols (ornamental marks, infinity/knot symbols, horizontal lines) that
+visually separate one ensemble's set from the next — these indicate ensemble boundaries.
+
+Do NOT read across rows (left-to-right across both columns at the same vertical position).
+Do NOT assume a new column means a new ensemble — check for an actual ensemble header.
+
+LANDSCAPE;
+        }
+
+        return <<<PROMPT
+You are analyzing a concert program document that may have text extracted in an unusual order due to PDF layout issues.
+{$landscapeInstructions}
 IMPORTANT: The text extraction may list ALL song titles first, followed by ALL ensemble names later in the document. You need to intelligently match songs to ensembles based on context clues.
 
 Your task is to extract information using a TWO-STEP PROCESS:
@@ -305,11 +360,15 @@ PROMPT;
                 'x-api-key' => $this->apiKey,
                 'anthropic-version' => $this->apiVersion,
                 'content-type' => 'application/json',
-            ])->timeout(60)->post('https://api.anthropic.com/v1/messages', [
+            ])->timeout(120)->post('https://api.anthropic.com/v1/messages', array_filter([
                 'model' => $this->model,
-                'max_tokens' => 4096,
+                'max_tokens' => 16000,
+                'thinking' => $this->useThinking ? [
+                    'type' => 'enabled',
+                    'budget_tokens' => 10000,
+                ] : null,
                 'messages' => $messages,
-            ]);
+            ]));
 
             if ($response->successful()) {
                 return $response->json();
@@ -356,11 +415,18 @@ PROMPT;
 
     private function parseResponse(array $response): array
     {
-        if (! isset($response['content'][0]['text'])) {
-            throw new \Exception('Unexpected API response format');
+        // Extract the text content block, skipping any thinking blocks
+        $text = null;
+        foreach ($response['content'] ?? [] as $block) {
+            if (($block['type'] ?? '') === 'text') {
+                $text = $block['text'];
+                break;
+            }
         }
 
-        $text = $response['content'][0]['text'];
+        if ($text === null) {
+            throw new \Exception('Unexpected API response format');
+        }
 
         // Try to extract JSON from the response
         $jsonStart = strpos($text, '{');

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Smalot\PdfParser\Parser as PdfParser;
 
 class ProgramContentExtractor
@@ -64,6 +65,9 @@ class ProgramContentExtractor
                 throw new \Exception("PDF file is too large ({$sizeInMB}MB). Maximum size for processing is 20MB.");
             }
 
+            // Detect page orientation from PDF metadata
+            $orientation = $this->detectPdfOrientation($path);
+
             // Encode as base64 - base64_encode() doesn't add whitespace in PHP
             $base64 = base64_encode($pdfData);
 
@@ -78,14 +82,40 @@ class ProgramContentExtractor
             }
 
             // Return a special marker that indicates this is PDF data
-            // Format: PDF_DATA|||application/pdf|||base64_data
+            // Format: PDF_DATA|||application/pdf|||base64_data|||orientation
             // Using ||| as delimiter to avoid conflicts with base64 characters
-            return "PDF_DATA|||application/pdf|||{$base64}";
+            return "PDF_DATA|||application/pdf|||{$base64}|||{$orientation}";
 
         } catch (\Exception $e) {
             // Fallback to text extraction if PDF reading fails
             return $this->extractPdfAsText($path);
         }
+    }
+
+    private function detectPdfOrientation(string $path): string
+    {
+        try {
+            $pdf = $this->pdfParser->parseFile($path);
+            $pages = $pdf->getPages();
+
+            foreach ($pages as $page) {
+                $details = $page->getDetails();
+
+                if (isset($details['MediaBox'])) {
+                    $mediaBox = $details['MediaBox'];
+                    $width = (float) ($mediaBox[2] ?? 0);
+                    $height = (float) ($mediaBox[3] ?? 0);
+
+                    if ($width > 0 && $height > 0) {
+                        return $width > $height ? 'landscape' : 'portrait';
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::info('Could not detect PDF orientation', ['error' => $e->getMessage()]);
+        }
+
+        return 'unknown';
     }
 
     private function extractPdfAsText(string $path): string

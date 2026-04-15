@@ -91,7 +91,7 @@
             </p>
         </div>
 
-        <p style="margin-bottom: 16px;">Please try uploading your program again, or contact support if the problem persists.</p>
+        <p style="margin-bottom: 16px;">Something didn’t work as expected. Please try again—and if the issue persists, click Feedback to report it so we can fix it quickly.</p>
 
         <div style="margin-top: 32px;">
             <p>
