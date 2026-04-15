@@ -171,9 +171,11 @@
             </flux:button>
 
             @if (! ($newsletterId && $newsletters->firstWhere('id', $newsletterId)?->sent_at))
-                <flux:button wire:click="$dispatch('open-modal', { name: 'confirm-send' })" variant="primary" icon="paper-airplane">
-                    {{ __('Send to All') }}
-                </flux:button>
+                <flux:modal.trigger name="confirm-send">
+                    <flux:button variant="primary" icon="paper-airplane">
+                        {{ __('Send to All') }}
+                    </flux:button>
+                </flux:modal.trigger>
             @endif
         </div>
     </div>

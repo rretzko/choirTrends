@@ -50,11 +50,11 @@ class ClaudeAnalysisService
     {
         // Check content type and select appropriate model
         if (str_starts_with($content, 'PDF_DATA|||')) {
-            // Use Sonnet 4 for PDFs - has native document support
-            $this->model = 'claude-sonnet-4-20250514';
+            // Use Sonnet 4.6 for PDFs - has native document support
+            $this->model = 'claude-sonnet-4-6-20250620';
         } elseif (str_starts_with($content, 'IMAGE_DATA|||')) {
-            // Use Haiku for images - better vision performance
-            $this->model = 'claude-3-haiku-20240307';
+            // Use Haiku 4.5 for images - better vision performance
+            $this->model = 'claude-haiku-4-5-20251001';
         }
         // For text content, use the configured default model
     }
