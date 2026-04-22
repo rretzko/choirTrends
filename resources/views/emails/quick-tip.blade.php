@@ -25,6 +25,7 @@
 
     <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
         <p>{{ $quickTip->resolvedFooter() }}</p>
+        <p style="font-size: 13px;">Next Mailing: {{ now()->addDays(config('quicktip.days_between_tips'))->format('F j, Y') }}</p>
         <p style="font-size: 12px;">
             <a href="{{ $unsubscribeUrl }}" style="color: #9ca3af; text-decoration: underline;">Unsubscribe from Quick Tips emails</a>
         </p>

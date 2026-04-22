@@ -7,6 +7,8 @@ use App\Livewire\Founder\QuickTips;
 use App\Mail\QuickTipEmail;
 use App\Models\QuickTip;
 use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 
@@ -306,4 +308,40 @@ test('saving an edited tip redirects to the index page', function () {
         ->set('header', 'Updated')
         ->call('save')
         ->assertRedirect(route('founder.quickTips'));
+});
+
+// --- Next Mailing date reference ---
+
+test('form shows next mailing date as 21 days after the most recent emailed_at', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+    $user = User::factory()->withoutTwoFactor()->create();
+    $tip = QuickTip::factory()->create();
+
+    $lastEmailed = Carbon::parse('2026-04-01 12:00:00');
+    DB::table('quick_tip_user')->insert([
+        'quick_tip_id' => $tip->id,
+        'user_id' => $user->id,
+        'emailed_at' => $lastEmailed,
+    ]);
+
+    $expected = $lastEmailed->copy()->addDays(21)->format('F j, Y');
+
+    Livewire::actingAs($founder)
+        ->test(QuickTipForm::class)
+        ->assertSee('Next Mailing')
+        ->assertSee($expected);
+});
+
+test('form falls back to now + 21 days when no prior mailings exist', function () {
+    Carbon::setTestNow('2026-04-22 09:00:00');
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $expected = Carbon::now()->addDays(21)->format('F j, Y');
+
+    Livewire::actingAs($founder)
+        ->test(QuickTipForm::class)
+        ->assertSee('Next Mailing')
+        ->assertSee($expected);
+
+    Carbon::setTestNow();
 });

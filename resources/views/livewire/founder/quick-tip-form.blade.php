@@ -5,6 +5,9 @@
             <flux:icon name="arrow-left" class="size-3" />
             {{ __('Return to Quick Tips') }}
         </a>
+        <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+            {{ __('Next Mailing') }}: {{ $nextMailingDate->format('F j, Y') }}
+        </p>
     </div>
 
     <form wire:submit="save" class="mx-auto max-w-2xl space-y-6">

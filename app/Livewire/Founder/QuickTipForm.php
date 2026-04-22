@@ -6,6 +6,8 @@ namespace App\Livewire\Founder;
 
 use App\Enums\QuickTipStatus;
 use App\Models\QuickTip;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Livewire\Component;
 use Symfony\Component\HttpFoundation\Response;
@@ -85,7 +87,13 @@ class QuickTipForm extends Component
     {
         $title = $this->quickTip ? __('Edit Quick Tip') : __('Add Quick Tip');
 
-        return view('livewire.founder.quick-tip-form')
-            ->layout('components.layouts.app', ['title' => $title]);
+        /** @var string|null $lastEmailedAt */
+        $lastEmailedAt = DB::table('quick_tip_user')->max('emailed_at');
+        $reference = $lastEmailedAt ? Carbon::parse($lastEmailedAt) : Carbon::now();
+        $nextMailingDate = $reference->copy()->addDays((int) config('quicktip.days_between_tips'));
+
+        return view('livewire.founder.quick-tip-form', [
+            'nextMailingDate' => $nextMailingDate,
+        ])->layout('components.layouts.app', ['title' => $title]);
     }
 }
