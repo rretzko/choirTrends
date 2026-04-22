@@ -21,6 +21,8 @@ class Index extends Component
 
     public string $search = '';
 
+    public bool $searchLyrics = false;
+
     public string $sortBy = 'song_title';
 
     public string $sortDirection = 'asc';
@@ -125,10 +127,23 @@ class Index extends Component
 
         if ($this->search !== '') {
             $searchTerm = '%'.$this->search.'%';
-            $query->where(function ($q) use ($searchTerm) {
+            $rawSearch = $this->search;
+            $includeLyrics = $this->searchLyrics && $this->canViewAll();
+
+            $query->where(function ($q) use ($searchTerm, $rawSearch, $includeLyrics) {
                 $q->where('song_titles.song_title', 'like', $searchTerm)
                     ->orWhere('composers.artist_name', 'like', $searchTerm)
                     ->orWhere('arrangers.artist_name', 'like', $searchTerm);
+
+                if ($includeLyrics) {
+                    $q->orWhereHas('lyrics', function ($lq) use ($searchTerm, $rawSearch) {
+                        if (DB::connection()->getDriverName() === 'mysql') {
+                            $lq->whereRaw('MATCH(content) AGAINST(? IN NATURAL LANGUAGE MODE)', [$rawSearch]);
+                        } else {
+                            $lq->where('content', 'like', $searchTerm);
+                        }
+                    });
+                }
             });
         }
 

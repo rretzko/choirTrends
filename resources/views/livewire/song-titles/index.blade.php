@@ -39,6 +39,11 @@
 
     <div class="mb-4 md:w-1/2">
         <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Search song titles, composers, arrangers...') }}" icon="magnifying-glass" />
+        @if ($compliance['canViewAll'])
+            <div class="mt-2">
+                <flux:checkbox wire:model.live="searchLyrics" label="{{ __('Also search lyrics') }}" />
+            </div>
+        @endif
     </div>
 
     {{-- Mobile card layout --}}

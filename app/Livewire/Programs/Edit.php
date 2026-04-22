@@ -10,14 +10,18 @@ use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
+use App\Models\UserSongFile;
+use App\Models\UserSongLyrics;
 use App\Services\ArtistNameParser;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
+use Mews\Purifier\Facades\Purifier;
 
 class Edit extends Component
 {
@@ -42,10 +46,7 @@ class Edit extends Component
 
     public bool $hasProgramVideo = false;
 
-    /** @var array<string, TemporaryUploadedFile|null> */
-    public array $songVideos = [];
-
-    /** @var array<int, array{id: int|null, name: string, editable: bool, songs: list<array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int, videoPath: string|null, videoVisibility: string}>}> */
+    /** @var array<int, array{id: int|null, name: string, director: string, editable: bool, songs: list<array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int, notes: string, videoPath: string|null, videoVisibility: string, hasLyrics: bool, hasSheetMusic: bool}>}> */
     public array $ensembles = [];
 
     public function mount(Program $program): void
@@ -72,6 +73,7 @@ class Edit extends Component
         $this->ensembles[] = [
             'id' => null,
             'name' => '',
+            'director' => $this->directorName,
             'editable' => true,
             'songs' => [
                 [
@@ -85,8 +87,11 @@ class Edit extends Component
                     'composerId' => null,
                     'arrangerId' => null,
                     'sortOrder' => 1,
+                    'notes' => '',
                     'videoPath' => null,
                     'videoVisibility' => 'Private',
+                    'hasLyrics' => false,
+                    'hasSheetMusic' => false,
                 ],
             ],
         ];
@@ -133,8 +138,11 @@ class Edit extends Component
             'composerId' => null,
             'arrangerId' => null,
             'sortOrder' => $maxSortOrder + 1,
+            'notes' => '',
             'videoPath' => null,
             'videoVisibility' => 'Private',
+            'hasLyrics' => false,
+            'hasSheetMusic' => false,
         ];
     }
 
@@ -187,68 +195,40 @@ class Edit extends Component
         $this->programVideoVisibility = $newVisibility->value;
     }
 
-    public function uploadSongVideo(int $eIndex, int $sIndex): void
+    #[On('song-media-updated')]
+    public function refreshSongMedia(int $songTitleId): void
     {
-        $key = "{$eIndex}-{$sIndex}";
+        /** @var object{video_path: string|null, video_visibility: string|null}|null $pivot */
+        $pivot = $this->program->songTitles()
+            ->wherePivot('song_title_id', $songTitleId)
+            ->first()
+            ?->pivot;
 
-        $this->validate([
-            "songVideos.{$key}" => ['file', 'mimes:mp4,mov,avi,wmv,mp3,wav,m4a,ogg,flac,aac,wma', 'max:512000'],
-        ]);
-
-        $file = $this->songVideos[$key];
-        $path = $file->store('mp4s/songs');
-
-        $songTitleId = $this->ensembles[$eIndex]['songs'][$sIndex]['songTitleId'] ?? null;
-
-        if ($songTitleId) {
-            $this->program->songTitles()->updateExistingPivot($songTitleId, [
-                'video_path' => $path,
-                'video_visibility' => 'Private',
-                'video_uploaded_at' => now(),
-            ]);
+        if (! $pivot) {
+            return;
         }
 
-        $this->ensembles[$eIndex]['songs'][$sIndex]['videoPath'] = $path;
-        $this->ensembles[$eIndex]['songs'][$sIndex]['videoVisibility'] = 'Private';
-        unset($this->songVideos[$key]);
-    }
+        $hasLyrics = UserSongLyrics::query()
+            ->where('user_id', $this->program->user_id)
+            ->where('song_title_id', $songTitleId)
+            ->exists();
 
-    public function removeSongVideo(int $eIndex, int $sIndex): void
-    {
-        $videoPath = $this->ensembles[$eIndex]['songs'][$sIndex]['videoPath'] ?? null;
+        $hasSheetMusic = UserSongFile::query()
+            ->where('user_id', $this->program->user_id)
+            ->where('song_title_id', $songTitleId)
+            ->where('type', 'sheet_music')
+            ->exists();
 
-        if ($videoPath) {
-            Storage::delete($videoPath);
+        foreach ($this->ensembles as $eIndex => $ensemble) {
+            foreach ($ensemble['songs'] as $sIndex => $song) {
+                if (($song['songTitleId'] ?? null) === $songTitleId) {
+                    $this->ensembles[$eIndex]['songs'][$sIndex]['videoPath'] = $pivot->video_path;
+                    $this->ensembles[$eIndex]['songs'][$sIndex]['videoVisibility'] = $pivot->video_visibility ?? 'Private';
+                    $this->ensembles[$eIndex]['songs'][$sIndex]['hasLyrics'] = $hasLyrics;
+                    $this->ensembles[$eIndex]['songs'][$sIndex]['hasSheetMusic'] = $hasSheetMusic;
+                }
+            }
         }
-
-        $songTitleId = $this->ensembles[$eIndex]['songs'][$sIndex]['songTitleId'] ?? null;
-
-        if ($songTitleId) {
-            $this->program->songTitles()->updateExistingPivot($songTitleId, [
-                'video_path' => null,
-                'video_visibility' => null,
-                'video_uploaded_at' => null,
-            ]);
-        }
-
-        $this->ensembles[$eIndex]['songs'][$sIndex]['videoPath'] = null;
-        $this->ensembles[$eIndex]['songs'][$sIndex]['videoVisibility'] = 'Private';
-    }
-
-    public function toggleSongVideoVisibility(int $eIndex, int $sIndex): void
-    {
-        $current = $this->ensembles[$eIndex]['songs'][$sIndex]['videoVisibility'] ?? 'Private';
-        $new = $current === 'Private' ? 'Public' : 'Private';
-
-        $songTitleId = $this->ensembles[$eIndex]['songs'][$sIndex]['songTitleId'] ?? null;
-
-        if ($songTitleId) {
-            $this->program->songTitles()->updateExistingPivot($songTitleId, [
-                'video_visibility' => $new,
-            ]);
-        }
-
-        $this->ensembles[$eIndex]['songs'][$sIndex]['videoVisibility'] = $new;
     }
 
     public function save(): void
@@ -259,10 +239,12 @@ class Edit extends Component
             'directorName' => ['required', 'string', 'max:255'],
             'schoolName' => ['required', 'string', 'max:255'],
             'ensembles.*.name' => ['nullable', 'string', 'max:255'],
+            'ensembles.*.director' => ['nullable', 'string', 'max:255'],
             'ensembles.*.songs.*.title' => ['required', 'string', 'max:255'],
             'ensembles.*.songs.*.composer' => ['nullable', 'string', 'max:255'],
             'ensembles.*.songs.*.arranger' => ['nullable', 'string', 'max:255'],
             'ensembles.*.songs.*.sortOrder' => ['required', 'integer', 'min:1'],
+            'ensembles.*.songs.*.notes' => ['nullable', 'string', 'max:10000'],
         ]);
 
         $duplicate = Program::query()
@@ -360,10 +342,14 @@ class Edit extends Component
                         'arranger_id' => $arrangerId,
                     ]);
 
+                    $notes = trim((string) ($songData['notes'] ?? ''));
+
                     $songTitleAttachments[$songTitle->id] = [
                         'ensemble_id' => $ensemble?->id,
                         'sort_order' => (int) $songData['sortOrder'],
                         'ensemble_sort_order' => $ensembleSortOrder + 1,
+                        'notes' => $notes !== '' ? Purifier::clean($notes, 'program_notes') : null,
+                        'ensemble_director' => ! empty($ensembleData['director']) ? $ensembleData['director'] : null,
                         'video_path' => $songData['videoPath'] ?? null,
                         'video_visibility' => ($songData['videoPath'] ?? null) ? ($songData['videoVisibility'] ?? 'Private') : null,
                         'video_uploaded_at' => ($songData['videoPath'] ?? null) ? now() : null,
@@ -398,6 +384,25 @@ class Edit extends Component
         $songsByEnsemble = $this->program->songTitles
             ->sortBy('pivot.ensemble_sort_order')
             ->groupBy('pivot.ensemble_id');
+
+        $songTitleIds = $this->program->songTitles->pluck('id')->all();
+
+        $lyricsSongIds = UserSongLyrics::query()
+            ->where('user_id', $userId)
+            ->whereIn('song_title_id', $songTitleIds)
+            ->pluck('song_title_id')
+            ->all();
+
+        $lyricsSongIds = array_flip($lyricsSongIds);
+
+        $sheetMusicSongIds = UserSongFile::query()
+            ->where('user_id', $userId)
+            ->where('type', 'sheet_music')
+            ->whereIn('song_title_id', $songTitleIds)
+            ->pluck('song_title_id')
+            ->all();
+
+        $sheetMusicSongIds = array_flip($sheetMusicSongIds);
 
         $this->ensembles = [];
 
@@ -443,7 +448,7 @@ class Edit extends Component
                         ->exists();
                 }
 
-                /** @var object{sort_order: int, video_path: string|null, video_visibility: string|null} $pivot */
+                /** @var object{sort_order: int, video_path: string|null, video_visibility: string|null, notes: string|null, ensemble_director: string|null} $pivot */
                 $pivot = $songTitle->pivot;
 
                 $songsArray[] = [
@@ -457,14 +462,24 @@ class Edit extends Component
                     'composerId' => $songTitle->composer_id,
                     'arrangerId' => $songTitle->arranger_id,
                     'sortOrder' => $pivot->sort_order ?? 0,
+                    'notes' => $pivot->notes ?? '',
                     'videoPath' => $pivot->video_path,
                     'videoVisibility' => $pivot->video_visibility ?? 'Private',
+                    'hasLyrics' => isset($lyricsSongIds[$songTitle->id]),
+                    'hasSheetMusic' => isset($sheetMusicSongIds[$songTitle->id]),
                 ];
             }
+
+            // Denormalized across songs — pick the first non-null value.
+            $ensembleDirector = $songs
+                ->pluck('pivot.ensemble_director')
+                ->filter()
+                ->first() ?? '';
 
             $this->ensembles[] = [
                 'id' => $ensemble?->id,
                 'name' => $ensemble->ensemble_name ?? '',
+                'director' => $ensembleDirector,
                 'editable' => $ensembleEditable,
                 'songs' => $songsArray,
             ];

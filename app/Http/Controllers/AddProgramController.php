@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Mews\Purifier\Facades\Purifier;
 
 class AddProgramController extends Controller
 {
@@ -181,6 +182,10 @@ class AddProgramController extends Controller
                         $ensembleSongOrder[$ensembleKey] = 0;
                     }
 
+                    $ensembleDirector = ! empty($ensembleData['director'])
+                        ? $ensembleData['director']
+                        : null;
+
                     // Process songs for this ensemble
                     if (isset($ensembleData['songs']) && is_array($ensembleData['songs'])) {
                         foreach ($ensembleData['songs'] as $song) {
@@ -223,6 +228,10 @@ class AddProgramController extends Controller
                             $songTitleAttachments[$songTitle->id] = [
                                 'ensemble_id' => $ensemble?->id,
                                 'sort_order' => $ensembleSongOrder[$ensembleKey],
+                                'notes' => ! empty($song['notes'])
+                                    ? Purifier::clean($song['notes'], 'program_notes')
+                                    : null,
+                                'ensemble_director' => $ensembleDirector,
                             ];
                         }
                     }

@@ -361,7 +361,7 @@
                                 <div class="ensemble-group rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 space-y-4" data-ensemble-index="{{ $ensembleIndex }}">
                                     {{-- Ensemble Header --}}
                                     <div class="flex gap-3 items-start">
-                                        <div class="flex-1">
+                                        <div class="flex-1 space-y-3">
                                             <flux:field>
                                                 <flux:label>{{ __('Ensemble Name') }}</flux:label>
                                                 <flux:input
@@ -369,6 +369,15 @@
                                                     name="ensembles[{{ $ensembleIndex }}][name]"
                                                     value="{{ $ensemble['name'] ?? '' }}"
                                                     placeholder="{{ __('Enter ensemble name') }}"
+                                                />
+                                            </flux:field>
+                                            <flux:field>
+                                                <flux:label>{{ __('Ensemble Director') }}</flux:label>
+                                                <flux:input
+                                                    type="text"
+                                                    name="ensembles[{{ $ensembleIndex }}][director]"
+                                                    value="{{ $ensemble['director'] ?? $data['director_name'] ?? auth()->user()->name }}"
+                                                    placeholder="{{ __('Director for this ensemble') }}"
                                                 />
                                             </flux:field>
                                         </div>
@@ -593,13 +602,23 @@
             newEnsemble.setAttribute('data-ensemble-index', ensembleIndex);
             newEnsemble.innerHTML = `
                 <div class="flex gap-3 items-start">
-                    <div class="flex-1">
+                    <div class="flex-1 space-y-3">
                         <div>
                             <label class="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">{{ __('Ensemble Name') }}</label>
                             <input
                                 type="text"
                                 name="ensembles[${ensembleIndex}][name]"
                                 placeholder="{{ __('Enter ensemble name') }}"
+                                class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">{{ __('Ensemble Director') }}</label>
+                            <input
+                                type="text"
+                                name="ensembles[${ensembleIndex}][director]"
+                                value="{{ $data['director_name'] ?? auth()->user()->name }}"
+                                placeholder="{{ __('Director for this ensemble') }}"
                                 class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>

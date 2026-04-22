@@ -300,7 +300,10 @@ ADDITIONAL INFORMATION TO EXTRACT:
 1. Event name: The name/title of the concert or performance
 2. Event date: The date when the event took place or will take place (format as YYYY-MM-DD if possible)
 3. School name: The name of the school, organization, or institution presenting the concert
-4. Director name: The name of the musical director, conductor, or choir director
+4. Director name: The primary or overall musical director for the event. If there is only one director for the whole program, use that name. If multiple directors are listed (e.g., one per ensemble), pick the most prominent or leave null.
+
+For each ensemble, also extract:
+- Director: The director/conductor of THAT SPECIFIC ensemble, if the program lists a separate director per ensemble (common in collage concerts and festivals). If the program only has one overall director, leave this null — the UI will fall back to the event-level director_name.
 
 For each song, extract:
 - Title: The name of the song/piece
@@ -317,6 +320,7 @@ Return ONLY a valid JSON object with this exact structure:
   "ensembles": [
     {
       "name": "First Ensemble Name",
+      "director": "Director for this ensemble or null",
       "songs": [
         {
           "title": "Song Title",
@@ -328,6 +332,7 @@ Return ONLY a valid JSON object with this exact structure:
     },
     {
       "name": "Second Ensemble Name",
+      "director": "Director for this ensemble or null",
       "songs": [
         {
           "title": "Another Song Title",
@@ -463,6 +468,7 @@ PROMPT;
             if (! is_array($ensemble)) {
                 $data['ensembles'][$index] = [
                     'name' => (string) $ensemble,
+                    'director' => null,
                     'songs' => [],
                 ];
 
@@ -473,6 +479,8 @@ PROMPT;
             if (! isset($ensemble['name'])) {
                 $data['ensembles'][$index]['name'] = 'Unnamed Ensemble';
             }
+
+            $data['ensembles'][$index]['director'] = $ensemble['director'] ?? null;
 
             if (! isset($ensemble['songs']) || ! is_array($ensemble['songs'])) {
                 $data['ensembles'][$index]['songs'] = [];

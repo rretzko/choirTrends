@@ -26,6 +26,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('videos/program/{program}', [App\Http\Controllers\VideoController::class, 'programVideo'])->name('videos.program');
     Route::get('videos/song/{program}/{songTitle}', [App\Http\Controllers\VideoController::class, 'songVideo'])->name('videos.song');
 
+    Route::get('media/sheet-music/{file}', [App\Http\Controllers\SheetMusicController::class, 'show'])->name('media.sheet-music.show');
+
     Route::get('add-program/status', [App\Http\Controllers\AddProgramController::class, 'status'])->name('addProgram.status');
 
     Route::view('dashboard', 'dashboard')->name('dashboard');

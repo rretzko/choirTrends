@@ -135,6 +135,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(UserLogin::class);
     }
 
+    public function songLyrics(): HasMany
+    {
+        return $this->hasMany(UserSongLyrics::class);
+    }
+
+    public function songFiles(): HasMany
+    {
+        return $this->hasMany(UserSongFile::class);
+    }
+
     public function quickTips(): BelongsToMany
     {
         return $this->belongsToMany(QuickTip::class)

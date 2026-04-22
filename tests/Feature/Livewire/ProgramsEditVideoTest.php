@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\VideoVisibility;
 use App\Livewire\Programs\Edit;
+use App\Livewire\Programs\SongMediaManager;
 use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
@@ -127,112 +130,6 @@ test('song video data is preserved during save', function () {
     expect($pivot->video_visibility)->toBe('Private');
 });
 
-test('can upload a song video for existing song', function () {
-    $user = User::factory()->create();
-    $school = School::factory()->create();
-    $program = Program::factory()->for($user)->for($school)->create();
-
-    $song = SongTitle::factory()->create(['song_title' => 'Test Song']);
-    $program->songTitles()->attach($song->id, ['sort_order' => 1]);
-
-    $this->actingAs($user);
-
-    $file = UploadedFile::fake()->create('song-video.mp4', 3000, 'video/mp4');
-
-    Livewire::test(Edit::class, ['program' => $program])
-        ->set('songVideos.0-0', $file)
-        ->call('uploadSongVideo', 0, 0);
-
-    $program->refresh();
-    $pivot = $program->songTitles()->first()?->pivot;
-    expect($pivot->video_path)->not->toBeNull();
-
-    Storage::assertExists($pivot->video_path);
-});
-
-test('can remove a song video', function () {
-    $user = User::factory()->create();
-    $school = School::factory()->create();
-    $program = Program::factory()->for($user)->for($school)->create();
-
-    $song = SongTitle::factory()->create(['song_title' => 'Test Song']);
-
-    $videoPath = 'mp4s/songs/to-remove.mp4';
-    Storage::put($videoPath, 'fake-video-content');
-
-    $program->songTitles()->attach($song->id, [
-        'sort_order' => 1,
-        'video_path' => $videoPath,
-        'video_visibility' => 'Private',
-        'video_uploaded_at' => now(),
-    ]);
-
-    $this->actingAs($user);
-
-    $component = Livewire::test(Edit::class, ['program' => $program]);
-    $ensembles = $component->get('ensembles');
-    expect($ensembles[0]['songs'][0]['videoPath'])->toBe($videoPath);
-
-    $component->call('removeSongVideo', 0, 0);
-
-    $ensembles = $component->get('ensembles');
-    expect($ensembles[0]['songs'][0]['videoPath'])->toBeNull();
-
-    $program->refresh();
-    $pivot = $program->songTitles()->first()?->pivot;
-    expect($pivot->video_path)->toBeNull();
-});
-
-test('can toggle song video visibility', function () {
-    $user = User::factory()->create();
-    $school = School::factory()->create();
-    $program = Program::factory()->for($user)->for($school)->create();
-
-    $song = SongTitle::factory()->create(['song_title' => 'Test Song']);
-
-    $program->songTitles()->attach($song->id, [
-        'sort_order' => 1,
-        'video_path' => 'mp4s/songs/test.mp4',
-        'video_visibility' => 'Private',
-        'video_uploaded_at' => now(),
-    ]);
-
-    $this->actingAs($user);
-
-    $component = Livewire::test(Edit::class, ['program' => $program])
-        ->call('toggleSongVideoVisibility', 0, 0);
-
-    $ensembles = $component->get('ensembles');
-    expect($ensembles[0]['songs'][0]['videoVisibility'])->toBe('Public');
-
-    $program->refresh();
-    $pivot = $program->songTitles()->first()?->pivot;
-    expect($pivot->video_visibility)->toBe('Public');
-});
-
-test('can upload an audio file for existing song', function () {
-    $user = User::factory()->create();
-    $school = School::factory()->create();
-    $program = Program::factory()->for($user)->for($school)->create();
-
-    $song = SongTitle::factory()->create(['song_title' => 'Audio Song']);
-    $program->songTitles()->attach($song->id, ['sort_order' => 1]);
-
-    $this->actingAs($user);
-
-    $file = UploadedFile::fake()->create('recording.mp3', 2000, 'audio/mpeg');
-
-    Livewire::test(Edit::class, ['program' => $program])
-        ->set('songVideos.0-0', $file)
-        ->call('uploadSongVideo', 0, 0);
-
-    $program->refresh();
-    $pivot = $program->songTitles()->first()?->pivot;
-    expect($pivot->video_path)->not->toBeNull();
-
-    Storage::assertExists($pivot->video_path);
-});
-
 test('non-owner cannot access program edit with video features', function () {
     $owner = User::factory()->create();
     $otherUser = User::factory()->create();
@@ -243,4 +140,32 @@ test('non-owner cannot access program edit with video features', function () {
 
     $this->get(route('programs.edit', $program))
         ->assertForbidden();
+});
+
+test('edit component refreshes song media state on song-media-updated event', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $song = SongTitle::factory()->create(['song_title' => 'Test Song']);
+    $program->songTitles()->attach($song->id, ['sort_order' => 1]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Edit::class, ['program' => $program]);
+
+    expect($component->get('ensembles')[0]['songs'][0]['videoPath'])->toBeNull();
+
+    // Simulate SongMediaManager updating the pivot, then dispatching the event.
+    $program->songTitles()->updateExistingPivot($song->id, [
+        'video_path' => 'mp4s/songs/new.mp4',
+        'video_visibility' => 'Public',
+        'video_uploaded_at' => now(),
+    ]);
+
+    $component->dispatch('song-media-updated', songTitleId: $song->id);
+
+    $ensembles = $component->get('ensembles');
+    expect($ensembles[0]['songs'][0]['videoPath'])->toBe('mp4s/songs/new.mp4');
+    expect($ensembles[0]['songs'][0]['videoVisibility'])->toBe('Public');
 });

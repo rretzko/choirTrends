@@ -734,3 +734,131 @@ test('sort_order is assigned sequentially per ensemble during confirmation', fun
     $jazzSongs = $songs->filter(fn ($s) => str_starts_with($s->song_title, 'Jazz'));
     expect($jazzSongs->pluck('pivot.sort_order')->sort()->values()->all())->toBe([1, 2]);
 });
+
+test('program notes are persisted on the pivot', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $longNotes = rtrim(str_repeat('Program notes for this piece. ', 100)); // ~3000 chars, no trailing space
+
+    $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Notes Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Notes School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => $longNotes],
+                ],
+            ],
+        ],
+    ]);
+
+    $program = Program::where('user_id', $user->id)->first();
+    expect($program->songTitles->first()->pivot->notes)->toBe($longNotes);
+});
+
+test('notes over 10000 characters are rejected', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $response = $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Long Notes Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Long Notes School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => null, 'arranger' => null, 'notes' => str_repeat('x', 10001)],
+                ],
+            ],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors('ensembles.0.songs.0.notes');
+});
+
+test('notes HTML is sanitized — scripts and javascript links are stripped', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $malicious = '<p>Legit <strong>notes</strong> here.</p><script>alert(1)</script><a href="javascript:alert(1)">bad</a>';
+
+    $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Sanitize Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Sanitize School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => null, 'arranger' => null, 'notes' => $malicious],
+                ],
+            ],
+        ],
+    ]);
+
+    $program = Program::where('user_id', $user->id)->first();
+    $stored = $program->songTitles->first()->pivot->notes;
+
+    expect($stored)->not->toContain('<script>');
+    expect($stored)->not->toContain('javascript:');
+    expect($stored)->toContain('<strong>notes</strong>');
+});
+
+test('per-ensemble director is persisted on the pivot', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Collage Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Collage School',
+        'director_name' => 'Head Director',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'director' => 'Dr. Alice',
+                'songs' => [
+                    ['title' => 'Song A', 'composer' => null, 'arranger' => null, 'notes' => null],
+                ],
+            ],
+            [
+                'name' => 'Jazz Choir',
+                'director' => 'Mr. Bob',
+                'songs' => [
+                    ['title' => 'Song B', 'composer' => null, 'arranger' => null, 'notes' => null],
+                ],
+            ],
+        ],
+    ]);
+
+    $program = Program::where('user_id', $user->id)->first();
+    $bySongTitle = $program->songTitles->keyBy('song_title');
+
+    expect($bySongTitle['Song A']->pivot->ensemble_director)->toBe('Dr. Alice');
+    expect($bySongTitle['Song B']->pivot->ensemble_director)->toBe('Mr. Bob');
+});
+
+test('ensemble_director is null when not provided', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'No Director Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'No Director School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Song A', 'composer' => null, 'arranger' => null, 'notes' => null],
+                ],
+            ],
+        ],
+    ]);
+
+    $program = Program::where('user_id', $user->id)->first();
+    expect($program->songTitles->first()->pivot->ensemble_director)->toBeNull();
+});

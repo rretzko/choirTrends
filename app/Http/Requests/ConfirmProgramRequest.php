@@ -43,11 +43,12 @@ class ConfirmProgramRequest extends FormRequest
             'director_name' => 'required|string|max:255',
             'ensembles' => 'nullable|array',
             'ensembles.*.name' => 'nullable|string|max:255',
+            'ensembles.*.director' => 'nullable|string|max:255',
             'ensembles.*.songs' => 'nullable|array',
             'ensembles.*.songs.*.title' => 'nullable|string|max:255',
             'ensembles.*.songs.*.composer' => 'nullable|string|max:255',
             'ensembles.*.songs.*.arranger' => 'nullable|string|max:255',
-            'ensembles.*.songs.*.notes' => 'nullable|string|max:1000',
+            'ensembles.*.songs.*.notes' => 'nullable|string|max:10000',
         ];
     }
 

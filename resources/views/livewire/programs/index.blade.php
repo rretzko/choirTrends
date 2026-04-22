@@ -230,11 +230,18 @@
                 @if ($songsByEnsemble->isNotEmpty())
                     <div class="space-y-4">
                         @foreach ($songsByEnsemble as $group)
+                            @php
+                                $ensembleDirector = $group['songs']->pluck('pivot.ensemble_director')->filter()->first();
+                                $showDirector = $ensembleDirector && $ensembleDirector !== $selectedProgram->director_name;
+                            @endphp
                             <div>
-                                <flux:heading size="sm" class="mb-2">
+                                <flux:heading size="sm" class="mb-1">
                                     {{ $group['ensemble']?->ensemble_name ?? __('Other') }}
                                 </flux:heading>
-                                <ul class="space-y-1 pl-4">
+                                @if ($showDirector)
+                                    <p class="mb-2 pl-1 text-xs text-neutral-500 dark:text-neutral-400">{{ $ensembleDirector }}</p>
+                                @endif
+                                <ul class="space-y-2 pl-4">
                                     @foreach ($group['songs'] as $songTitle)
                                         <li class="text-sm text-neutral-900 dark:text-neutral-100">
                                             {{ $songTitle->song_title }}
@@ -251,6 +258,32 @@
                                                         arr. {{ $songTitle->arranger->artist_name }}
                                                     @endif
                                                 </span>
+                                            @endif
+                                            @if ($songTitle->pivot->notes)
+                                                @php
+                                                    $notesPlain = trim(strip_tags($songTitle->pivot->notes));
+                                                    $needsTruncation = mb_strlen($notesPlain) > 150;
+                                                    $preview = $needsTruncation ? mb_substr($notesPlain, 0, 150).'…' : $notesPlain;
+                                                @endphp
+                                                <div
+                                                    x-data="{ open: false }"
+                                                    class="mt-1 rounded border-l-2 border-neutral-200 dark:border-neutral-700 pl-2 text-xs text-neutral-600 dark:text-neutral-400"
+                                                >
+                                                    <div x-show="! open" class="italic">{{ $preview }}</div>
+                                                    <div x-show="open" x-cloak class="prose prose-sm max-w-none dark:prose-invert italic">
+                                                        {!! $songTitle->pivot->notes !!}
+                                                    </div>
+                                                    @if ($needsTruncation)
+                                                        <button
+                                                            type="button"
+                                                            x-on:click="open = ! open"
+                                                            class="mt-1 text-xs font-medium text-teal-600 hover:text-teal-500 dark:text-teal-400"
+                                                        >
+                                                            <span x-show="! open">{{ __('Show more') }}</span>
+                                                            <span x-show="open" x-cloak>{{ __('Show less') }}</span>
+                                                        </button>
+                                                    @endif
+                                                </div>
                                             @endif
                                         </li>
                                     @endforeach

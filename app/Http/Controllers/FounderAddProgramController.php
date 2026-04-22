@@ -18,16 +18,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Mews\Purifier\Facades\Purifier;
 
 class FounderAddProgramController extends Controller
 {
     public function index(Request $request)
     {
         $targetUserId = $request->session()->get('founder_target_user_id');
+        $targetUser = $targetUserId ? User::find($targetUserId) : null;
         $analysis = $targetUserId ? cache()->get("program_analysis_{$targetUserId}") : null;
 
-        $targetUserSchools = $targetUserId
-            ? User::find($targetUserId)?->schools()->get(['schools.id', 'school_name', 'abbreviation']) ?? collect()
+        $targetUserSchools = $targetUser
+            ? $targetUser->schools()->get(['schools.id', 'school_name', 'abbreviation'])
             : collect();
 
         $targetUserSchoolsJson = $targetUserSchools->map(fn ($s) => [
@@ -40,6 +42,7 @@ class FounderAddProgramController extends Controller
             'analysis' => $analysis,
             'users' => User::orderBy('alpha_name')->get(),
             'targetUserId' => $targetUserId,
+            'targetUser' => $targetUser,
             'targetUserSchools' => $targetUserSchools,
             'targetUserSchoolsJson' => $targetUserSchoolsJson,
         ]);
@@ -204,6 +207,10 @@ class FounderAddProgramController extends Controller
                         $ensembleSongOrder[$ensembleKey] = 0;
                     }
 
+                    $ensembleDirector = ! empty($ensembleData['director'])
+                        ? $ensembleData['director']
+                        : null;
+
                     if (isset($ensembleData['songs']) && is_array($ensembleData['songs'])) {
                         foreach ($ensembleData['songs'] as $song) {
                             if (empty($song['title'])) {
@@ -241,6 +248,10 @@ class FounderAddProgramController extends Controller
                             $songTitleAttachments[$songTitle->id] = [
                                 'ensemble_id' => $ensemble?->id,
                                 'sort_order' => $ensembleSongOrder[$ensembleKey],
+                                'notes' => ! empty($song['notes'])
+                                    ? Purifier::clean($song['notes'], 'program_notes')
+                                    : null,
+                                'ensemble_director' => $ensembleDirector,
                             ];
                         }
                     }
