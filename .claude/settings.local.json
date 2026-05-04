@@ -59,7 +59,11 @@
       "Bash(find /c/xampp/htdocs/dev/choirTrends -name \"*honeypot*\" -type f 2>/dev/null | grep -v vendor | grep -v node_modules)",
       "Bash(COMPOSER_AUDIT_ABANDONED=ignore composer require:*)",
       "Bash(composer config:*)",
-      "Bash(find /c/xampp/htdocs/dev/choirTrends/app -type f \\\\\\( -name \"*.php\" \\\\\\) -exec grep -l \"subscription\\\\|plan\\\\|pricing\\\\|tier\" {} \\\\;)"
+      "Bash(find /c/xampp/htdocs/dev/choirTrends/app -type f \\\\\\( -name \"*.php\" \\\\\\) -exec grep -l \"subscription\\\\|plan\\\\|pricing\\\\|tier\" {} \\\\;)",
+      "WebFetch(domain:packagist.org)",
+      "WebFetch(domain:laravelshift.com)",
+      "Bash(Get-Content \"C:\\\\Users\\\\RICKRE~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--xampp-htdocs-dev-choirTrends\\\\070990bc-1f94-4327-a9cd-0c3f5ca6af9b\\\\tasks\\\\b13an9ef0.output\" -Wait -Tail 30)",
+      "Bash(Select-Object -First 50)"
     ]
   },
   "enableAllProjectMcpServers": true,
