@@ -48,7 +48,8 @@
                     <flux:sidebar.item icon="academic-cap" :href="route('documentation.schools-guide')" :current="request()->routeIs('documentation.schools-guide')" wire:navigate>{{ __('Schools Guide') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="queue-list" :href="route('documentation.song-titles-guide')" :current="request()->routeIs('documentation.song-titles-guide')" wire:navigate>{{ __('Song Titles Guide') }}</flux:sidebar.item>
                 </flux:sidebar.group>
-                <flux:sidebar.item icon="moon" x-data x-on:click.prevent="$flux.dark = ! $flux.dark">{{ __('Dark Mode') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="moon" x-data x-show="!$flux.dark" x-on:click.prevent="$flux.dark = true">{{ __('Dark Mode') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="sun" x-data x-show="$flux.dark" x-on:click.prevent="$flux.dark = false">{{ __('Light Mode') }}</flux:sidebar.item>
             </flux:sidebar.nav>
 
             <flux:sidebar.spacer />
