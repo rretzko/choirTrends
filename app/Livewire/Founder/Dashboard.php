@@ -92,6 +92,18 @@ class Dashboard extends Component
             ->orderByDesc('total')
             ->get();
 
+        $byReferralSource = User::query()
+            ->selectRaw('referral_source, count(*) as total')
+            ->groupBy('referral_source')
+            ->orderByDesc('total')
+            ->get();
+
+        $byReferralDetail = User::query()
+            ->selectRaw('referral_detail, count(*) as total')
+            ->groupBy('referral_detail')
+            ->orderByDesc('total')
+            ->get();
+
         return view('livewire.founder.dashboard', [
             'totalLogins' => $totalLogins,
             'uniqueUsers' => $uniqueUsers,
@@ -99,6 +111,8 @@ class Dashboard extends Component
             'byOs' => $byOs,
             'byBrowser' => $byBrowser,
             'byDevice' => $byDevice,
+            'byReferralSource' => $byReferralSource,
+            'byReferralDetail' => $byReferralDetail,
         ])->layout('components.layouts.app', ['title' => __('Founder Dashboard')]);
     }
 }

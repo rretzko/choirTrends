@@ -58,6 +58,35 @@
             </div>
         </div>
 
+        {{-- Referral Breakdowns --}}
+        <div class="grid gap-4 sm:grid-cols-2">
+            {{-- By Referral Source --}}
+            <div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <flux:heading size="sm" class="mb-2">{{ __('By Referral Source') }}</flux:heading>
+                @forelse($byReferralSource as $row)
+                    <div class="flex items-center justify-between py-1 text-sm">
+                        <span class="text-zinc-700 dark:text-zinc-300">{{ $row->referral_source ?? __('Unknown') }}</span>
+                        <flux:badge size="sm">{{ $row->total }}</flux:badge>
+                    </div>
+                @empty
+                    <flux:text class="text-sm">{{ __('No data yet.') }}</flux:text>
+                @endforelse
+            </div>
+
+            {{-- By Referral Detail --}}
+            <div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <flux:heading size="sm" class="mb-2">{{ __('By Referral Detail') }}</flux:heading>
+                @forelse($byReferralDetail as $row)
+                    <div class="flex items-center justify-between py-1 text-sm">
+                        <span class="text-zinc-700 dark:text-zinc-300">{{ $row->referral_detail ?? __('Unknown') }}</span>
+                        <flux:badge size="sm">{{ $row->total }}</flux:badge>
+                    </div>
+                @empty
+                    <flux:text class="text-sm">{{ __('No data yet.') }}</flux:text>
+                @endforelse
+            </div>
+        </div>
+
         {{-- Program Distribution --}}
         <div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
             <div class="mb-2 flex items-center justify-between">
