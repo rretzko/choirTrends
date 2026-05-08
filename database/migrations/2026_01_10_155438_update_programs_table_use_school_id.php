@@ -45,8 +45,8 @@ return new class extends Migration
         $foreignKeyExists = false;
 
         try {
-            if (\DB::getDriverName() === 'mysql') {
-                $foreignKeyExists = ! empty(\DB::select("
+            if (DB::getDriverName() === 'mysql') {
+                $foreignKeyExists = ! empty(DB::select("
                     SELECT CONSTRAINT_NAME
                     FROM information_schema.TABLE_CONSTRAINTS
                     WHERE TABLE_SCHEMA = DATABASE()
@@ -59,7 +59,7 @@ return new class extends Migration
                 // If it already exists, it will fail gracefully in the try-catch below
                 $foreignKeyExists = false;
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $foreignKeyExists = false;
         }
 
@@ -68,7 +68,7 @@ return new class extends Migration
                 Schema::table('programs', function (Blueprint $table) {
                     $table->foreign('school_id')->references('id')->on('schools')->cascadeOnDelete();
                 });
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Foreign key already exists, ignore
             }
         }

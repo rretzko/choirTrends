@@ -8,6 +8,7 @@ use App\Services\ClaudeAnalysisService;
 use App\Services\ProgramContentExtractor;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Queue\Middleware\RateLimited;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -74,7 +75,7 @@ class ProcessProgram implements ShouldQueue
                 $fileContents = Storage::get($this->filePath);
                 file_put_contents($tempFilePath, $fileContents);
 
-                $uploadedFile = new \Illuminate\Http\UploadedFile(
+                $uploadedFile = new UploadedFile(
                     $tempFilePath,
                     basename($this->filePath),
                     Storage::mimeType($this->filePath),

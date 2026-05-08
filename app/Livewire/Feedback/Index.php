@@ -8,12 +8,14 @@ use App\Enums\FeedbackType;
 use App\Mail\FeedbackSubmitted;
 use App\Models\Feedback;
 use App\Models\FeedbackComment;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 class Index extends Component
@@ -41,7 +43,7 @@ class Index extends Component
 
     public bool $isPrivate = false;
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $file = null;
 
     // History tab — editing
@@ -51,7 +53,7 @@ class Index extends Component
 
     public string $editType = '';
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $editFile = null;
 
     // History tab — user comments
@@ -87,7 +89,7 @@ class Index extends Component
             $filePath = $this->file->store('feedback-files', 'public');
         }
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         $feedback = Feedback::create([
@@ -124,7 +126,7 @@ class Index extends Component
 
     public function startEditing(int $feedbackId): void
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         $feedback = Feedback::find($feedbackId);
@@ -150,7 +152,7 @@ class Index extends Component
 
     public function saveEdit(): void
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         $feedback = Feedback::find($this->editingFeedbackId);
@@ -181,7 +183,7 @@ class Index extends Component
 
     public function startCommenting(int $feedbackId): void
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         $feedback = Feedback::find($feedbackId);
@@ -203,7 +205,7 @@ class Index extends Component
 
     public function submitUserComment(): void
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         $feedback = Feedback::find($this->commentingFeedbackId);
@@ -229,7 +231,7 @@ class Index extends Component
     {
         $query = Feedback::query()->with(['user.privacy', 'comments']);
 
-        /** @var \App\Models\User $currentUser */
+        /** @var User $currentUser */
         $currentUser = Auth::user();
 
         // Hide private feedback from the history tab

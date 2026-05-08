@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ReferralSource;
+use Illuminate\Support\Facades\RateLimiter;
 
 test('registration screen can be rendered', function () {
     $response = $this->get(route('register'));
@@ -14,6 +15,7 @@ test('new users can register', function () {
         'email' => 'test@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
+        'viewport' => '1920x1080',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -27,6 +29,7 @@ test('new users must verify email before accessing dashboard', function () {
         'email' => 'test@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
+        'viewport' => '1920x1080',
     ]);
 
     $this->assertAuthenticated();
@@ -53,6 +56,7 @@ test('new users can register with a referral source', function () {
         'password' => 'password',
         'password_confirmation' => 'password',
         'referral_source' => ReferralSource::Facebook->value,
+        'viewport' => '1920x1080',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -72,6 +76,7 @@ test('new users can register with a referral source and detail', function () {
         'password_confirmation' => 'password',
         'referral_source' => ReferralSource::Referral->value,
         'referral_detail' => 'John Smith',
+        'viewport' => '1920x1080',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -90,6 +95,7 @@ test('new users can register without a referral source', function () {
         'email' => 'jane@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
+        'viewport' => '1920x1080',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -108,7 +114,68 @@ test('registration rejects invalid referral source', function () {
         'password' => 'password',
         'password_confirmation' => 'password',
         'referral_source' => 'InvalidSource',
+        'viewport' => '1920x1080',
     ]);
 
     $response->assertSessionHasErrors('referral_source');
+});
+
+test('registration is blocked when viewport is missing', function () {
+    $this->post(route('register.store'), [
+        'name' => 'Bot User',
+        'email' => 'bot@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ]);
+
+    $this->assertGuest();
+    $this->assertDatabaseMissing('users', ['email' => 'bot@example.com']);
+});
+
+test('registration is blocked when viewport is empty', function () {
+    $this->post(route('register.store'), [
+        'name' => 'Bot User',
+        'email' => 'bot@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'viewport' => '',
+    ]);
+
+    $this->assertGuest();
+    $this->assertDatabaseMissing('users', ['email' => 'bot@example.com']);
+});
+
+test('registration is blocked when viewport has invalid format', function () {
+    $this->post(route('register.store'), [
+        'name' => 'Bot User',
+        'email' => 'bot@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'viewport' => 'not-a-viewport',
+    ]);
+
+    $this->assertGuest();
+    $this->assertDatabaseMissing('users', ['email' => 'bot@example.com']);
+});
+
+test('registration is blocked after rate limit is exceeded', function () {
+    $key = 'register|127.0.0.1';
+    RateLimiter::clear($key);
+
+    RateLimiter::hit($key, 60);
+    RateLimiter::hit($key, 60);
+    RateLimiter::hit($key, 60);
+
+    $response = $this->post(route('register.store'), [
+        'name' => 'Test User',
+        'email' => 'user@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'viewport' => '1920x1080',
+    ]);
+
+    $response->assertSessionHasErrors('email');
+    $this->assertDatabaseMissing('users', ['email' => 'user@example.com']);
+
+    RateLimiter::clear($key);
 });

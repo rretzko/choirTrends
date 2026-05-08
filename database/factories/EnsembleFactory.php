@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\EnsembleType;
+use App\Models\Ensemble;
 use App\Models\School;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Ensemble>
+ * @extends Factory<Ensemble>
  */
 class EnsembleFactory extends Factory
 {

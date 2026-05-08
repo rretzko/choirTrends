@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Onboarding;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 use Livewire\Component;
 
 class WelcomeModal extends Component
@@ -23,7 +24,7 @@ class WelcomeModal extends Component
         $this->showWelcomeModal = false;
     }
 
-    public function render(): \Illuminate\View\View
+    public function render(): View
     {
         return view('livewire.onboarding.welcome-modal');
     }

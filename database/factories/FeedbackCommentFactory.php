@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Models\Feedback;
+use App\Models\FeedbackComment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\FeedbackComment>
+ * @extends Factory<FeedbackComment>
  */
 class FeedbackCommentFactory extends Factory
 {

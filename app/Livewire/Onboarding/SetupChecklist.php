@@ -7,6 +7,7 @@ namespace App\Livewire\Onboarding;
 use App\Mail\OrientationEmail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\View\View;
 use Livewire\Component;
 
 class SetupChecklist extends Component
@@ -49,7 +50,7 @@ class SetupChecklist extends Component
         $this->isDismissed = true;
     }
 
-    public function render(): \Illuminate\View\View
+    public function render(): View
     {
         return view('livewire.onboarding.setup-checklist');
     }

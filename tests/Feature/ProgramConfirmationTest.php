@@ -290,7 +290,7 @@ test('multiple programs for same school only create one school_user relationship
     $school = School::where('school_name', 'Single Association High School')->first();
 
     // Should only have one pivot record
-    $pivotCount = \DB::table('school_user')
+    $pivotCount = DB::table('school_user')
         ->where('user_id', $user->id)
         ->where('school_id', $school->id)
         ->count();

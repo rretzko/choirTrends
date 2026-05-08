@@ -14,6 +14,7 @@ use App\Models\School;
 use App\Models\SongTitle;
 use App\Models\User;
 use App\Services\ArtistNameParser;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -270,7 +271,7 @@ class FounderAddProgramController extends Controller
             return redirect()
                 ->route('founder.addProgram')
                 ->with('success', "Program saved successfully for {$targetUser->name}!");
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if ($e->getCode() === '23000' && str_contains($e->getMessage(), 'programs')) {
                 return redirect()
                     ->back()

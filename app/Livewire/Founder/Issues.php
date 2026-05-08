@@ -8,6 +8,7 @@ use App\Enums\FeedbackStatus;
 use App\Models\Feedback;
 use App\Models\FeedbackComment;
 use App\Models\FeedbackEffort;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -99,7 +100,7 @@ class Issues extends Component
             'newComment' => ['required', 'string', 'min:2'],
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         FeedbackComment::create([

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\UserLoginFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -17,11 +19,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $device
  * @property string|null $viewport
  * @property int $counter
- * @property \Illuminate\Support\Carbon|null $created_at
+ * @property Carbon|null $created_at
  */
 class UserLogin extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserLoginFactory> */
+    /** @use HasFactory<UserLoginFactory> */
     use HasFactory;
 
     public $timestamps = false;

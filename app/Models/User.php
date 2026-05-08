@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\ReferralSource;
+use App\Mail\NewUserRegistered;
+use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,7 +27,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     protected static function booted(): void
@@ -40,7 +42,7 @@ class User extends Authenticatable implements MustVerifyEmail
             $founderEmail = config('app.founder');
 
             if ($founderEmail) {
-                Mail::to($founderEmail)->send(new \App\Mail\NewUserRegistered($user));
+                Mail::to($founderEmail)->send(new NewUserRegistered($user));
             }
         });
     }

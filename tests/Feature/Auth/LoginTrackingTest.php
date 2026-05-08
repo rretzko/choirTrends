@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Livewire\Founder\ImpersonateUser;
 use App\Models\User;
 use App\Models\UserLogin;
 use Livewire\Livewire;
@@ -137,7 +138,7 @@ test('impersonation does not create a user_logins record', function () {
 
     // Impersonate the target user via the Livewire component
     Livewire::actingAs($founder)
-        ->test(\App\Livewire\Founder\ImpersonateUser::class)
+        ->test(ImpersonateUser::class)
         ->set('userId', $target->id)
         ->call('impersonate');
 

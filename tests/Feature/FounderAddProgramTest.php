@@ -57,7 +57,7 @@ test('founder can upload file on behalf of target user', function () {
     $response->assertRedirect(route('founder.addProgram'));
     $response->assertSessionHas('success');
 
-    Queue::assertPushed(\App\Jobs\ProcessProgram::class, function ($job) use ($targetUser) {
+    Queue::assertPushed(ProcessProgram::class, function ($job) use ($targetUser) {
         return $job->userId === $targetUser->id
             && $job->filePath !== ''
             && $job->uris === null;
@@ -79,7 +79,7 @@ test('founder can submit URLs on behalf of target user', function () {
     $response->assertRedirect(route('founder.addProgram'));
     $response->assertSessionHas('success');
 
-    Queue::assertPushed(\App\Jobs\ProcessProgram::class, function ($job) use ($targetUser, $urls) {
+    Queue::assertPushed(ProcessProgram::class, function ($job) use ($targetUser, $urls) {
         return $job->userId === $targetUser->id
             && $job->filePath === ''
             && $job->uris === $urls;
@@ -263,7 +263,7 @@ test('failed method updates cache and sends failure email when job exhausts retr
     );
 
     $job = new ProcessProgram($targetUser->id, 'fake/path.pdf');
-    $job->failed(new \RuntimeException('Claude API timed out'));
+    $job->failed(new RuntimeException('Claude API timed out'));
 
     $analysis = cache()->get("program_analysis_{$targetUser->id}");
     expect($analysis)->toBeArray()

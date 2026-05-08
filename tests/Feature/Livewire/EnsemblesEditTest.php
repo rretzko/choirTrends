@@ -8,6 +8,7 @@ use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
 test('guests cannot access ensemble edit page', function () {
@@ -343,7 +344,7 @@ test('linked pivot rows have ensemble_id set to null after removal', function ()
 
     expect(Ensemble::find($ensemble->id))->toBeNull();
 
-    $pivotRow = \Illuminate\Support\Facades\DB::table('program_song_title')
+    $pivotRow = DB::table('program_song_title')
         ->where('program_id', $program->id)
         ->where('song_title_id', $song->id)
         ->first();

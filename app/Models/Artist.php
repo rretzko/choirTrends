@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\ArtistFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Artist extends Model
 {
-    /** @use HasFactory<\Database\Factories\ArtistFactory> */
+    /** @use HasFactory<ArtistFactory> */
     use HasFactory;
 
     protected $fillable = [

@@ -13,6 +13,7 @@ use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
 use App\Services\ArtistNameParser;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -249,7 +250,7 @@ class AddProgramController extends Controller
             return redirect()
                 ->route('dashboard')
                 ->with('success', 'Program saved successfully!');
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if ($e->getCode() === '23000' && str_contains($e->getMessage(), 'programs')) {
                 return redirect()
                     ->back()

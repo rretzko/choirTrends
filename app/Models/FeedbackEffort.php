@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\FeedbackEffortFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
- * @property \Illuminate\Support\Carbon $started_at
- * @property \Illuminate\Support\Carbon|null $stopped_at
+ * @property Carbon $started_at
+ * @property Carbon|null $stopped_at
  * @property-read Feedback $feedback
  */
 class FeedbackEffort extends Model
 {
-    /** @use HasFactory<\Database\Factories\FeedbackEffortFactory> */
+    /** @use HasFactory<FeedbackEffortFactory> */
     use HasFactory;
 
     protected $fillable = [

@@ -6,6 +6,8 @@ namespace App\Models;
 
 use App\Enums\FeedbackStatus;
 use App\Enums\FeedbackType;
+use Database\Factories\FeedbackFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,11 +17,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property FeedbackType $type
  * @property FeedbackStatus $status
  * @property-read User $user
- * @property-read \Illuminate\Database\Eloquent\Collection<int, FeedbackEffort> $efforts
+ * @property-read Collection<int, FeedbackEffort> $efforts
  */
 class Feedback extends Model
 {
-    /** @use HasFactory<\Database\Factories\FeedbackFactory> */
+    /** @use HasFactory<FeedbackFactory> */
     use HasFactory;
 
     protected $table = 'feedbacks';

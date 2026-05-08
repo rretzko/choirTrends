@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\UserSongFileFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class UserSongFile extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserSongFileFactory> */
+    /** @use HasFactory<UserSongFileFactory> */
     use HasFactory;
 
     protected $fillable = [

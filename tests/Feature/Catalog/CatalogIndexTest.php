@@ -7,6 +7,7 @@ use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 
 test('guest can view catalog when enabled', function () {
@@ -21,7 +22,7 @@ test('guest can view catalog when enabled', function () {
 
 test('guest gets 404 when catalog is disabled', function () {
     $user = User::factory()->create([
-        'catalog_token' => \Illuminate\Support\Str::uuid()->toString(),
+        'catalog_token' => Str::uuid()->toString(),
         'catalog_enabled_at' => null,
     ]);
 

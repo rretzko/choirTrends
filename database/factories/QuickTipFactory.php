@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\QuickTipStatus;
+use App\Models\QuickTip;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\QuickTip>
+ * @extends Factory<QuickTip>
  */
 class QuickTipFactory extends Factory
 {

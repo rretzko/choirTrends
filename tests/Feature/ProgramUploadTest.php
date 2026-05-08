@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Jobs\ProcessProgram;
 use App\Models\School;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -64,7 +65,7 @@ test('user can upload a program file', function () {
     $response->assertRedirect(route('addProgram'));
     $response->assertSessionHas('success');
 
-    Queue::assertPushed(\App\Jobs\ProcessProgram::class, function ($job) use ($user) {
+    Queue::assertPushed(ProcessProgram::class, function ($job) use ($user) {
         return $job->userId === $user->id
             && $job->filePath !== ''
             && $job->uris === null;
@@ -84,7 +85,7 @@ test('user can submit program URLs', function () {
     $response->assertRedirect(route('addProgram'));
     $response->assertSessionHas('success');
 
-    Queue::assertPushed(\App\Jobs\ProcessProgram::class, function ($job) use ($user, $urls) {
+    Queue::assertPushed(ProcessProgram::class, function ($job) use ($user, $urls) {
         return $job->userId === $user->id
             && $job->filePath === ''
             && $job->uris === $urls;
@@ -181,7 +182,7 @@ test('user can submit via vapor file key', function () {
     expect($files)->toHaveCount(1)
         ->and($files[0])->toEndWith('.pdf');
 
-    Queue::assertPushed(\App\Jobs\ProcessProgram::class, function ($job) use ($user) {
+    Queue::assertPushed(ProcessProgram::class, function ($job) use ($user) {
         return $job->userId === $user->id
             && str_starts_with($job->filePath, 'concert-programs/')
             && $job->uris === null;

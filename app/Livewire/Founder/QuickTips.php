@@ -6,6 +6,7 @@ namespace App\Livewire\Founder;
 
 use App\Mail\QuickTipEmail;
 use App\Models\QuickTip;
+use App\Models\User;
 use Flux;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
@@ -22,7 +23,7 @@ class QuickTips extends Component
     {
         $tip = QuickTip::findOrFail($tipId);
 
-        /** @var \App\Models\User $founder */
+        /** @var User $founder */
         $founder = auth()->user();
 
         Mail::to($founder)->send(new QuickTipEmail($tip, $founder));

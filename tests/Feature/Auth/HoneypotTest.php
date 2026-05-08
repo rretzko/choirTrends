@@ -74,6 +74,7 @@ test('register succeeds with valid honeypot fields', function () {
         'password_confirmation' => 'password',
         'my_name' => '',
         'valid_from' => $validFrom,
+        'viewport' => '1920x1080',
     ]);
 
     $response->assertSessionHasNoErrors()

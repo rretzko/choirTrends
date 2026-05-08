@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Spatie\Honeypot\ProtectAgainstSpam;
 use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -13,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'honeypot' => \Spatie\Honeypot\ProtectAgainstSpam::class,
+            'honeypot' => ProtectAgainstSpam::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

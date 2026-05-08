@@ -27,7 +27,7 @@ test('overloaded error is retried and returns user-friendly message on final fai
     $service = new ClaudeAnalysisService;
 
     $service->analyzeProgram('Sample program text content');
-})->throws(\Exception::class, 'The AI service is temporarily busy. Please try again in a few minutes.');
+})->throws(Exception::class, 'The AI service is temporarily busy. Please try again in a few minutes.');
 
 test('rate limit error is retried and returns user-friendly message on final failure', function () {
     Http::fake([
@@ -43,7 +43,7 @@ test('rate limit error is retried and returns user-friendly message on final fai
     $service = new ClaudeAnalysisService;
 
     $service->analyzeProgram('Sample program text content');
-})->throws(\Exception::class, 'Too many requests. Please wait a moment and try again.');
+})->throws(Exception::class, 'Too many requests. Please wait a moment and try again.');
 
 test('non-retryable error throws immediately with descriptive message', function () {
     Http::fake([
@@ -59,7 +59,7 @@ test('non-retryable error throws immediately with descriptive message', function
     $service = new ClaudeAnalysisService;
 
     $service->analyzeProgram('Sample program text content');
-})->throws(\Exception::class, 'Failed to analyze program: The request body is invalid.');
+})->throws(Exception::class, 'Failed to analyze program: The request body is invalid.');
 
 test('overloaded error recovers on retry', function () {
     $attempt = 0;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\UserSongLyricsFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class UserSongLyrics extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserSongLyricsFactory> */
+    /** @use HasFactory<UserSongLyricsFactory> */
     use HasFactory;
 
     protected $table = 'user_song_lyrics';

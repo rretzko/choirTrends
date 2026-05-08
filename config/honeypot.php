@@ -1,5 +1,6 @@
 <?php
 
+use Spatie\Honeypot\SpamProtection;
 use Spatie\Honeypot\SpamResponder\BlankPageResponder;
 
 return [
@@ -39,7 +40,7 @@ return [
      * If the form is submitted faster than this amount of seconds
      * the form submission will be considered invalid.
      */
-    'amount_of_seconds' => (int) env('HONEYPOT_SECONDS', 1),
+    'amount_of_seconds' => (int) env('HONEYPOT_SECONDS', 5),
 
     /*
      * This class is responsible for sending a response to requests that
@@ -62,7 +63,7 @@ return [
      * rules for a request. In most cases, you shouldn't change
      * this value.
      */
-    'spam_protection' => \Spatie\Honeypot\SpamProtection::class,
+    'spam_protection' => SpamProtection::class,
 
     /*
      * need to add @cspNonce https://github.com/spatie/laravel-csp in style tag hidden items

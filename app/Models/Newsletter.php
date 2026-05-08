@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\NewsletterFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Newsletter extends Model
 {
-    /** @use HasFactory<\Database\Factories\NewsletterFactory> */
+    /** @use HasFactory<NewsletterFactory> */
     use HasFactory;
 
     protected $fillable = [

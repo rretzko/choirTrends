@@ -6,10 +6,11 @@ namespace Database\Factories;
 
 use App\Models\SongTitle;
 use App\Models\User;
+use App\Models\UserSongFile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\UserSongFile>
+ * @extends Factory<UserSongFile>
  */
 class UserSongFileFactory extends Factory
 {

@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\UserGuideFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class UserGuide extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserGuideFactory> */
+    /** @use HasFactory<UserGuideFactory> */
     use HasFactory;
 
     protected $fillable = [

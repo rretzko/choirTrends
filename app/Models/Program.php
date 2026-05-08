@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\VideoVisibility;
+use Database\Factories\ProgramFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Program extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProgramFactory> */
+    /** @use HasFactory<ProgramFactory> */
     use HasFactory;
 
     protected $fillable = [

@@ -55,7 +55,7 @@ class SongTitleConflicts extends Component
         $total = $grouped->count();
         $items = $grouped->slice(($page - 1) * $perPage, $perPage);
 
-        return new \Illuminate\Pagination\LengthAwarePaginator(
+        return new LengthAwarePaginator(
             $items,
             $total,
             $perPage,
