@@ -478,6 +478,7 @@
                     if (msg) msg.textContent = '{{ __("Processing is taking longer than expected.") }}';
                     if (sub) sub.textContent = '{{ __("You can wait or start over and try again.") }}';
                     if (spinner) spinner.classList.remove('animate-spin');
+                    setTimeout(() => window.location.reload(), 3000);
                     return;
                 }
 

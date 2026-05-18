@@ -357,7 +357,7 @@ PROMPT;
 
     private function sendToClaudeAPI(array $messages): array
     {
-        $maxRetries = 3;
+        $maxRetries = 1;
         $baseDelay = 2; // seconds
 
         for ($attempt = 0; $attempt <= $maxRetries; $attempt++) {
@@ -365,7 +365,7 @@ PROMPT;
                 'x-api-key' => $this->apiKey,
                 'anthropic-version' => $this->apiVersion,
                 'content-type' => 'application/json',
-            ])->timeout(120)->post('https://api.anthropic.com/v1/messages', array_filter([
+            ])->timeout(90)->post('https://api.anthropic.com/v1/messages', array_filter([
                 'model' => $this->model,
                 'max_tokens' => 16000,
                 'thinking' => $this->useThinking ? [
