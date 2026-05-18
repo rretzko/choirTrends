@@ -357,10 +357,11 @@ PROMPT;
 
     private function sendToClaudeAPI(array $messages): array
     {
-        $maxRetries = 1;
+        $maxRetries = 2;
         $baseDelay = 2; // seconds
+        $attempt = 0;
 
-        for ($attempt = 0; $attempt <= $maxRetries; $attempt++) {
+        while (true) {
             $response = Http::withHeaders([
                 'x-api-key' => $this->apiKey,
                 'anthropic-version' => $this->apiVersion,
@@ -388,7 +389,7 @@ PROMPT;
             ]);
 
             // If it's the last attempt or not a retryable error, throw exception
-            if ($attempt === $maxRetries || ! $isRetryable) {
+            if ($attempt >= $maxRetries || ! $isRetryable) {
                 $message = match ($errorType) {
                     'overloaded_error' => 'The AI service is temporarily busy. Please try again in a few minutes.',
                     'rate_limit_error' => 'Too many requests. Please wait a moment and try again.',
@@ -410,12 +411,9 @@ PROMPT;
                 'delay_seconds' => $delay,
             ]);
 
-            // Wait before retrying
             sleep($delay);
+            $attempt++;
         }
-
-        // This should never be reached, but just in case
-        throw new \Exception('The AI service is unavailable after multiple attempts. Please try again later.');
     }
 
     private function parseResponse(array $response): array

@@ -469,6 +469,8 @@
             const pollStartTime = Date.now();
             const pollTimeoutMs = 5 * 60 * 1000; // 5 minutes
 
+            const statusUrl = '{{ route("founder.addProgram.status") }}?u={{ $targetUserId }}';
+
             const pollInterval = setInterval(async () => {
                 if (Date.now() - pollStartTime > pollTimeoutMs) {
                     clearInterval(pollInterval);
@@ -483,8 +485,22 @@
                 }
 
                 try {
-                    const response = await fetch('{{ route("founder.addProgram.status") }}');
+                    const response = await fetch(statusUrl);
+
+                    if (!response.ok) {
+                        console.warn('Status endpoint returned HTTP', response.status, '— will retry');
+                        return;
+                    }
+
+                    const contentType = response.headers.get('content-type') || '';
+                    if (!contentType.includes('application/json')) {
+                        const text = await response.text();
+                        console.warn('Non-JSON response from status endpoint:', text.substring(0, 300));
+                        return;
+                    }
+
                     const data = await response.json();
+                    console.log('Status poll:', data);
 
                     if (data.status === 'completed' || data.status === 'failed') {
                         window.location.reload();
