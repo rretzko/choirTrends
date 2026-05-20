@@ -4,7 +4,7 @@ environments:
   production:
     domain: choirtrends.com
     scheduler: true
-    memory: 1024
+    memory: 512
     cli-memory: 1024
     cli-timeout: 900
     timeout: 30
@@ -24,8 +24,8 @@ environments:
       - 'find vendor -type d -name "test" -o -name "tests" -o -name "Test" -o -name "Tests" | xargs rm -rf'
       - 'find vendor -type f -name "*.md" -o -name "*.txt" -o -name "LICENSE*" -o -name "CHANGELOG*" | xargs rm -f'
   staging:
-    memory: 1024
-    cli-memory: 1024
+    memory: 512
+    cli-memory: 512
     cli-timeout: 900
     runtime: 'php-8.4:al2'
     database: mfr-staging

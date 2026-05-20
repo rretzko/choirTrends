@@ -123,21 +123,11 @@ class FounderAddProgramController extends Controller
         $targetUserId = $request->session()->get('founder_target_user_id')
             ?: ($request->filled('u') ? (int) $request->input('u') : null);
 
-        Log::info('Founder addProgram status polled', [
-            'target_user_id' => $targetUserId,
-            'session_has_key' => $request->session()->has('founder_target_user_id'),
-        ]);
-
         if (! $targetUserId) {
             return response()->json(['status' => 'not_found']);
         }
 
         $analysis = cache()->get("program_analysis_{$targetUserId}");
-
-        Log::info('Founder addProgram status result', [
-            'target_user_id' => $targetUserId,
-            'cache_status' => $analysis['status'] ?? 'null',
-        ]);
 
         return response()->json($analysis ?? ['status' => 'not_found']);
     }

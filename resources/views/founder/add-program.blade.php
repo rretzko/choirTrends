@@ -500,7 +500,6 @@
                     }
 
                     const data = await response.json();
-                    console.log('Status poll:', data);
 
                     if (data.status === 'completed' || data.status === 'failed') {
                         window.location.reload();
