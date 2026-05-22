@@ -34,13 +34,61 @@ class CreateNewUser implements CreatesNewUsers
         RateLimiter::hit($throttleKey, 60);
 
         Validator::make($input, [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $trimmed = trim((string) $value);
+                    if (! preg_match('/\S+\s+\S+/', $trimmed)) {
+                        $fail(__('Please enter your full name (first and last name required).'));
+
+                        return;
+                    }
+                    if (! preg_match('/^[\p{L}\s\'\-\.]+$/u', $trimmed)) {
+                        $fail(__('The name may only contain letters, spaces, hyphens, and apostrophes.'));
+                    }
+                },
+            ],
             'email' => [
                 'required',
                 'string',
                 'email',
                 'max:255',
                 Rule::unique(User::class),
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $email = strtolower(trim((string) $value));
+
+                    if (! str_ends_with($email, '@gmail.com') && ! str_ends_with($email, '@googlemail.com')) {
+                        return;
+                    }
+
+                    $local = explode('@', $email)[0];
+                    $segments = explode('.', $local);
+
+                    if (count($segments) >= 4) {
+                        $shortCount = count(array_filter($segments, fn (string $s): bool => strlen($s) <= 2));
+                        if ($shortCount / count($segments) >= 0.6) {
+                            $fail(__('Registration failed. Please try again.'));
+
+                            return;
+                        }
+                    }
+
+                    $normalized = str_replace('.', '', $local);
+                    $exists = User::query()
+                        ->whereRaw("REPLACE(LOWER(SUBSTR(email, 1, INSTR(email, '@') - 1)), '.', '') = ?", [$normalized])
+                        ->where(function ($q): void {
+                            $q->where('email', 'like', '%@gmail.com')
+                                ->orWhere('email', 'like', '%@googlemail.com');
+                        })
+                        ->whereNotNull('email_verified_at')
+                        ->exists();
+
+                    if ($exists) {
+                        $fail(__('An account with this email address already exists.'));
+                    }
+                },
             ],
             'password' => $this->passwordRules(),
             'referral_source' => ['nullable', Rule::enum(ReferralSource::class)],
