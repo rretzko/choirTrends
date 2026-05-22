@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Mail\SurveyInvitation;
+use App\Mail\SurveyInvitationsSent;
 use App\Models\Program;
 use App\Models\SurveyResponse;
 use App\Models\User;
@@ -25,6 +26,16 @@ test('sends survey to eligible user with no programs registered over two weeks a
     });
 
     expect($user->fresh()->survey_emails_sent_count)->toBe(1);
+});
+
+test('does not send to user who has not verified their email', function () {
+    User::factory()->withoutTwoFactor()->unverified()->create([
+        'created_at' => now()->subWeeks(3),
+    ]);
+
+    $this->artisan('survey:send')->assertSuccessful();
+
+    Mail::assertNothingQueued();
 });
 
 test('does not send to user registered less than two weeks ago', function () {
@@ -89,4 +100,23 @@ test('sends to multiple eligible users', function () {
     $this->artisan('survey:send')->assertSuccessful();
 
     Mail::assertQueued(SurveyInvitation::class, 3);
+});
+
+test('sends summary notification to founder when invitations go out', function () {
+    User::factory()->withoutTwoFactor()->count(2)->create([
+        'created_at' => now()->subWeeks(3),
+    ]);
+
+    $this->artisan('survey:send')->assertSuccessful();
+
+    Mail::assertQueued(SurveyInvitationsSent::class, function (SurveyInvitationsSent $mail) {
+        return $mail->hasTo('founder@example.com')
+            && count($mail->recipients) === 2;
+    });
+});
+
+test('does not send summary notification when no invitations go out', function () {
+    $this->artisan('survey:send')->assertSuccessful();
+
+    Mail::assertNotQueued(SurveyInvitationsSent::class);
 });

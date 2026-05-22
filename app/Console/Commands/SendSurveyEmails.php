@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Mail\SurveyInvitation;
+use App\Mail\SurveyInvitationsSent;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
@@ -17,25 +18,38 @@ class SendSurveyEmails extends Command
 
     public function handle(): int
     {
-        $sent = 0;
-        $skipped = 0;
+        $recipients = [];
 
         $users = User::query()
             ->where('created_at', '<=', now()->subWeeks(2))
+            ->whereNotNull('email_verified_at')
             ->where('survey_emails_sent_count', '<', 3)
             ->doesntHave('programs')
             ->doesntHave('surveyResponses')
             ->get();
 
         foreach ($users as $user) {
+            $recipients[] = [
+                'name' => $user->name,
+                'email' => $user->email,
+                'send_number' => $user->survey_emails_sent_count + 1,
+            ];
+
             Mail::to($user)->queue(new SurveyInvitation($user));
 
             $user->increment('survey_emails_sent_count');
-
-            $sent++;
         }
 
-        $this->info("Survey emails sent: {$sent}, skipped: {$skipped}");
+        $sent = count($recipients);
+
+        if ($sent > 0) {
+            $founderEmail = config('app.founder');
+            if ($founderEmail) {
+                Mail::to($founderEmail)->queue(new SurveyInvitationsSent($recipients));
+            }
+        }
+
+        $this->info("Survey emails sent: {$sent}");
 
         return self::SUCCESS;
     }
