@@ -31,7 +31,7 @@ class CreateNewUser implements CreatesNewUsers
             ]);
         }
 
-        RateLimiter::hit($throttleKey, 60);
+        RateLimiter::hit($throttleKey, 3600);
 
         Validator::make($input, [
             'name' => [
@@ -58,12 +58,18 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::unique(User::class),
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     $email = strtolower(trim((string) $value));
+                    $local = explode('@', $email)[0];
+
+                    if (preg_match('/\d{6,}/', $local)) {
+                        $fail(__('Registration failed. Please try again.'));
+
+                        return;
+                    }
 
                     if (! str_ends_with($email, '@gmail.com') && ! str_ends_with($email, '@googlemail.com')) {
                         return;
                     }
 
-                    $local = explode('@', $email)[0];
                     $segments = explode('.', $local);
 
                     if (count($segments) >= 4) {

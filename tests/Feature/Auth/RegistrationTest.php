@@ -263,13 +263,54 @@ test('registration accepts a normal gmail address with two dot segments', functi
     $this->assertAuthenticated();
 });
 
+test('registration is blocked for an email with 6 or more consecutive digits', function () {
+    $response = $this->post(route('register.store'), [
+        'name' => 'No Thanks',
+        'email' => 'nothanks849278194@gmail.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'viewport' => '1920x1080',
+    ]);
+
+    $response->assertSessionHasErrors('email');
+    $this->assertGuest();
+    $this->assertDatabaseMissing('users', ['email' => 'nothanks849278194@gmail.com']);
+});
+
+test('registration is blocked for a non-gmail email with 6 or more consecutive digits', function () {
+    $response = $this->post(route('register.store'), [
+        'name' => 'Some Bot',
+        'email' => 'user123456@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'viewport' => '1920x1080',
+    ]);
+
+    $response->assertSessionHasErrors('email');
+    $this->assertGuest();
+    $this->assertDatabaseMissing('users', ['email' => 'user123456@example.com']);
+});
+
+test('registration accepts an email with fewer than 6 consecutive digits', function () {
+    $response = $this->post(route('register.store'), [
+        'name' => 'Jane Doe',
+        'email' => 'jane123@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'viewport' => '1920x1080',
+    ]);
+
+    $response->assertSessionHasNoErrors();
+    $this->assertAuthenticated();
+});
+
 test('registration is blocked after rate limit is exceeded', function () {
     $key = 'register|127.0.0.1';
     RateLimiter::clear($key);
 
-    RateLimiter::hit($key, 60);
-    RateLimiter::hit($key, 60);
-    RateLimiter::hit($key, 60);
+    RateLimiter::hit($key, 3600);
+    RateLimiter::hit($key, 3600);
+    RateLimiter::hit($key, 3600);
 
     $response = $this->post(route('register.store'), [
         'name' => 'Test User',
