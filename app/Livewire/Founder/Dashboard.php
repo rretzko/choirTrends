@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Founder;
 
+use App\Models\School;
 use App\Models\User;
 use App\Models\UserLogin;
 use Illuminate\Support\Collection;
@@ -67,6 +68,11 @@ class Dashboard extends Component
 
         $totalLogins = UserLogin::query()->count();
         $uniqueUsers = UserLogin::query()->distinct('user_id')->count('user_id');
+        $uniqueVerifiedUsers = UserLogin::query()
+            ->join('users', 'user_logins.user_id', '=', 'users.id')
+            ->whereNotNull('users.email_verified_at')
+            ->distinct('user_logins.user_id')
+            ->count('user_logins.user_id');
 
         $recentLogins = UserLogin::query()
             ->with('user')
@@ -92,6 +98,17 @@ class Dashboard extends Component
             ->orderByDesc('total')
             ->get();
 
+        $byState = School::query()
+            ->join('school_user', 'schools.id', '=', 'school_user.school_id')
+            ->join('users', 'school_user.user_id', '=', 'users.id')
+            ->whereNotNull('users.email_verified_at')
+            ->selectRaw('schools.country, schools.geo_state, count(distinct users.id) as total')
+            ->groupBy('schools.country', 'schools.geo_state')
+            ->orderBy('schools.country')
+            ->orderByDesc('total')
+            ->get()
+            ->groupBy('country');
+
         $byReferralSource = User::query()
             ->selectRaw('referral_source, count(*) as total')
             ->groupBy('referral_source')
@@ -107,7 +124,9 @@ class Dashboard extends Component
         return view('livewire.founder.dashboard', [
             'totalLogins' => $totalLogins,
             'uniqueUsers' => $uniqueUsers,
+            'uniqueVerifiedUsers' => $uniqueVerifiedUsers,
             'recentLogins' => $recentLogins,
+            'byState' => $byState,
             'byOs' => $byOs,
             'byBrowser' => $byBrowser,
             'byDevice' => $byDevice,

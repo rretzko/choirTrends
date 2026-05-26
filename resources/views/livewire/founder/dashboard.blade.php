@@ -11,8 +11,10 @@
                 <div class="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($totalLogins) }}</div>
             </div>
             <div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
-                <flux:text class="text-sm">{{ __('Unique Users') }}</flux:text>
-                <div class="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($uniqueUsers) }}</div>
+                <flux:text class="text-sm">{{ __('Unique/Verified Users') }}</flux:text>
+                <div class="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+                    {{ number_format($uniqueUsers) }} / {{ number_format($uniqueVerifiedUsers) }}
+                </div>
             </div>
         </div>
 
@@ -59,7 +61,26 @@
         </div>
 
         {{-- Referral Breakdowns --}}
-        <div class="grid gap-4 sm:grid-cols-2">
+        <div class="grid gap-4 sm:grid-cols-3">
+            {{-- By State --}}
+            <div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <flux:heading size="sm" class="mb-2">{{ __('By State (verified)') }}</flux:heading>
+                @forelse($byState as $country => $rows)
+                    <div class="mt-2">
+                        <div class="rounded bg-zinc-100 px-2 py-1 text-xs font-bold uppercase tracking-wide text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100">
+                            {{ $country ?? __('Unknown') }}
+                        </div>
+                        @foreach($rows as $row)
+                            <div class="flex items-center justify-between py-1 pl-4 text-sm">
+                                <span class="text-zinc-700 dark:text-zinc-300">{{ $row->geo_state ?? __('Unknown') }}</span>
+                                <flux:badge size="sm">{{ $row->total }}</flux:badge>
+                            </div>
+                        @endforeach
+                    </div>
+                @empty
+                    <flux:text class="text-sm">{{ __('No data yet.') }}</flux:text>
+                @endforelse
+            </div>
             {{-- By Referral Source --}}
             <div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
                 <flux:heading size="sm" class="mb-2">{{ __('By Referral Source') }}</flux:heading>

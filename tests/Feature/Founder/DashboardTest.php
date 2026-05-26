@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Livewire\Founder\Dashboard;
 use App\Models\Program;
+use App\Models\School;
 use App\Models\User;
 use App\Models\UserLogin;
 use Livewire\Livewire;
@@ -44,7 +45,7 @@ test('dashboard page renders with correct layout', function () {
         ->test(Dashboard::class)
         ->assertSee('Founder Dashboard')
         ->assertSee('Total Logins')
-        ->assertSee('Unique Users')
+        ->assertSee('Unique/Verified Users')
         ->assertStatus(200);
 });
 
@@ -120,6 +121,50 @@ test('dashboard shows breakdown by device', function () {
         ->assertSee('By Device')
         ->assertSee('Desktop')
         ->assertSee('Mobile');
+});
+
+test('dashboard unique verified users count excludes unverified users', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+    $verified = User::factory()->withoutTwoFactor()->create();
+    $unverified = User::factory()->withoutTwoFactor()->unverified()->create();
+
+    UserLogin::factory()->create(['user_id' => $verified->id]);
+    UserLogin::factory()->create(['user_id' => $unverified->id]);
+
+    Livewire::actingAs($founder)
+        ->test(Dashboard::class)
+        ->assertViewHas('uniqueUsers', 2)
+        ->assertViewHas('uniqueVerifiedUsers', 1);
+});
+
+test('dashboard shows by state card with verified users grouped by country', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+    $verified = User::factory()->withoutTwoFactor()->create();
+    $unverified = User::factory()->withoutTwoFactor()->unverified()->create();
+
+    $school = School::factory()->create(['country' => 'US', 'geo_state' => 'CA']);
+    $verified->schools()->attach($school);
+    $unverified->schools()->attach($school);
+
+    Livewire::actingAs($founder)
+        ->test(Dashboard::class)
+        ->assertSee('By State (verified)')
+        ->assertSee('US')
+        ->assertSee('CA');
+});
+
+test('dashboard by state card excludes unverified users from counts', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+    $verified = User::factory()->withoutTwoFactor()->create();
+    $unverified = User::factory()->withoutTwoFactor()->unverified()->create();
+
+    $school = School::factory()->create(['country' => 'US', 'geo_state' => 'TX']);
+    $verified->schools()->attach($school);
+    $unverified->schools()->attach($school);
+
+    Livewire::actingAs($founder)
+        ->test(Dashboard::class)
+        ->assertViewHas('byState', fn ($byState) => $byState->get('US')->first()->total === 1);
 });
 
 test('dashboard shows empty state when no logins exist', function () {

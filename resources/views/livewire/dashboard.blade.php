@@ -70,7 +70,7 @@
                 <flux:icon name="users" class="size-6 text-cyan-600 dark:text-cyan-400" />
             </div>
             <div>
-                <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">Users</flux:text>
+                <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">Users (verified)</flux:text>
                 <flux:heading size="xl">{{ number_format($usersCount) }}</flux:heading>
             </div>
         </div>

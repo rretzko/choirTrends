@@ -37,6 +37,16 @@ test('dashboard component displays summary counts', function () {
         ->assertStatus(200);
 });
 
+test('dashboard users count only includes verified users', function () {
+    $user = User::factory()->create(); // verified by default
+    User::factory()->unverified()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Dashboard::class)
+        ->assertSet('usersCount', 1);
+});
+
 test('dashboard page contains livewire component', function () {
     $user = User::factory()->create();
 

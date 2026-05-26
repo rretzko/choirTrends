@@ -49,7 +49,7 @@ class Dashboard extends Component
         $this->programsCount = Program::query()->count();
         $this->schoolsCount = School::query()->count();
         $this->songTitlesCount = SongTitle::query()->count();
-        $this->usersCount = User::query()->count();
+        $this->usersCount = User::query()->whereNotNull('email_verified_at')->count();
     }
 
     public function toggleCatalog(): void
