@@ -86,7 +86,7 @@ class Index extends Component
 
         $filePath = null;
         if ($this->file) {
-            $filePath = $this->file->store('feedback-files', 'public');
+            $filePath = $this->file->store('feedback-files', 's3');
         }
 
         /** @var User $user */
@@ -173,7 +173,7 @@ class Index extends Component
         ];
 
         if ($this->editFile) {
-            $data['file_path'] = $this->editFile->store('feedback-files', 'public');
+            $data['file_path'] = $this->editFile->store('feedback-files', 's3');
         }
 
         $feedback->update($data);

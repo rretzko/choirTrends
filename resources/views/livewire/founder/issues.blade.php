@@ -149,9 +149,9 @@
                         <div>
                             <flux:text class="mb-2 font-medium text-neutral-500 dark:text-neutral-400">{{ __('Attached File') }}</flux:text>
                             @if (Str::endsWith($selectedFeedback->file_path, ['.jpg', '.jpeg', '.png', '.gif', '.webp']))
-                                <img src="{{ Storage::disk('public')->url($selectedFeedback->file_path) }}" alt="{{ __('Attached image') }}" class="max-h-64 rounded-lg" />
+                                <img src="{{ Storage::disk('s3')->url($selectedFeedback->file_path) }}" alt="{{ __('Attached image') }}" class="max-h-64 rounded-lg" />
                             @else
-                                <a href="{{ Storage::disk('public')->url($selectedFeedback->file_path) }}" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">
+                                <a href="{{ Storage::disk('s3')->url($selectedFeedback->file_path) }}" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">
                                     {{ __('View attached file') }}
                                 </a>
                             @endif

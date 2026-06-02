@@ -113,7 +113,7 @@ test('feedback type must be valid', function () {
 
 test('user can upload a file with feedback', function () {
     Mail::fake();
-    Storage::fake('public');
+    Storage::fake('s3');
 
     $user = User::factory()->withoutTwoFactor()->create();
 
@@ -132,7 +132,7 @@ test('user can upload a file with feedback', function () {
 
     expect($feedback->file_path)->not->toBeNull();
 
-    Storage::disk('public')->assertExists($feedback->file_path);
+    Storage::disk('s3')->assertExists($feedback->file_path);
 });
 
 test('user can set feedback type via setType method', function () {
