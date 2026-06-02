@@ -86,7 +86,7 @@ class ProgramContentExtractor
             // Using ||| as delimiter to avoid conflicts with base64 characters
             return "PDF_DATA|||application/pdf|||{$base64}|||{$orientation}";
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Fallback to text extraction if PDF reading fails
             return $this->extractPdfAsText($path);
         }
@@ -111,7 +111,7 @@ class ProgramContentExtractor
                     }
                 }
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::info('Could not detect PDF orientation', ['error' => $e->getMessage()]);
         }
 
@@ -139,7 +139,7 @@ class ProgramContentExtractor
             }
 
             return implode("\n\n", $formattedText);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new \Exception('Failed to extract text from PDF: '.$e->getMessage());
         }
     }

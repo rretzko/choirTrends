@@ -162,7 +162,7 @@ class ProcessProgram implements ShouldQueue
             if ($this->filePath && Storage::exists($this->filePath)) {
                 Storage::delete($this->filePath);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Program processing failed', [
                 'user_id' => $this->userId,
                 'file_path' => $this->filePath,
