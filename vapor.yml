@@ -12,7 +12,7 @@ environments:
     database: mfr-prod
     queues:
       - default
-    queue-memory: 1024
+    queue-memory: 2048
     queue-timeout: 900
     deploy-timeout: 300
     build:

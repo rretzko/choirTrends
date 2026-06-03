@@ -50,8 +50,8 @@ class ProcessProgram implements ShouldQueue
         ClaudeAnalysisService $analysisService
     ): void {
         try {
-            // Increase memory limit for large PDFs
-            ini_set('memory_limit', '1024M');
+            // Increase memory limit for large PDFs (leave headroom for Lambda runtime overhead)
+            ini_set('memory_limit', '768M');
 
             // Extract content from file
             $uploadedFile = null;
