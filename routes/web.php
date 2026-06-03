@@ -11,6 +11,7 @@ use App\Http\Middleware\EnsureUserIsFounder;
 use App\Http\Middleware\EnsureUserIsFounderOrImpersonating;
 use App\Livewire\Catalog\Index;
 use App\Livewire\Ensembles\Edit;
+use App\Livewire\Founder\ChangeUserPassword;
 use App\Livewire\Founder\Dashboard;
 use App\Livewire\Founder\Duplicates;
 use App\Livewire\Founder\ImpersonateUser;
@@ -94,6 +95,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('add-program/status', [FounderAddProgramController::class, 'status'])->name('founder.addProgram.status');
         Route::post('add-program/confirm', [FounderAddProgramController::class, 'confirm'])->name('founder.addProgram.confirm');
         Route::post('add-program/reset', [FounderAddProgramController::class, 'reset'])->name('founder.addProgram.reset');
+        Route::get('change-user-password', ChangeUserPassword::class)->name('founder.changeUserPassword');
         Route::get('impersonate', ImpersonateUser::class)->name('founder.impersonate');
         Route::get('duplicates', Duplicates::class)->name('founder.duplicates');
         Route::get('issues', Issues::class)->name('founder.issues');

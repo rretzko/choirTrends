@@ -65,7 +65,8 @@
       "Bash(Get-Content \"C:\\\\Users\\\\RICKRE~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--xampp-htdocs-dev-choirTrends\\\\070990bc-1f94-4327-a9cd-0c3f5ca6af9b\\\\tasks\\\\b13an9ef0.output\" -Wait -Tail 30)",
       "Bash(Select-Object -First 50)",
       "Bash(Get-ChildItem *)",
-      "Bash(Select-String -Pattern \"\\(Dashboard|dashboard\\)\")"
+      "Bash(Select-String -Pattern \"\\(Dashboard|dashboard\\)\")",
+      "Bash(Remove-Item *)"
     ]
   },
   "enableAllProjectMcpServers": true,
