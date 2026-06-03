@@ -61,7 +61,7 @@
                         <flux:sidebar.item icon="user-plus" :href="route('founder.addProgram')" :current="request()->routeIs('founder.addProgram*')" wire:navigate>{{ __('Add Program for User') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="document-duplicate" :href="route('founder.duplicates')" :current="request()->routeIs('founder.duplicates')" wire:navigate>{{ __('Duplicates') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="identification" :href="route('founder.impersonate')" :current="request()->routeIs('founder.impersonate')" wire:navigate>{{ __('Impersonate User') }}</flux:sidebar.item>
-                        <flux:sidebar.item icon="key" :href="route('founder.changeUserPassword')" :current="request()->routeIs('founder.changeUserPassword')" wire:navigate>{{ __('Change User Password') }}</flux:sidebar.item>
+                        <flux:sidebar.item icon="key" :href="route('founder.changeUserPassword')" :current="request()->routeIs('founder.changeUserPassword')" wire:navigate>{{ __('Change User Password!') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="clipboard-document-list" :href="route('founder.issues')" :current="request()->routeIs('founder.issues')" wire:navigate>{{ __('Issues') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="magnifying-glass" :href="route('founder.songTitleConflicts')" :current="request()->routeIs('founder.songTitleConflicts')" wire:navigate>{{ __('Song Title Conflicts') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="light-bulb" :href="route('founder.quickTips')" :current="request()->routeIs('founder.quickTips')" wire:navigate>{{ __('Quick Tips') }}</flux:sidebar.item>
