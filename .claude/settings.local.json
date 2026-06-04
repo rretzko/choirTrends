@@ -66,7 +66,14 @@
       "Bash(Select-Object -First 50)",
       "Bash(Get-ChildItem *)",
       "Bash(Select-String -Pattern \"\\(Dashboard|dashboard\\)\")",
-      "Bash(Remove-Item *)"
+      "Bash(Remove-Item *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git restore *)",
+      "Bash(del \"C:\\\\xampp\\\\htdocs\\\\dev\\\\choirTrends\\\\resources\\\\views\\\\components\\\\founder\\\\⚡create-program.blade.php\")",
+      "PowerShell(Set-Content *)",
+      "Bash(npm install *)",
+      "Bash(npx playwright *)"
     ]
   },
   "enableAllProjectMcpServers": true,
