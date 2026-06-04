@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property-read User $user
@@ -56,6 +57,11 @@ class Program extends Model
             ->withPivot('ensemble_id', 'sort_order', 'ensemble_sort_order', 'video_path', 'video_visibility', 'video_uploaded_at', 'notes', 'ensemble_director')
             ->orderByPivot('ensemble_sort_order')
             ->orderByPivot('sort_order');
+    }
+
+    public function digitalPrograms(): HasMany
+    {
+        return $this->hasMany(DigitalProgram::class);
     }
 
     public function hasVideo(): bool

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AddProgramController;
+use App\Http\Controllers\DigitalProgramPublicController;
 use App\Http\Controllers\FounderAddProgramController;
 use App\Http\Controllers\QuickTipUnsubscribeController;
 use App\Http\Controllers\SheetMusicController;
@@ -10,8 +11,11 @@ use App\Http\Controllers\VideoController;
 use App\Http\Middleware\EnsureUserIsFounder;
 use App\Http\Middleware\EnsureUserIsFounderOrImpersonating;
 use App\Livewire\Catalog\Index;
+use App\Livewire\DigitalPrograms\GuidedWizard;
+use App\Livewire\DigitalPrograms\PowerUserForm;
 use App\Livewire\Ensembles\Edit;
 use App\Livewire\Founder\ChangeUserPassword;
+use App\Livewire\Founder\CreateProgram;
 use App\Livewire\Founder\Dashboard;
 use App\Livewire\Founder\Duplicates;
 use App\Livewire\Founder\ImpersonateUser;
@@ -43,6 +47,10 @@ Route::get('quick-tips/unsubscribe', QuickTipUnsubscribeController::class)->name
 Route::get('survey/{user}', Show::class)
     ->name('survey.show')
     ->middleware('signed');
+
+// Public digital program view (no auth — slug-based)
+Route::get('p/{slug}', DigitalProgramPublicController::class)
+    ->name('program.public');
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -80,6 +88,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('documentation/song-titles-guide', 'documentation.song-titles-guide')->name('documentation.song-titles-guide');
     Route::view('documentation/orientation-email', 'documentation.orientation-email')->name('documentation.orientation-email');
 
+    // Digital Programs
+    Route::prefix('digital-programs')->name('digital-programs.')->group(function () {
+        Route::get('/', App\Livewire\DigitalPrograms\Index::class)->name('index');
+        Route::get('create/guided', GuidedWizard::class)->name('create.guided');
+        Route::get('create/pro', PowerUserForm::class)->name('create.pro');
+    });
+
     Route::get('add-program', [AddProgramController::class, 'index'])->name('addProgram');
 
     Route::post('add-program', [AddProgramController::class, 'store'])->name('addProgram.store');
@@ -106,6 +121,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('quick-tips/{quickTip}/edit', QuickTipForm::class)->name('founder.quickTips.edit');
         Route::get('newsletter', Newsletter::class)->name('founder.newsletter');
         Route::get('user-guide', UserGuideEditor::class)->name('founder.userGuide');
+        Route::get('create-program', CreateProgram::class)->name('founder.createProgram');
     });
 
     // Stop impersonation (must be accessible while impersonating)
