@@ -10,4 +10,15 @@ Artisan::command('inspire', function () {
 
 Schedule::command('quicktips:send')->dailyAt('08:00')->timezone('America/New_York');
 Schedule::command('survey:send')->cron('30 7 8-14 * 1')->timezone('America/New_York'); // second Monday of the month at 7:30 am Eastern
-Schedule::command('programs:nudge-spring')->cron('0 8 1-7 6 4')->timezone('America/New_York'); // first Thursday of June at 8:00 am Eastern
+// Skips 2026 (already fired incorrectly due to cron OR-logic bug; idempotency guard covers future years).
+Schedule::command('programs:nudge-spring')
+    ->dailyAt('08:00')
+    ->timezone('America/New_York')
+    ->when(function (): bool {
+        $now = now()->timezone('America/New_York');
+
+        return $now->year > 2026
+            && $now->month === 6
+            && $now->isThursday()
+            && $now->day <= 7;
+    });
