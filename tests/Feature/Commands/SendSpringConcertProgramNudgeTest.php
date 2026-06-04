@@ -6,6 +6,7 @@ use App\Mail\SpringConcertProgramNudge;
 use App\Models\Program;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
@@ -71,6 +72,15 @@ test('dry run reports count without queuing', function () {
     $this->artisan('programs:nudge-spring', ['--dry-run' => true])
         ->assertSuccessful()
         ->expectsOutputToContain('2 user(s)');
+
+    Mail::assertNothingQueued();
+});
+
+test('does not queue nudge to user who already received it this year', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    Cache::put('spring_concert_nudge:'.now()->year.":{$user->id}", true, now()->addYear());
+
+    $this->artisan('programs:nudge-spring')->assertSuccessful();
 
     Mail::assertNothingQueued();
 });

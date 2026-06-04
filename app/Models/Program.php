@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
  * @property-read User $user
@@ -51,9 +52,11 @@ class Program extends Model
         return $this->belongsTo(School::class);
     }
 
+    /** @return BelongsToMany<SongTitle, $this, ProgramSongTitlePivot, 'pivot'> */
     public function songTitles(): BelongsToMany
     {
         return $this->belongsToMany(SongTitle::class)
+            ->using(ProgramSongTitlePivot::class)
             ->withPivot('ensemble_id', 'sort_order', 'ensemble_sort_order', 'video_path', 'video_visibility', 'video_uploaded_at', 'notes', 'ensemble_director')
             ->orderByPivot('ensemble_sort_order')
             ->orderByPivot('sort_order');
@@ -69,6 +72,7 @@ class Program extends Model
         return $this->video_path !== null;
     }
 
+    /** @return BelongsToMany<Ensemble, $this, Pivot, 'pivot'> */
     public function ensembles(): BelongsToMany
     {
         return $this->belongsToMany(Ensemble::class, 'program_song_title', 'program_id', 'ensemble_id')

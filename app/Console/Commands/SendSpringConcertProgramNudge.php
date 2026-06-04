@@ -8,6 +8,7 @@ use App\Mail\SpringConcertProgramNudge;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 
 class SendSpringConcertProgramNudge extends Command
@@ -40,12 +41,23 @@ class SendSpringConcertProgramNudge extends Command
             return self::SUCCESS;
         }
 
+        $year = now()->year;
         $sent = 0;
+        $skipped = 0;
         $failed = 0;
 
         foreach ($users as $user) {
+            $cacheKey = "spring_concert_nudge:{$year}:{$user->id}";
+
+            if (Cache::has($cacheKey)) {
+                $skipped++;
+
+                continue;
+            }
+
             try {
                 Mail::to($user)->queue(new SpringConcertProgramNudge($user));
+                Cache::put($cacheKey, true, now()->addYear());
                 $sent++;
             } catch (\Throwable $e) {
                 $this->error("Failed to queue for {$user->email}: {$e->getMessage()}");
@@ -53,7 +65,7 @@ class SendSpringConcertProgramNudge extends Command
             }
         }
 
-        $this->info("Spring concert program nudge queued: {$sent}, failed: {$failed}");
+        $this->info("Spring concert program nudge queued: {$sent}, skipped: {$skipped}, failed: {$failed}");
 
         return $failed > 0 ? self::FAILURE : self::SUCCESS;
     }

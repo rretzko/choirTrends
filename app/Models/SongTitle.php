@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
- * @property-read Pivot|null $pivot
+ * @property-read ProgramSongTitlePivot|null $pivot
+ * @property-read Artist|null $composer
  */
 class SongTitle extends Model
 {
