@@ -26,8 +26,8 @@ test('qr svg has substantial content for the program', function () {
 
     // SVG must have width/height attributes and path data (the QR matrix)
     expect($svg)->toContain('width="400"')
-                ->toContain('height="400"')
-                ->toContain('<path');
+        ->toContain('height="400"')
+        ->toContain('<path');
 });
 
 test('unpublished program returns 404 for qr endpoint', function () {

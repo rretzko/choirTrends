@@ -113,7 +113,7 @@ class Configure extends Component
         $dp = DigitalProgram::with(['program.school', 'program.ensembles'])->find($this->digitalProgramId);
 
         $program = $dp?->program;
-        $ensembles = $program?->ensembles ?? collect();
+        $ensembles = $program !== null ? $program->ensembles : collect();
 
         return view('livewire.digital-programs.configure', [
             'dp' => $dp,

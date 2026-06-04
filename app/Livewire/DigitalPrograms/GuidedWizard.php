@@ -10,6 +10,7 @@ use App\Models\DigitalProgramRoster;
 use App\Models\DigitalProgramSongSetting;
 use App\Models\Program;
 use App\Models\School;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use Livewire\Component;
 
@@ -23,6 +24,8 @@ class GuidedWizard extends Component
     public string $startChoice = ''; // 'existing' | 'new'
 
     public ?int $selectedProgramId = null;
+
+    public bool $editingExistingProgram = false;
 
     public string $newEventName = '';
 
@@ -53,6 +56,12 @@ class GuidedWizard extends Component
 
     public function previousStep(): void
     {
+        if ($this->editingExistingProgram) {
+            $this->editingExistingProgram = false;
+
+            return;
+        }
+
         if ($this->step > 1) {
             $this->step--;
         }
@@ -62,17 +71,46 @@ class GuidedWizard extends Component
 
     private function completeStep1(): void
     {
+        // Phase 1 (existing path only): validate selection, load into edit fields.
+        if ($this->startChoice === 'existing' && ! $this->editingExistingProgram) {
+            $this->validate([
+                'startChoice' => ['required', 'in:existing,new'],
+                'selectedProgramId' => ['required', 'integer', 'exists:programs,id'],
+            ]);
+
+            $program = Program::query()
+                ->where('id', $this->selectedProgramId)
+                ->where('user_id', auth()->id())
+                ->firstOrFail();
+
+            $this->newEventName = $program->event_name;
+            $this->newEventDate = Carbon::parse($program->event_date)->format('Y-m-d');
+            $this->newDirectorName = $program->director_name ?? '';
+            $this->newSchoolName = $program->school !== null ? $program->school->school_name : '';
+            $this->editingExistingProgram = true;
+
+            return;
+        }
+
+        // Phase 2: validate edit fields, persist, advance.
         $this->validate($this->step1Rules());
+
+        $school = School::firstOrCreate(['school_name' => trim($this->newSchoolName)]);
+        auth()->user()->schools()->syncWithoutDetaching([$school->id]);
 
         if ($this->startChoice === 'existing') {
             $program = Program::query()
                 ->where('id', $this->selectedProgramId)
                 ->where('user_id', auth()->id())
                 ->firstOrFail();
-        } else {
-            $school = School::firstOrCreate(['school_name' => trim($this->newSchoolName)]);
-            auth()->user()->schools()->syncWithoutDetaching([$school->id]);
 
+            $program->update([
+                'event_name' => trim($this->newEventName),
+                'event_date' => $this->newEventDate,
+                'director_name' => trim($this->newDirectorName),
+                'school_id' => $school->id,
+            ]);
+        } else {
             $program = Program::firstOrCreate(
                 [
                     'user_id' => auth()->id(),
@@ -198,15 +236,16 @@ class GuidedWizard extends Component
 
     private function step1Rules(): array
     {
-        $rules = ['startChoice' => ['required', 'in:existing,new']];
+        $rules = [
+            'startChoice' => ['required', 'in:existing,new'],
+            'newEventName' => ['required', 'string', 'max:255'],
+            'newEventDate' => ['required', 'date'],
+            'newDirectorName' => ['required', 'string', 'max:255'],
+            'newSchoolName' => ['required', 'string', 'max:255'],
+        ];
 
         if ($this->startChoice === 'existing') {
             $rules['selectedProgramId'] = ['required', 'integer', 'exists:programs,id'];
-        } else {
-            $rules['newEventName'] = ['required', 'string', 'max:255'];
-            $rules['newEventDate'] = ['required', 'date'];
-            $rules['newDirectorName'] = ['required', 'string', 'max:255'];
-            $rules['newSchoolName'] = ['required', 'string', 'max:255'];
         }
 
         return $rules;

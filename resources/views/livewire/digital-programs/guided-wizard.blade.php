@@ -34,94 +34,131 @@
 
         {{-- ── STEP 1: Program ── --}}
         @if($step === 1)
-            <div class="space-y-6">
-                <div>
-                    <flux:heading size="xl">{{ __('Choose a Program') }}</flux:heading>
-                    <flux:text class="mt-1">{{ __('Use an existing ChoirTrends program or start a brand new one.') }}</flux:text>
-                </div>
-
-                {{-- Choice cards --}}
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <button type="button" wire:click="$set('startChoice', 'existing')"
-                        class="flex flex-col gap-3 rounded-xl border-2 p-5 text-left transition
-                            {{ $startChoice === 'existing' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30' : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600' }}">
-                        <flux:icon.document-text class="size-8 text-blue-500" />
-                        <div>
-                            <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ __('Use an Existing Program') }}</div>
-                            <flux:text class="mt-1 text-sm">{{ __('Select a program you have already entered in ChoirTrends.') }}</flux:text>
-                        </div>
-                    </button>
-
-                    <button type="button" wire:click="$set('startChoice', 'new')"
-                        class="flex flex-col gap-3 rounded-xl border-2 p-5 text-left transition
-                            {{ $startChoice === 'new' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30' : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600' }}">
-                        <flux:icon.plus-circle class="size-8 text-emerald-500" />
-                        <div>
-                            <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ __('Start a New Program') }}</div>
-                            <flux:text class="mt-1 text-sm">{{ __('Enter event details now. You can add songs and ensembles in ChoirTrends afterward.') }}</flux:text>
-                        </div>
-                    </button>
-                </div>
-
-                {{-- Existing program selector --}}
-                @if($startChoice === 'existing')
-                    <div class="space-y-3">
-                        <flux:field>
-                            <flux:label>{{ __('Select a program') }}</flux:label>
-                            <select wire:model="selectedProgramId"
-                                class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100">
-                                <option value="">{{ __('— Choose a program —') }}</option>
-                                @foreach($userPrograms as $prog)
-                                    <option value="{{ $prog->id }}">
-                                        {{ $prog->event_name }} — {{ $prog->event_date->format('M j, Y') }}
-                                        @if($prog->school) ({{ $prog->school->school_name }}) @endif
-                                    </option>
-                                @endforeach
-                            </select>
-                            <flux:error name="selectedProgramId" />
-                        </flux:field>
-
-                        @if($userPrograms->isEmpty())
-                            <flux:callout icon="information-circle">
-                                <flux:callout.text>{{ __('You have no programs yet. Use "Start a New Program" or add programs via the Add Program page first.') }}</flux:callout.text>
-                            </flux:callout>
-                        @endif
+            @if($editingExistingProgram)
+                {{-- Step 1b: Edit the selected program's details --}}
+                <div class="space-y-6">
+                    <div>
+                        <flux:heading size="xl">{{ __('Confirm Program Details') }}</flux:heading>
+                        <flux:text class="mt-1">{{ __('Review and update the event details before continuing.') }}</flux:text>
                     </div>
-                @endif
 
-                {{-- New program fields --}}
-                @if($startChoice === 'new')
-                    <div class="space-y-4">
+                    <flux:field>
+                        <flux:label>{{ __('Event Name') }}</flux:label>
+                        <flux:input wire:model="newEventName" placeholder="{{ __('e.g. Spring Choral Concert') }}" />
+                        <flux:error name="newEventName" />
+                    </flux:field>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
                         <flux:field>
-                            <flux:label>{{ __('Event Name') }}</flux:label>
-                            <flux:input wire:model="newEventName" placeholder="{{ __('e.g. Spring Choral Concert') }}" />
-                            <flux:error name="newEventName" />
+                            <flux:label>{{ __('Event Date') }}</flux:label>
+                            <flux:input wire:model="newEventDate" type="date" />
+                            <flux:error name="newEventDate" />
                         </flux:field>
 
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <flux:field>
-                                <flux:label>{{ __('Event Date') }}</flux:label>
-                                <flux:input wire:model="newEventDate" type="date" />
-                                <flux:error name="newEventDate" />
-                            </flux:field>
-
-                            <flux:field>
-                                <flux:label>{{ __('Director Name') }}</flux:label>
-                                <flux:input wire:model="newDirectorName" placeholder="{{ __('e.g. Jane Smith') }}" />
-                                <flux:error name="newDirectorName" />
-                            </flux:field>
-                        </div>
-
                         <flux:field>
-                            <flux:label>{{ __('School Name') }}</flux:label>
-                            <flux:input wire:model="newSchoolName" placeholder="{{ __('e.g. Lincoln High School') }}" />
-                            <flux:error name="newSchoolName" />
+                            <flux:label>{{ __('Director Name') }}</flux:label>
+                            <flux:input wire:model="newDirectorName" placeholder="{{ __('e.g. Jane Smith') }}" />
+                            <flux:error name="newDirectorName" />
                         </flux:field>
                     </div>
-                @endif
 
-                <flux:error name="startChoice" />
-            </div>
+                    <flux:field>
+                        <flux:label>{{ __('School Name') }}</flux:label>
+                        <flux:input wire:model="newSchoolName" placeholder="{{ __('e.g. Lincoln High School') }}" />
+                        <flux:error name="newSchoolName" />
+                    </flux:field>
+                </div>
+            @else
+                {{-- Step 1a: Choose existing or new --}}
+                <div class="space-y-6">
+                    <div>
+                        <flux:heading size="xl">{{ __('Choose a Program') }}</flux:heading>
+                        <flux:text class="mt-1">{{ __('Use an existing ChoirTrends program or start a brand new one.') }}</flux:text>
+                    </div>
+
+                    {{-- Choice cards --}}
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <button type="button" wire:click="$set('startChoice', 'existing')"
+                            class="flex flex-col gap-3 rounded-xl border-2 p-5 text-left transition
+                                {{ $startChoice === 'existing' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30' : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600' }}">
+                            <flux:icon.document-text class="size-8 text-blue-500" />
+                            <div>
+                                <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ __('Use an Existing Program') }}</div>
+                                <flux:text class="mt-1 text-sm">{{ __('Select a program you have already entered in ChoirTrends.') }}</flux:text>
+                            </div>
+                        </button>
+
+                        <button type="button" wire:click="$set('startChoice', 'new')"
+                            class="flex flex-col gap-3 rounded-xl border-2 p-5 text-left transition
+                                {{ $startChoice === 'new' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30' : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600' }}">
+                            <flux:icon.plus-circle class="size-8 text-emerald-500" />
+                            <div>
+                                <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ __('Start a New Program') }}</div>
+                                <flux:text class="mt-1 text-sm">{{ __('Enter event details now. You can add songs and ensembles in ChoirTrends afterward.') }}</flux:text>
+                            </div>
+                        </button>
+                    </div>
+
+                    {{-- Existing program selector --}}
+                    @if($startChoice === 'existing')
+                        <div class="space-y-3">
+                            <flux:field>
+                                <flux:label>{{ __('Select a program') }}</flux:label>
+                                <select wire:model="selectedProgramId"
+                                    class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100">
+                                    <option value="">{{ __('— Choose a program —') }}</option>
+                                    @foreach($userPrograms as $prog)
+                                        <option value="{{ $prog->id }}">
+                                            {{ $prog->event_name }} — {{ $prog->event_date->format('M j, Y') }}
+                                            @if($prog->school) ({{ $prog->school->school_name }}) @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <flux:error name="selectedProgramId" />
+                            </flux:field>
+
+                            @if($userPrograms->isEmpty())
+                                <flux:callout icon="information-circle">
+                                    <flux:callout.text>{{ __('You have no programs yet. Use "Start a New Program" or add programs via the Add Program page first.') }}</flux:callout.text>
+                                </flux:callout>
+                            @endif
+                        </div>
+                    @endif
+
+                    {{-- New program fields --}}
+                    @if($startChoice === 'new')
+                        <div class="space-y-4">
+                            <flux:field>
+                                <flux:label>{{ __('Event Name') }}</flux:label>
+                                <flux:input wire:model="newEventName" placeholder="{{ __('e.g. Spring Choral Concert') }}" />
+                                <flux:error name="newEventName" />
+                            </flux:field>
+
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <flux:field>
+                                    <flux:label>{{ __('Event Date') }}</flux:label>
+                                    <flux:input wire:model="newEventDate" type="date" />
+                                    <flux:error name="newEventDate" />
+                                </flux:field>
+
+                                <flux:field>
+                                    <flux:label>{{ __('Director Name') }}</flux:label>
+                                    <flux:input wire:model="newDirectorName" placeholder="{{ __('e.g. Jane Smith') }}" />
+                                    <flux:error name="newDirectorName" />
+                                </flux:field>
+                            </div>
+
+                            <flux:field>
+                                <flux:label>{{ __('School Name') }}</flux:label>
+                                <flux:input wire:model="newSchoolName" placeholder="{{ __('e.g. Lincoln High School') }}" />
+                                <flux:error name="newSchoolName" />
+                            </flux:field>
+                        </div>
+                    @endif
+
+                    <flux:error name="startChoice" />
+                </div>
+            @endif
         @endif
 
         {{-- ── STEP 2: Style ── --}}
@@ -188,19 +225,19 @@
 
                 <flux:field>
                     <flux:label>{{ __("Director's Welcome Message") }}</flux:label>
-                    <flux:textarea wire:model="welcomeMessage" rows="5"
+                    <flux:editor wire:model="welcomeMessage"
                         placeholder="{{ __('A brief welcome or note to the audience from the director...') }}" />
                 </flux:field>
 
                 <flux:field>
                     <flux:label>{{ __('Acknowledgments') }}</flux:label>
-                    <flux:textarea wire:model="acknowledgments" rows="4"
+                    <flux:editor wire:model="acknowledgments"
                         placeholder="{{ __('Thank you to parents, staff, accompanists, and volunteers...') }}" />
                 </flux:field>
 
                 <flux:field>
                     <flux:label>{{ __('Sponsors & Patrons') }}</flux:label>
-                    <flux:textarea wire:model="sponsorText" rows="3"
+                    <flux:editor wire:model="sponsorText"
                         placeholder="{{ __('Recognize sponsors, boosters, or patron donors...') }}" />
                 </flux:field>
 
@@ -396,7 +433,7 @@
 
     {{-- ── Navigation buttons ── --}}
     <div class="flex items-center justify-between">
-        @if($step > 1)
+        @if($step > 1 || $editingExistingProgram)
             <flux:button wire:click="previousStep" variant="subtle" icon="arrow-left">{{ __('Back') }}</flux:button>
         @else
             <div></div>

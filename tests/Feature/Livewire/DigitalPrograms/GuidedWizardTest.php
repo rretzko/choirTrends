@@ -42,7 +42,7 @@ test('step 1 requires startChoice', function () {
         ->assertSet('step', 1);
 });
 
-test('step 1 with existing program creates a digital program', function () {
+test('step 1 with existing program shows edit sub-step on first next', function () {
     $user = User::factory()->create();
     $school = School::factory()->create();
     $program = Program::factory()->for($user)->for($school)->create();
@@ -53,10 +53,67 @@ test('step 1 with existing program creates a digital program', function () {
         ->set('startChoice', 'existing')
         ->set('selectedProgramId', $program->id)
         ->call('nextStep')
+        ->assertSet('editingExistingProgram', true)
+        ->assertSet('step', 1)
+        ->assertSet('newEventName', $program->event_name);
+});
+
+test('step 1 with existing program creates a digital program', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(GuidedWizard::class)
+        ->set('startChoice', 'existing')
+        ->set('selectedProgramId', $program->id)
+        ->set('editingExistingProgram', true)
+        ->set('newEventName', $program->event_name)
+        ->set('newEventDate', $program->event_date->format('Y-m-d'))
+        ->set('newDirectorName', $program->director_name ?? '')
+        ->set('newSchoolName', $school->school_name)
+        ->call('nextStep')
         ->assertSet('step', 2)
         ->assertSet('resolvedProgramId', $program->id);
 
     expect(DigitalProgram::where('program_id', $program->id)->where('user_id', $user->id)->exists())->toBeTrue();
+});
+
+test('step 1 with existing program updates program details on confirm', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(GuidedWizard::class)
+        ->set('startChoice', 'existing')
+        ->set('selectedProgramId', $program->id)
+        ->set('editingExistingProgram', true)
+        ->set('newEventName', 'Updated Concert')
+        ->set('newEventDate', '2026-08-01')
+        ->set('newDirectorName', 'New Director')
+        ->set('newSchoolName', $school->school_name)
+        ->call('nextStep')
+        ->assertSet('step', 2);
+
+    expect($program->fresh()->event_name)->toBe('Updated Concert');
+    expect($program->fresh()->director_name)->toBe('New Director');
+});
+
+test('previous step from edit sub-step returns to selection', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(GuidedWizard::class)
+        ->set('step', 1)
+        ->set('startChoice', 'existing')
+        ->set('editingExistingProgram', true)
+        ->call('previousStep')
+        ->assertSet('editingExistingProgram', false)
+        ->assertSet('step', 1);
 });
 
 test('step 1 existing program requires a selected program id', function () {
