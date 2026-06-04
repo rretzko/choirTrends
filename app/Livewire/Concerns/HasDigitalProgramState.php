@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Concerns;
 
+use App\Models\DigitalProgram;
 use App\Models\DigitalProgramHonor;
 use App\Models\DigitalProgramRoster;
 use App\Models\Program;
@@ -223,6 +224,72 @@ trait HasDigitalProgramState
                     $roster->honors()->attach($honorIds);
                 }
             }
+        }
+    }
+
+    // ─── Load-from-existing helpers (used by Configure component) ────────────
+
+    protected function loadExistingSongSettings(DigitalProgram $dp): void
+    {
+        if (! $dp->program_id) {
+            $this->songSettings = [];
+
+            return;
+        }
+
+        $this->initializeSongSettings($dp->program_id);
+
+        $existing = $dp->songSettings->keyBy('song_title_id');
+
+        foreach ($this->songSettings as &$setting) {
+            if ($existing->has($setting['songTitleId'])) {
+                $setting['showLyrics'] = (bool) $existing[$setting['songTitleId']]->show_lyrics;
+            }
+        }
+    }
+
+    protected function loadExistingRosterAndHonors(DigitalProgram $dp): void
+    {
+        $dp->load(['honors', 'rosters.honors']);
+
+        if ($dp->program_id) {
+            $this->initializeRosterData($dp->program_id);
+        }
+
+        // Populate honors from DB (initializeRosterData already seeded empty arrays)
+        foreach ($dp->honors as $honor) {
+            $key = (string) ($honor->ensemble_id ?? 'general');
+            $this->honors[$key][] = ['label' => $honor->label];
+        }
+
+        // Build honor DB id → array index map per ensemble key
+        $honorIdToIndex = [];
+
+        foreach ($dp->honors->groupBy(fn ($h) => (string) ($h->ensemble_id ?? 'general')) as $key => $honors) {
+            foreach ($honors->values() as $idx => $honor) {
+                $honorIdToIndex[$honor->id] = $idx;
+            }
+        }
+
+        // Populate rosters from DB
+        foreach ($dp->rosters as $roster) {
+            $key = (string) ($roster->ensemble_id ?? 'general');
+
+            if (! isset($this->rosters[$key])) {
+                $this->rosters[$key] = [];
+            }
+
+            $honorIndexes = $roster->honors
+                ->map(fn ($h) => $honorIdToIndex[$h->id] ?? null)
+                ->filter(fn ($i) => $i !== null)
+                ->values()
+                ->all();
+
+            $this->rosters[$key][] = [
+                'student_name' => $roster->student_name,
+                'voice_part' => $roster->voice_part ?? '',
+                'honorIndexes' => $honorIndexes,
+            ];
         }
     }
 

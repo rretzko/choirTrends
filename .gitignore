@@ -26,3 +26,6 @@ yarn-error.log
 /.vscode
 /.zed
 /.env.production.backup
+
+tests/Browser/Screenshots
+tests/Browser/screenshots

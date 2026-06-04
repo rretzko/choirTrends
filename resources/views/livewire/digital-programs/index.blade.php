@@ -134,6 +134,16 @@
                             {{-- Right: actions --}}
                             <div class="flex shrink-0 flex-wrap items-center gap-2">
 
+                                {{-- Edit / configure --}}
+                                <flux:button
+                                    :href="route('digital-programs.configure', $dp)"
+                                    variant="subtle"
+                                    size="sm"
+                                    icon="pencil-square"
+                                    wire:navigate>
+                                    {{ __('Edit') }}
+                                </flux:button>
+
                                 {{-- View public page --}}
                                 @if($dp->is_published)
                                     <flux:button

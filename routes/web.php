@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AddProgramController;
 use App\Http\Controllers\DigitalProgramPublicController;
+use App\Http\Controllers\DigitalProgramQrController;
 use App\Http\Controllers\FounderAddProgramController;
 use App\Http\Controllers\QuickTipUnsubscribeController;
 use App\Http\Controllers\SheetMusicController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\VideoController;
 use App\Http\Middleware\EnsureUserIsFounder;
 use App\Http\Middleware\EnsureUserIsFounderOrImpersonating;
 use App\Livewire\Catalog\Index;
+use App\Livewire\DigitalPrograms\Configure;
 use App\Livewire\DigitalPrograms\GuidedWizard;
 use App\Livewire\DigitalPrograms\PowerUserForm;
 use App\Livewire\Ensembles\Edit;
@@ -51,6 +53,10 @@ Route::get('survey/{user}', Show::class)
 // Public digital program view (no auth — slug-based)
 Route::get('p/{slug}', DigitalProgramPublicController::class)
     ->name('program.public');
+
+// Standalone QR code SVG for large-format display (projectors, print materials)
+Route::get('p/{slug}/qr.svg', DigitalProgramQrController::class)
+    ->name('program.qr');
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -93,6 +99,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', App\Livewire\DigitalPrograms\Index::class)->name('index');
         Route::get('create/guided', GuidedWizard::class)->name('create.guided');
         Route::get('create/pro', PowerUserForm::class)->name('create.pro');
+        Route::get('/{digitalProgram}/configure', Configure::class)->name('configure');
     });
 
     Route::get('add-program', [AddProgramController::class, 'index'])->name('addProgram');

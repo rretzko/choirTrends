@@ -416,16 +416,29 @@
                     {{ url('/p/' . $dp->slug) }}
                 </p>
 
-                <button onclick="window.print()"
-                    class="no-print inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-80"
-                    style="background: var(--dp-surface2); color: var(--dp-text); border: 1px solid var(--dp-border);">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                    </svg>
-                    {{ __('Print Program') }}
-                </button>
+                <div class="no-print flex flex-wrap gap-2">
+                    <button onclick="window.print()"
+                        class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-80"
+                        style="background: var(--dp-surface2); color: var(--dp-text); border: 1px solid var(--dp-border);">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        {{ __('Print Program') }}
+                    </button>
+
+                    <a href="{{ route('program.qr', $dp->slug) }}" target="_blank"
+                        class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-80"
+                        style="background: var(--dp-surface2); color: var(--dp-text); border: 1px solid var(--dp-border);">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 3.5V16M4 4h4v4H4V4zm12 0h4v4h-4V4zM4 16h4v4H4v-4z"/>
+                        </svg>
+                        {{ __('Large QR Code') }}
+                    </a>
+                </div>
             </div>
         </div>
 
