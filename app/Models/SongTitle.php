@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property-read ProgramSongTitlePivot|null $pivot
  * @property-read Artist|null $composer
+ * @property-read Artist|null $arranger
  */
 class SongTitle extends Model
 {
