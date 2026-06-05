@@ -1,6 +1,12 @@
 <div>
-    <div class="mb-6">
+    <div class="mb-6 flex items-center justify-between gap-4">
         <flux:heading size="xl">{{ __('Edit Program') }}</flux:heading>
+        @if($digitalProgram)
+            <flux:button href="{{ route('digital-programs.configure', $digitalProgram) }}#songs"
+                variant="subtle" size="sm" icon="musical-note">
+                {{ __('Digital Program: Song Settings') }}
+            </flux:button>
+        @endif
     </div>
 
     <form wire:submit="save" class="space-y-6">
@@ -209,9 +215,15 @@
             </flux:button>
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex flex-wrap items-center gap-4">
             <flux:button type="submit" variant="primary">{{ __('Save Changes') }}</flux:button>
             <flux:button href="{{ route('programs.index') }}" variant="ghost">{{ __('Cancel') }}</flux:button>
+            @if($digitalProgram)
+                <flux:button href="{{ route('digital-programs.configure', $digitalProgram) }}#songs"
+                    variant="subtle" icon="musical-note">
+                    {{ __('Digital Program: Song Settings') }}
+                </flux:button>
+            @endif
         </div>
     </form>
 

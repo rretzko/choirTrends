@@ -6,6 +6,7 @@ use App\Models\DigitalProgram;
 use App\Models\DigitalProgramHonor;
 use App\Models\DigitalProgramRoster;
 use App\Models\DigitalProgramSongSetting;
+use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
@@ -191,25 +192,18 @@ test('save updates song settings in database', function () {
     $user = User::factory()->create();
     $school = School::factory()->create();
     $program = Program::factory()->for($user)->for($school)->create();
-    $song = SongTitle::factory()->create();
-    $program->songTitles()->attach($song->id, ['sort_order' => 1, 'ensemble_sort_order' => 1]);
+    $ensemble = Ensemble::factory()->for($school)->create();
+    $song = SongTitle::factory()->create(['song_title' => 'Ave Maria']);
+    $program->songTitles()->attach($song->id, ['ensemble_id' => $ensemble->id, 'sort_order' => 1]);
 
     $dp = DigitalProgram::factory()->for($user)->create(['program_id' => $program->id]);
-    DigitalProgramSongSetting::create([
-        'digital_program_id' => $dp->id,
-        'song_title_id' => $song->id,
-        'show_lyrics' => false,
-    ]);
 
     $this->actingAs($user);
 
     Livewire::test(Configure::class, ['digitalProgram' => $dp])
-        ->set('songSettings', [[
-            'songTitleId' => $song->id,
-            'title' => 'Ave Maria',
-            'composer' => '',
-            'hasLyrics' => true,
-            'showLyrics' => true,
+        ->set('wizardEnsembles', [['id' => $ensemble->id, 'name' => $ensemble->ensemble_name, 'type' => 'Satb']])
+        ->set('ensembleSongs', [[
+            ['songTitleId' => $song->id, 'title' => 'Ave Maria', 'composer' => '', 'arranger' => '', 'showLyrics' => true],
         ]])
         ->set('lyricsCopyrightAcknowledged', true)
         ->call('save', false);

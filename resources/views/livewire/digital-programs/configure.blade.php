@@ -129,51 +129,152 @@
 
             {{-- ═══════════ SONGS ═══════════ --}}
             <section id="songs">
-                <flux:heading size="lg" class="mb-1">{{ __('Song Settings') }}</flux:heading>
-                <flux:text class="mb-5 text-sm">{{ __('Choose which songs show lyrics on the public program.') }}</flux:text>
-
-                @if(empty($songSettings))
-                    <flux:callout variant="warning" icon="information-circle">
-                        <flux:callout.text>{{ __('No songs found. Songs are added via the Edit Program page.') }}</flux:callout.text>
-                    </flux:callout>
-                @else
-                    <div class="space-y-3">
-                        @foreach($songSettings as $si => $setting)
-                            <div class="flex items-center justify-between rounded-xl border border-zinc-200 px-4 py-3 dark:border-zinc-700">
-                                <div>
-                                    <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $setting['title'] }}</p>
-                                    @if($setting['composer'])
-                                        <p class="text-xs text-zinc-400">{{ $setting['composer'] }}</p>
-                                    @endif
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    @if($setting['hasLyrics'])
-                                        <flux:switch
-                                            wire:model.live="songSettings.{{ $si }}.showLyrics"
-                                            label="{{ __('Show lyrics') }}" />
-                                    @else
-                                        <span class="text-xs text-zinc-400">{{ __('No lyrics on file') }}</span>
-                                    @endif
-                                </div>
-                            </div>
-                        @endforeach
+                <div class="mb-5 flex items-start justify-between gap-4">
+                    <div>
+                        <flux:heading size="lg" class="mb-1">{{ __('Song Settings') }}</flux:heading>
+                        <flux:text class="text-sm">{{ __('Manage songs per ensemble and toggle lyric display.') }}</flux:text>
                     </div>
+                    <flux:button wire:click="toggleEditSongs" size="sm" variant="subtle"
+                        icon="{{ $editingSongs ? 'check' : 'pencil-square' }}" class="shrink-0">
+                        {{ $editingSongs ? __('Done Editing') : __('Edit Songs') }}
+                    </flux:button>
+                </div>
 
-                    @if($this->anyLyricsEnabled())
-                        <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
-                            <div class="flex items-start gap-3">
-                                <input type="checkbox" wire:model.live="lyricsCopyrightAcknowledged"
-                                    id="lyrics_ack_edit"
-                                    class="mt-0.5 size-4 rounded border-zinc-300 text-blue-600">
-                                <label for="lyrics_ack_edit" class="text-sm text-amber-900 dark:text-amber-200">
-                                    {{ __('I confirm that I have the rights or a valid license to display these lyrics publicly on this program.') }}
-                                </label>
-                            </div>
-                            @error('lyricsCopyrightAcknowledged')
-                                <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
-                            @enderror
+                @if(! $editingSongs)
+                    {{-- ── Read-only grouped view ── --}}
+                    @php
+                        $settingsMap = collect($songSettings)->keyBy('songTitleId');
+                        $songIndexMap = [];
+                        foreach ($ensembleSongs as $ensIdx => $eSongs) {
+                            foreach ($eSongs as $songIdx => $s) {
+                                if (! empty($s['songTitleId'])) {
+                                    $songIndexMap[$s['songTitleId']] = [$ensIdx, $songIdx];
+                                }
+                            }
+                        }
+                    @endphp
+
+                    @if($ensembles->isEmpty() && empty($songSettings))
+                        <flux:callout variant="warning" icon="information-circle">
+                            <flux:callout.text>{{ __('No songs found. Use "Edit Songs" to add songs and ensembles.') }}</flux:callout.text>
+                        </flux:callout>
+                    @else
+                        <div class="space-y-6">
+                            @foreach($ensembles as $ensemble)
+                                @php $list = $songsByEnsemble[(string) $ensemble->id] ?? []; @endphp
+                                @if(count($list))
+                                    <div>
+                                        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                                            {{ $ensemble->ensemble_name }}
+                                        </p>
+                                        <div class="space-y-2">
+                                            @foreach($list as $song)
+                                                @php
+                                                    $setting = $settingsMap[$song->id] ?? null;
+                                                    $idxPair = $songIndexMap[$song->id] ?? null;
+                                                @endphp
+                                                <div class="flex items-center justify-between rounded-xl border border-zinc-200 px-4 py-3 dark:border-zinc-700">
+                                                    <div>
+                                                        <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $song->song_title }}</p>
+                                                        @if($song->composer || $song->arranger)
+                                                            <p class="text-xs text-zinc-400">
+                                                                {{ $song->composer?->artist_name }}
+                                                                @if($song->composer && $song->arranger) · @endif
+                                                                @if($song->arranger) arr. {{ $song->arranger->artist_name }} @endif
+                                                            </p>
+                                                        @endif
+                                                    </div>
+                                                    <div class="shrink-0">
+                                                        @if($setting && $setting['hasLyrics'] && $idxPair)
+                                                            <flux:switch
+                                                                wire:model.live="ensembleSongs.{{ $idxPair[0] }}.{{ $idxPair[1] }}.showLyrics"
+                                                                label="{{ __('Show lyrics') }}" />
+                                                        @elseif($setting)
+                                                            <span class="text-xs text-zinc-400">{{ __('No lyrics on file') }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
                         </div>
                     @endif
+                @else
+                    {{-- ── Edit mode ── --}}
+                    @if(count($wizardEnsembles) === 0)
+                        <flux:callout icon="information-circle">
+                            <flux:callout.text>{{ __('No ensembles found. Add ensembles to this program first.') }}</flux:callout.text>
+                        </flux:callout>
+                    @else
+                        <div class="space-y-8">
+                            @foreach($wizardEnsembles as $ensIdx => $ens)
+                                <div wire:key="edit-ens-{{ $ensIdx }}">
+                                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                                        {{ $ens['name'] }}
+                                    </p>
+
+                                    @if(! empty($ensembleSongs[$ensIdx] ?? []))
+                                        <div class="mb-3 divide-y divide-zinc-100 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-700">
+                                            @foreach($ensembleSongs[$ensIdx] as $songIdx => $song)
+                                                <div wire:key="edit-song-{{ $ensIdx }}-{{ $songIdx }}" class="p-3 space-y-2"
+                                                    x-on:focus-song-title.window="
+                                                        if ($event.detail.ensembleIndex == {{ $ensIdx }} && $event.detail.songIndex == {{ $songIdx }})
+                                                            $nextTick(() => $el.querySelector('input')?.focus())
+                                                    ">
+                                                    <div class="grid items-center gap-3 sm:grid-cols-[1fr_1fr_1fr_auto_auto_auto_auto]">
+                                                        <flux:input wire:model.blur="ensembleSongs.{{ $ensIdx }}.{{ $songIdx }}.title"
+                                                            placeholder="{{ __('Song title') }}" />
+                                                        <flux:input wire:model.blur="ensembleSongs.{{ $ensIdx }}.{{ $songIdx }}.composer"
+                                                            placeholder="{{ __('Composer (optional)') }}" />
+                                                        <flux:input wire:model.blur="ensembleSongs.{{ $ensIdx }}.{{ $songIdx }}.arranger"
+                                                            placeholder="{{ __('Arranger (optional)') }}" />
+                                                        <flux:switch wire:model.live="ensembleSongs.{{ $ensIdx }}.{{ $songIdx }}.showLyrics"
+                                                            label="{{ __('Lyrics') }}" />
+                                                        @if($songIdx > 0)
+                                                            <flux:button wire:click="moveSongRowUp({{ $ensIdx }}, {{ $songIdx }})" variant="subtle" size="sm" icon="chevron-up" title="{{ __('Move up') }}" />
+                                                        @else
+                                                            <div></div>
+                                                        @endif
+                                                        @if($songIdx < count($ensembleSongs[$ensIdx]) - 1)
+                                                            <flux:button wire:click="moveSongRowDown({{ $ensIdx }}, {{ $songIdx }})" variant="subtle" size="sm" icon="chevron-down" title="{{ __('Move down') }}" />
+                                                        @else
+                                                            <div></div>
+                                                        @endif
+                                                        <flux:button wire:click="removeSongRow({{ $ensIdx }}, {{ $songIdx }})"
+                                                            variant="subtle" size="sm" icon="trash" />
+                                                    </div>
+                                                    <flux:input wire:model.blur="ensembleSongs.{{ $ensIdx }}.{{ $songIdx }}.programNotes"
+                                                        placeholder="{{ __('Program notes — soloists, accompanists, guest conductors… (optional)') }}" />
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    <flux:button wire:click="addSongRow({{ $ensIdx }})" variant="subtle" size="sm" icon="plus">
+                                        {{ __('Add Song') }}
+                                    </flux:button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                @endif
+
+                @if($this->anyLyricsEnabled())
+                    <div class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
+                        <div class="flex items-start gap-3">
+                            <input type="checkbox" wire:model.live="lyricsCopyrightAcknowledged"
+                                id="lyrics_ack_edit"
+                                class="mt-0.5 size-4 rounded border-zinc-300 text-blue-600">
+                            <label for="lyrics_ack_edit" class="text-sm text-amber-900 dark:text-amber-200">
+                                {{ __('I confirm that I have the rights or a valid license to display these lyrics publicly on this program.') }}
+                            </label>
+                        </div>
+                        @error('lyricsCopyrightAcknowledged')
+                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
                 @endif
             </section>
 

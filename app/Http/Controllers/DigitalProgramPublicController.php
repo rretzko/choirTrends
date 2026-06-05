@@ -79,6 +79,12 @@ class DigitalProgramPublicController extends Controller
             ]);
         }
 
+        // ── Per-song program notes ───────────────────────────────────────────
+        $notesBySongId = $dp->songSettings
+            ->whereNotNull('program_notes')
+            ->pluck('program_notes', 'song_title_id')
+            ->all();
+
         // ── Lyrics for enabled songs ─────────────────────────────────────────
         $showLyricsSongIds = $dp->songSettings
             ->where('show_lyrics', true)
@@ -109,6 +115,7 @@ class DigitalProgramPublicController extends Controller
             'honorsByEnsemble',
             'showLyricsSongIds',
             'lyricsBySongId',
+            'notesBySongId',
             'qrCode',
             'themeStyle',
         ));

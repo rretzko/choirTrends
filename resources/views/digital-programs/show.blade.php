@@ -195,8 +195,8 @@
                 style="color: var(--dp-section-lbl);">
                 {{ __('A Note from the Director') }}
             </h2>
-            <div class="text-base leading-relaxed whitespace-pre-line"
-                style="color: var(--dp-text);">{{ $dp->welcome_message }}</div>
+            <div class="text-base leading-relaxed"
+                style="color: var(--dp-text);">{!! $dp->welcome_message !!}</div>
         </section>
     @endif
 
@@ -240,36 +240,36 @@
                 @foreach($songs as $si => $song)
                     <li class="song-item relative pl-0">
 
-                        {{-- Song number + title row --}}
-                        <div class="flex items-baseline gap-3">
-                            <span class="shrink-0 text-sm font-bold tabular-nums"
-                                style="color: var(--dp-text-muted); min-width: 1.5rem;">
-                                {{ $si + 1 }}.
-                            </span>
-                            <h3 class="text-lg font-semibold leading-snug"
-                                style="color: var(--dp-song-title);">
-                                {{ $song->song_title }}
-                            </h3>
-                        </div>
-
-                        {{-- Composer / Arranger --}}
+                        {{-- Song number + title + composer/arranger on one row --}}
                         @php
                             $credits = [];
                             if ($song->composer) $credits[] = $song->composer->artist_name;
                             if ($song->arranger) $credits[] = 'arr. ' . $song->arranger->artist_name;
                         @endphp
-                        @if(!empty($credits))
-                            <p class="mt-1 ml-9 text-sm" style="color: var(--dp-text-muted);">
-                                {{ implode(' / ', $credits) }}
-                            </p>
-                        @endif
-
-                        {{-- Program notes --}}
-                        @if(!empty($song->pivot->notes))
-                            <div class="mt-2 ml-9 text-sm italic leading-relaxed"
-                                style="color: var(--dp-text-muted);">
-                                {!! $song->pivot->notes !!}
+                        <div class="flex items-baseline gap-3">
+                            <span class="shrink-0 text-sm font-bold tabular-nums"
+                                style="color: var(--dp-text-muted); min-width: 1.5rem;">
+                                {{ $si + 1 }}.
+                            </span>
+                            <div class="flex flex-wrap items-baseline gap-x-2">
+                                <h3 class="text-lg font-semibold leading-snug"
+                                    style="color: var(--dp-song-title);">
+                                    {{ $song->song_title }}
+                                </h3>
+                                @if(!empty($credits))
+                                    <span class="text-sm" style="color: var(--dp-text-muted);">
+                                        {{ implode(' / ', $credits) }}
+                                    </span>
+                                @endif
                             </div>
+                        </div>
+
+                        {{-- Program notes: soloists, accompanists, guest conductors, etc. --}}
+                        @if(!empty($notesBySongId[$song->id] ?? null))
+                            <p class="mt-1 ml-9 text-sm italic leading-relaxed"
+                                style="color: var(--dp-text-muted);">
+                                {{ $notesBySongId[$song->id] }}
+                            </p>
                         @endif
 
                         {{-- Lyrics (if enabled and available) --}}
@@ -365,8 +365,8 @@
                 style="color: var(--dp-section-lbl);">
                 {{ __('Acknowledgments') }}
             </h2>
-            <div class="text-sm leading-relaxed whitespace-pre-line"
-                style="color: var(--dp-text);">{{ $dp->acknowledgments }}</div>
+            <div class="text-sm leading-relaxed"
+                style="color: var(--dp-text);">{!! $dp->acknowledgments !!}</div>
         </section>
     @endif
 
@@ -378,8 +378,8 @@
                 style="color: var(--dp-section-lbl);">
                 {{ __('Sponsors & Patrons') }}
             </h2>
-            <div class="text-sm leading-relaxed whitespace-pre-line"
-                style="color: var(--dp-text);">{{ $dp->sponsor_text }}</div>
+            <div class="text-sm leading-relaxed"
+                style="color: var(--dp-text);">{!! $dp->sponsor_text !!}</div>
         </section>
     @endif
 

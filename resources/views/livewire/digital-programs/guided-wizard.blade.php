@@ -2,7 +2,7 @@
 
     {{-- ── Step indicator ── --}}
     <div class="flex items-center justify-between">
-        @foreach(['Program', 'Style', 'Content', 'Songs', 'Roster', 'Publish'] as $i => $label)
+        @foreach(['Program', 'Style', 'Content', 'Ensembles', 'Songs', 'Roster', 'Publish'] as $i => $label)
             <div class="flex flex-1 items-center">
                 <div class="flex flex-col items-center gap-1">
                     <div class="flex size-8 items-center justify-center rounded-full text-xs font-bold
@@ -22,12 +22,37 @@
                         {{ $label }}
                     </span>
                 </div>
-                @if($i < 5)
+                @if($i < 6)
                     <div class="mx-1 h-px flex-1 @if($step > $i + 1) bg-green-400 dark:bg-green-700 @else bg-zinc-300 dark:bg-zinc-600 @endif"></div>
                 @endif
             </div>
         @endforeach
     </div>
+
+    {{-- ── Navigation buttons (top) ── --}}
+    <div class="flex items-center justify-between">
+        @if($step > 1 || $editingExistingProgram)
+            <flux:button wire:click="previousStep" variant="subtle" icon="arrow-left">{{ __('Back') }}</flux:button>
+        @else
+            <div></div>
+        @endif
+
+        @if($step < 7)
+            <flux:button wire:click="nextStep" variant="primary" icon-trailing="arrow-right">{{ __('Next') }}</flux:button>
+        @else
+            <div class="flex gap-3">
+                <flux:button wire:click="saveDraft" variant="subtle">{{ __('Save as Draft') }}</flux:button>
+                <flux:button wire:click="publish" variant="primary" icon="check">{{ __('Publish') }}</flux:button>
+            </div>
+        @endif
+    </div>
+
+    {{-- ── Save reminder ── --}}
+    @if($step < 7)
+        <flux:callout icon="exclamation-circle" color="amber">
+            <flux:callout.text>{{ __('Reminder: Changes on this page are saved only when you click the "Next" button.') }}</flux:callout.text>
+        </flux:callout>
+    @endif
 
     {{-- ── Step content ── --}}
     <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
@@ -94,7 +119,7 @@
                             <flux:icon.plus-circle class="size-8 text-emerald-500" />
                             <div>
                                 <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ __('Start a New Program') }}</div>
-                                <flux:text class="mt-1 text-sm">{{ __('Enter event details now. You can add songs and ensembles in ChoirTrends afterward.') }}</flux:text>
+                                <flux:text class="mt-1 text-sm">{{ __('Enter event details now and build ensembles and songs in the next steps.') }}</flux:text>
                             </div>
                         </button>
                     </div>
@@ -259,61 +284,202 @@
             </div>
         @endif
 
-        {{-- ── STEP 4: Songs / Lyrics ── --}}
+        {{-- ── STEP 4: Ensembles ── --}}
         @if($step === 4)
             <div class="space-y-6">
                 <div>
-                    <flux:heading size="xl">{{ __('Song Settings') }}</flux:heading>
-                    <flux:text class="mt-1">{{ __('Optionally display lyrics inline for any song that has lyrics stored in ChoirTrends.') }}</flux:text>
+                    <flux:heading size="xl">{{ __('Ensembles') }}</flux:heading>
+                    <flux:text class="mt-1">{{ __('Select or create the ensembles that will perform in this program. Ensembles are optional — you can continue without them.') }}</flux:text>
                 </div>
 
-                @if(empty($songSettings))
-                    <flux:callout icon="information-circle">
-                        <flux:callout.text>{{ __('No songs are linked to this program yet. You can add songs via the Edit Program page and return here later.') }}</flux:callout.text>
-                    </flux:callout>
-                @else
-                    <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
-                        @foreach($songSettings as $si => $setting)
-                            <div class="flex items-center justify-between py-3" wire:key="song-{{ $si }}">
-                                <div>
-                                    <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $setting['title'] }}</div>
-                                    @if($setting['composer'])
-                                        <div class="text-sm text-zinc-500 dark:text-zinc-400">{{ $setting['composer'] }}</div>
-                                    @endif
-                                </div>
-                                <div class="flex items-center gap-3 shrink-0">
-                                    @if($setting['hasLyrics'])
-                                        <flux:switch wire:model.live="songSettings.{{ $si }}.showLyrics" label="{{ __('Show lyrics') }}" />
+                {{-- School ensembles to pick from --}}
+                @if($schoolEnsembles->isNotEmpty())
+                    <div class="-mx-6 rounded-xl bg-zinc-50 px-6 py-4 dark:bg-zinc-800/50">
+                        <flux:text class="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ __("Your School's Ensembles") }}</flux:text>
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            @foreach($schoolEnsembles as $ens)
+                                @php $alreadyAdded = collect($wizardEnsembles)->contains('id', $ens->id); @endphp
+                                <button type="button"
+                                    wire:click="{{ $alreadyAdded ? '' : 'addSelectedEnsemble(' . $ens->id . ')' }}"
+                                    class="flex items-center justify-between rounded-xl border-2 px-4 py-3 text-left transition
+                                        {{ $alreadyAdded
+                                            ? 'border-blue-400 bg-blue-50 dark:border-blue-700 dark:bg-blue-950/30 cursor-default'
+                                            : 'border-zinc-200 hover:border-blue-300 dark:border-zinc-700 dark:hover:border-blue-600 cursor-pointer' }}">
+                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $ens->ensemble_name }}</span>
+                                    @if($alreadyAdded)
+                                        <flux:icon.check class="size-4 text-blue-500" />
                                     @else
-                                        <flux:text class="text-xs text-zinc-400">{{ __('No lyrics stored') }}</flux:text>
+                                        <flux:icon.plus class="size-4 text-zinc-400" />
                                     @endif
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="-mx-6 border-b border-zinc-200 dark:border-zinc-700"></div>
+                @endif
+
+                {{-- Current program ensembles --}}
+                @if(count($wizardEnsembles) > 0)
+                    <div class="space-y-2">
+                        <flux:text class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ __('Program Ensembles') }}</flux:text>
+                        @foreach($wizardEnsembles as $idx => $ens)
+                            <div wire:key="wizard-ens-{{ $idx }}" class="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/60">
+                                <div class="flex items-center gap-3">
+                                    <flux:icon.musical-note class="size-5 text-zinc-400" />
+                                    <div>
+                                        <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $ens['name'] }}</div>
+                                        @if($ens['id'] === null)
+                                            <flux:badge size="sm" color="green" class="mt-0.5">{{ __('New') }}</flux:badge>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    @if($idx > 0)
+                                        <flux:button wire:click="moveWizardEnsembleUp({{ $idx }})" variant="subtle" size="sm" icon="chevron-up" title="{{ __('Move up') }}" />
+                                    @endif
+                                    @if($idx < count($wizardEnsembles) - 1)
+                                        <flux:button wire:click="moveWizardEnsembleDown({{ $idx }})" variant="subtle" size="sm" icon="chevron-down" title="{{ __('Move down') }}" />
+                                    @endif
+                                    <flux:button wire:click="removeWizardEnsemble({{ $idx }})" variant="subtle" size="sm" icon="trash" />
                                 </div>
                             </div>
                         @endforeach
                     </div>
+                @endif
 
-                    {{-- Copyright acknowledgment --}}
-                    @if($this->anyLyricsEnabled())
-                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
-                            <flux:field>
-                                <div class="flex items-start gap-3">
-                                    <input type="checkbox" wire:model.live="lyricsCopyrightAcknowledged"
-                                        id="lyricsCopyright"
-                                        class="mt-0.5 size-4 rounded border-zinc-300 text-blue-600 dark:border-zinc-600">
-                                    <label for="lyricsCopyright" class="text-sm text-zinc-700 dark:text-zinc-300">
-                                        {{ __('I confirm that I have the right to publicly display the selected lyrics, or that they are in the public domain.') }}
-                                    </label>
-                                </div>
-                                <flux:error name="lyricsCopyrightAcknowledged" />
-                            </flux:field>
+                {{-- Create new ensemble --}}
+                <div class="rounded-xl border border-dashed border-zinc-300 p-4 dark:border-zinc-600">
+                    @if(! $showNewEnsembleForm)
+                        <flux:button wire:click="$set('showNewEnsembleForm', true)" variant="subtle" icon="plus">
+                            {{ __('Create New Ensemble') }}
+                        </flux:button>
+                    @else
+                        <div class="space-y-4" x-init="$nextTick(() => $el.querySelector('input')?.focus())">
+                            <flux:heading size="sm">{{ __('New Ensemble') }}</flux:heading>
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <flux:field>
+                                    <flux:label>{{ __('Ensemble Name') }}</flux:label>
+                                    <flux:input wire:model="newEnsembleName" placeholder="{{ __('e.g. Concert Choir') }}" />
+                                    <flux:error name="newEnsembleName" />
+                                </flux:field>
+                                <flux:field>
+                                    <flux:label>{{ __('Voice Parts') }}</flux:label>
+                                    <select wire:model="newEnsembleType"
+                                        class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100">
+                                        <option value="Satb">{{ __('SATB') }}</option>
+                                        <option value="SopranoAlto">{{ __('Soprano / Alto') }}</option>
+                                        <option value="TenorBass">{{ __('Tenor / Bass') }}</option>
+                                        <option value="Unknown">{{ __('Other') }}</option>
+                                    </select>
+                                </flux:field>
+                            </div>
+                            <div class="flex gap-2">
+                                <flux:button wire:click="createWizardEnsemble" variant="primary" size="sm">{{ __('Add Ensemble') }}</flux:button>
+                                <flux:button wire:click="$set('showNewEnsembleForm', false)" variant="subtle" size="sm">{{ __('Cancel') }}</flux:button>
+                            </div>
                         </div>
                     @endif
+                </div>
+
+                @if(count($wizardEnsembles) === 0)
+                    <flux:callout icon="information-circle" color="blue">
+                        <flux:callout.text>{{ __('No ensembles added yet. You can continue without ensembles and add them later.') }}</flux:callout.text>
+                    </flux:callout>
                 @endif
             </div>
         @endif
 
-        {{-- ── STEP 5: Roster & Honors ── --}}
+        {{-- ── STEP 5: Songs ── --}}
         @if($step === 5)
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="xl">{{ __('Songs') }}</flux:heading>
+                    <flux:text class="mt-1">{{ __('Add songs for each ensemble. Toggle "Show lyrics" for any song whose lyrics you want displayed in the program.') }}</flux:text>
+                </div>
+
+                @if(count($wizardEnsembles) === 0)
+                    <flux:callout icon="information-circle">
+                        <flux:callout.text>{{ __('No ensembles were added. Go back to add ensembles, or continue to the next step.') }}</flux:callout.text>
+                    </flux:callout>
+                @else
+                    @foreach($wizardEnsembles as $ensIdx => $ens)
+                        <div wire:key="ens-songs-{{ $ensIdx }}" class="space-y-3">
+
+                            {{-- Ensemble header --}}
+                            <div class="flex items-center gap-2 border-b border-zinc-200 pb-2 dark:border-zinc-700">
+                                <flux:icon.musical-note class="size-5 text-zinc-400" />
+                                <span class="font-semibold text-zinc-900 dark:text-zinc-100">{{ $ens['name'] }}</span>
+                                @if($ens['id'] === null)
+                                    <flux:badge size="sm" color="green">{{ __('New') }}</flux:badge>
+                                @endif
+                            </div>
+
+                            {{-- Song rows --}}
+                            @if(! empty($ensembleSongs[$ensIdx] ?? []))
+                                <div class="divide-y divide-zinc-100 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-700">
+                                    @foreach($ensembleSongs[$ensIdx] as $songIdx => $song)
+                                        <div wire:key="song-{{ $ensIdx }}-{{ $songIdx }}" class="p-3 space-y-2"
+                                            x-on:focus-song-title.window="
+                                                if ($event.detail.ensembleIndex == {{ $ensIdx }} && $event.detail.songIndex == {{ $songIdx }})
+                                                    $nextTick(() => $el.querySelector('input')?.focus())
+                                            ">
+                                            <div class="grid items-center gap-3 sm:grid-cols-[1fr_1fr_1fr_auto_auto_auto_auto]">
+                                                <flux:input wire:model.blur="ensembleSongs.{{ $ensIdx }}.{{ $songIdx }}.title"
+                                                    placeholder="{{ __('Song title') }}" />
+                                                <flux:input wire:model.blur="ensembleSongs.{{ $ensIdx }}.{{ $songIdx }}.composer"
+                                                    placeholder="{{ __('Composer (optional)') }}" />
+                                                <flux:input wire:model.blur="ensembleSongs.{{ $ensIdx }}.{{ $songIdx }}.arranger"
+                                                    placeholder="{{ __('Arranger (optional)') }}" />
+                                                <flux:switch wire:model.live="ensembleSongs.{{ $ensIdx }}.{{ $songIdx }}.showLyrics"
+                                                    label="{{ __('Lyrics') }}" />
+                                                @if($songIdx > 0)
+                                                    <flux:button wire:click="moveSongRowUp({{ $ensIdx }}, {{ $songIdx }})" variant="subtle" size="sm" icon="chevron-up" title="{{ __('Move up') }}" />
+                                                @else
+                                                    <div></div>
+                                                @endif
+                                                @if($songIdx < count($ensembleSongs[$ensIdx]) - 1)
+                                                    <flux:button wire:click="moveSongRowDown({{ $ensIdx }}, {{ $songIdx }})" variant="subtle" size="sm" icon="chevron-down" title="{{ __('Move down') }}" />
+                                                @else
+                                                    <div></div>
+                                                @endif
+                                                <flux:button wire:click="removeSongRow({{ $ensIdx }}, {{ $songIdx }})"
+                                                    variant="subtle" size="sm" icon="trash" />
+                                            </div>
+                                            <flux:input wire:model.blur="ensembleSongs.{{ $ensIdx }}.{{ $songIdx }}.programNotes"
+                                                placeholder="{{ __('Program notes — soloists, accompanists, guest conductors… (optional)') }}" />
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            <flux:button wire:click="addSongRow({{ $ensIdx }})" variant="subtle" size="sm" icon="plus">
+                                {{ __('Add Song') }}
+                            </flux:button>
+                        </div>
+                    @endforeach
+                @endif
+
+                {{-- Copyright acknowledgment --}}
+                @if($this->anyLyricsEnabled())
+                    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
+                        <flux:field>
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" wire:model.live="lyricsCopyrightAcknowledged"
+                                    id="lyricsCopyright"
+                                    class="mt-0.5 size-4 rounded border-zinc-300 text-blue-600 dark:border-zinc-600">
+                                <label for="lyricsCopyright" class="text-sm text-zinc-700 dark:text-zinc-300">
+                                    {{ __('I confirm that I have the right to publicly display the selected lyrics, or that they are in the public domain.') }}
+                                </label>
+                            </div>
+                            <flux:error name="lyricsCopyrightAcknowledged" />
+                        </flux:field>
+                    </div>
+                @endif
+            </div>
+        @endif
+
+        {{-- ── STEP 6: Roster & Honors ── --}}
+        @if($step === 6)
             <div class="space-y-6">
                 <div>
                     <flux:heading size="xl">{{ __('Student Roster & Honors') }}</flux:heading>
@@ -348,6 +514,7 @@
                             'ensembleKey' => 'general',
                             'ensembleName' => __('General (No Ensemble)'),
                             'voiceParts' => $voiceParts,
+                            'showCsvTools' => true,
                         ])
                     @endif
 
@@ -359,6 +526,7 @@
                                 'ensembleKey' => $ek,
                                 'ensembleName' => $ensemble->ensemble_name,
                                 'voiceParts' => $voiceParts,
+                                'showCsvTools' => true,
                             ])
                         @endif
                     @endforeach
@@ -366,8 +534,8 @@
             </div>
         @endif
 
-        {{-- ── STEP 6: Publish ── --}}
-        @if($step === 6)
+        {{-- ── STEP 7: Publish ── --}}
+        @if($step === 7)
             <div class="space-y-6">
                 <div>
                     <flux:heading size="xl">{{ __('Ready to Publish') }}</flux:heading>
@@ -396,18 +564,16 @@
                                 </div>
                             </div>
                             <div>
-                                <flux:text class="text-xs font-semibold uppercase tracking-wider text-zinc-400">{{ __('Songs') }}</flux:text>
+                                <flux:text class="text-xs font-semibold uppercase tracking-wider text-zinc-400">{{ __('Ensembles & Songs') }}</flux:text>
                                 <div class="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
-                                    {{ count($songSettings) }} {{ __('song(s)') }}
-                                    @if($this->anyLyricsEnabled())
-                                        · {{ collect($songSettings)->where('showLyrics', true)->count() }} {{ __('with lyrics') }}
-                                    @endif
+                                    {{ count($wizardEnsembles) }} {{ __('ensemble(s)') }}
+                                    · {{ collect($ensembleSongs)->flatten(1)->filter(fn($s) => !empty(trim($s['title'] ?? '')))->count() }} {{ __('song(s)') }}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Public URL --}}
+                    {{-- Public web address --}}
                     <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-800">
                         <flux:text class="text-xs font-semibold uppercase tracking-wider text-zinc-400">{{ __('Your unique web address') }}</flux:text>
                         <div class="mt-2 flex items-center gap-3">
@@ -439,7 +605,7 @@
             <div></div>
         @endif
 
-        @if($step < 6)
+        @if($step < 7)
             <flux:button wire:click="nextStep" variant="primary" icon-trailing="arrow-right">{{ __('Next') }}</flux:button>
         @else
             <div class="flex gap-3">

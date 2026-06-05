@@ -17,6 +17,7 @@ class DigitalProgramSongSetting extends Model
         'digital_program_id',
         'song_title_id',
         'show_lyrics',
+        'program_notes',
     ];
 
     protected function casts(): array

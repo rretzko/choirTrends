@@ -6,6 +6,7 @@ namespace App\Livewire\Programs;
 
 use App\Enums\VideoVisibility;
 use App\Models\Artist;
+use App\Models\DigitalProgram;
 use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
@@ -366,7 +367,11 @@ class Edit extends Component
 
     public function render(): View
     {
-        return view('livewire.programs.edit')
+        $digitalProgram = DigitalProgram::where('program_id', $this->program->id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        return view('livewire.programs.edit', ['digitalProgram' => $digitalProgram])
             ->layout('components.layouts.app', ['title' => __('Edit Program')]);
     }
 

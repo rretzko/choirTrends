@@ -7,7 +7,7 @@ namespace App\Livewire\DigitalPrograms;
 use App\Livewire\Concerns\HasDigitalProgramState;
 use App\Models\DigitalProgram;
 use App\Models\DigitalProgramRoster;
-use App\Models\DigitalProgramSongSetting;
+use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
 use Illuminate\Support\Carbon;
@@ -50,6 +50,7 @@ class GuidedWizard extends Component
             3 => $this->completeStep3(),
             4 => $this->completeStep4(),
             5 => $this->completeStep5(),
+            6 => $this->completeStep6(),
             default => null,
         };
     }
@@ -126,17 +127,50 @@ class GuidedWizard extends Component
 
         $this->resolvedProgramId = $program->id;
 
-        $digitalProgram = DigitalProgram::create([
-            'user_id' => auth()->id(),
-            'program_id' => $this->resolvedProgramId,
-            'theme' => $this->theme,
-            'print_orientation' => $this->printOrientation,
-        ]);
+        // Prefer an existing digital program that has content; fall back to most recently
+        // updated; create a new one only when none exists. This prevents empty wizard-stub
+        // records from shadowing a record that was already populated.
+        $digitalProgram = DigitalProgram::where('user_id', auth()->id())
+            ->where('program_id', $this->resolvedProgramId)
+            ->orderByRaw('CASE WHEN welcome_message IS NOT NULL OR acknowledgments IS NOT NULL OR sponsor_text IS NOT NULL THEN 1 ELSE 0 END DESC')
+            ->orderByDesc('updated_at')
+            ->first();
+
+        if (! $digitalProgram) {
+            $digitalProgram = DigitalProgram::firstOrCreate(
+                ['user_id' => auth()->id(), 'program_id' => $this->resolvedProgramId],
+                ['theme' => $this->theme, 'print_orientation' => $this->printOrientation]
+            );
+        }
 
         $this->digitalProgramId = $digitalProgram->id;
+        $this->welcomeMessage = $digitalProgram->welcome_message ?? '';
+        $this->acknowledgments = $digitalProgram->acknowledgments ?? '';
+        $this->sponsorText = $digitalProgram->sponsor_text ?? '';
+        $this->intermissionAfterEnsemble = $digitalProgram->intermission_after_ensemble;
+        $this->theme = $digitalProgram->theme ?? $this->theme;
+        $this->printOrientation = $digitalProgram->print_orientation ?? $this->printOrientation;
+        $this->lyricsCopyrightAcknowledged = (bool) $digitalProgram->lyrics_copyright_acknowledged;
+        $this->studentNamesAcknowledged = (bool) $digitalProgram->student_names_acknowledged;
 
-        $this->initializeSongSettings($this->resolvedProgramId);
-        $this->initializeRosterData($this->resolvedProgramId);
+        $this->initializeWizardEnsembles($this->resolvedProgramId);
+
+        // Sync showLyrics and programNotes from any previously saved song settings.
+        $digitalProgram->loadMissing('songSettings');
+        $settingsMap = $digitalProgram->songSettings->keyBy('song_title_id');
+
+        foreach ($this->ensembleSongs as $ensIdx => $songs) {
+            foreach ($songs as $songIdx => $song) {
+                $stId = $song['songTitleId'] ?? null;
+
+                if ($stId && $settingsMap->has($stId)) {
+                    $this->ensembleSongs[$ensIdx][$songIdx]['showLyrics'] =
+                        (bool) $settingsMap[$stId]->show_lyrics;
+                    $this->ensembleSongs[$ensIdx][$songIdx]['programNotes'] =
+                        $settingsMap[$stId]->program_notes ?? '';
+                }
+            }
+        }
 
         $this->step = 2;
     }
@@ -165,7 +199,39 @@ class GuidedWizard extends Component
         $this->step = 4;
     }
 
+    /** Step 4: Ensembles — persist new ensembles and advance. */
     private function completeStep4(): void
+    {
+        foreach ($this->wizardEnsembles as $index => $ens) {
+            if ($ens['id'] === null && empty(trim($ens['name']))) {
+                $this->addError("wizardEnsembles.{$index}.name", 'Ensemble name is required.');
+
+                return;
+            }
+        }
+
+        // Persist any new ensembles to the DB now so they survive navigation or interruption.
+        $schoolId = Program::find($this->resolvedProgramId)?->school_id;
+
+        foreach ($this->wizardEnsembles as $index => $ens) {
+            if ($ens['id'] === null && $schoolId !== null) {
+                $ensemble = Ensemble::firstOrCreate(
+                    ['school_id' => $schoolId, 'ensemble_name' => trim($ens['name'])],
+                    ['type' => $ens['type'], 'a_cappella' => false]
+                );
+                $this->wizardEnsembles[$index]['id'] = $ensemble->id;
+            }
+
+            if (! isset($this->ensembleSongs[$index])) {
+                $this->ensembleSongs[$index] = [];
+            }
+        }
+
+        $this->step = 5;
+    }
+
+    /** Step 5: Songs — save ensembles + songs, initialise roster, advance. */
+    private function completeStep5(): void
     {
         if ($this->anyLyricsEnabled() && ! $this->lyricsCopyrightAcknowledged) {
             $this->addError('lyricsCopyrightAcknowledged', 'You must acknowledge the copyright statement before enabling lyrics.');
@@ -177,20 +243,17 @@ class GuidedWizard extends Component
             'lyrics_copyright_acknowledged' => $this->lyricsCopyrightAcknowledged,
         ]);
 
-        foreach ($this->songSettings as $setting) {
-            DigitalProgramSongSetting::updateOrCreate(
-                [
-                    'digital_program_id' => $this->digitalProgramId,
-                    'song_title_id' => $setting['songTitleId'],
-                ],
-                ['show_lyrics' => $setting['showLyrics']]
-            );
-        }
+        $this->saveWizardEnsemblesAndSongs($this->resolvedProgramId, $this->digitalProgramId);
 
-        $this->step = 5;
+        // Load any previously saved honors and rosters so returning users see their data.
+        $dp = $this->fetchDigitalProgram()->load(['honors', 'rosters.honors']);
+        $this->loadExistingRosterAndHonors($dp);
+
+        $this->step = 6;
     }
 
-    private function completeStep5(): void
+    /** Step 6: Roster & Honours. */
+    private function completeStep6(): void
     {
         if ($this->hasAnyStudents() && ! $this->studentNamesAcknowledged) {
             $this->addError('studentNamesAcknowledged', 'You must acknowledge the student names statement before saving a roster.');
@@ -204,10 +267,10 @@ class GuidedWizard extends Component
 
         $this->saveHonorsAndRosters($this->digitalProgramId);
 
-        $this->step = 6;
+        $this->step = 7;
     }
 
-    // ─── Step 6 actions ──────────────────────────────────────────────────────
+    // ─── Step 7 actions ──────────────────────────────────────────────────────
 
     public function publish(): void
     {
@@ -262,8 +325,15 @@ class GuidedWizard extends Component
             ->get();
 
         $program = $this->resolvedProgram();
-        $program?->load(['school', 'ensembles']);
-        $ensembles = $program !== null ? $program->ensembles : collect();
+        $program?->load(['school']);
+        $ensembles = $program !== null
+            ? $program->ensembles()->orderByPivot('ensemble_sort_order')->get()
+            : collect();
+
+        $school = $program?->school;
+        $schoolEnsembles = $school !== null
+            ? Ensemble::where('school_id', $school->id)->orderBy('ensemble_name')->get()
+            : collect();
 
         $digitalProgram = $this->digitalProgramId
             ? $this->fetchDigitalProgram()
@@ -273,6 +343,7 @@ class GuidedWizard extends Component
             'userPrograms' => $userPrograms,
             'resolvedProgram' => $program,
             'ensembles' => $ensembles,
+            'schoolEnsembles' => $schoolEnsembles,
             'themes' => self::$themes,
             'voiceParts' => DigitalProgramRoster::VOICE_PARTS,
             'digitalProgram' => $digitalProgram,
