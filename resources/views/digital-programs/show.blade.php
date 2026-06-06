@@ -321,7 +321,7 @@
                                 {{-- Student name with honor superscripts --}}
                                 {{ $student->student_name }}@php
                                     $studentHonorNumbers = $student->honors->pluck('sort_order')->sort()->values();
-                                @endphp@if($studentHonorNumbers->isNotEmpty())<sup style="color: var(--dp-accent); font-weight: 700;">{{ $studentHonorNumbers->implode('') }}</sup>@endif@if(!$loop->last), @endif
+                                @endphp@if($studentHonorNumbers->isNotEmpty())<sup style="color: var(--dp-accent); font-weight: 700;">{{ $studentHonorNumbers->implode(',') }}</sup>@endif@if(!$loop->last), @endif
                             @endforeach
                         </p>
                     @endforeach
