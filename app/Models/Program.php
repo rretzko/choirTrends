@@ -76,6 +76,7 @@ class Program extends Model
     public function ensembles(): BelongsToMany
     {
         return $this->belongsToMany(Ensemble::class, 'program_song_title', 'program_id', 'ensemble_id')
+            ->withPivot('ensemble_sort_order')
             ->distinct();
     }
 }
