@@ -36,8 +36,12 @@
                 <flux:sidebar.item icon="queue-list" :href="route('song-titles.index')" :current="request()->routeIs('song-titles.*')" wire:navigate>{{ __('Song Titles') }}</flux:sidebar.item>
                 @if(auth()->user()->canAccessDigitalPrograms())
                 <flux:separator class="my-2"/>
-                <flux:sidebar.item icon="document-plus" :href="route('founder.createProgram')" :current="request()->routeIs('founder.createProgram')" wire:navigate>{{ __('Create Program') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="ticket" :href="route('digital-programs.index')" :current="request()->routeIs('digital-programs.*')" wire:navigate>{{ __('Digital Programs') }}</flux:sidebar.item>
+                @if(auth()->user()->isFounder())
+                    <flux:sidebar.item icon="document-plus" :href="route('founder.createProgram')" :current="request()->routeIs('founder.createProgram')" wire:navigate>{{ __('Create Program') }}</flux:sidebar.item>
+                @else
+                    <flux:sidebar.item icon="document-plus" :href="route('digital-programs.create.guided')" :current="request()->routeIs('digital-programs.create.*')" wire:navigate>{{ __('Create Program') }}</flux:sidebar.item>
+                @endif
+                <flux:sidebar.item icon="ticket" :href="route('digital-programs.index')" :current="request()->routeIs('digital-programs.index')" wire:navigate>{{ __('Digital Programs') }}</flux:sidebar.item>
                 @endif
                 <flux:separator class="my-2"/>
                 <flux:sidebar.item icon="book-open" :href="route('user-guide.index')" :current="request()->routeIs('user-guide.*')" wire:navigate>{{ __("User's Guide") }}</flux:sidebar.item>

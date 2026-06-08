@@ -58,6 +58,10 @@ Route::get('p/{slug}', DigitalProgramPublicController::class)
 Route::get('p/{slug}/qr.svg', DigitalProgramQrController::class)
     ->name('program.qr');
 
+// Booklet imposition view (duplex landscape → fold in half)
+Route::get('p/{slug}/booklet', [DigitalProgramPublicController::class, 'booklet'])
+    ->name('program.booklet');
+
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('videos/program/{program}', [VideoController::class, 'programVideo'])->name('videos.program');

@@ -164,6 +164,18 @@
                                         icon="printer">
                                         {{ __('Print') }}
                                     </flux:button>
+
+                                    {{-- Booklet (landscape programs only) --}}
+                                    @if($dp->print_orientation === 'Landscape')
+                                        <flux:button
+                                            href="{{ route('program.booklet', $dp->slug) }}"
+                                            target="_blank"
+                                            variant="subtle"
+                                            size="sm"
+                                            icon="document-duplicate">
+                                            {{ __('Booklet') }}
+                                        </flux:button>
+                                    @endif
                                 @endif
 
                                 {{-- Toggle publish --}}
