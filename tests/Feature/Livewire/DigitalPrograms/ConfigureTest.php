@@ -241,12 +241,12 @@ test('save replaces honors and rosters', function () {
     expect(DigitalProgramRoster::where('digital_program_id', $dp->id)->value('student_name'))->toBe('Alice');
 });
 
-test('index page shows edit button linking to configure route', function () {
+test('index page shows edit button linking to power user form', function () {
     $user = User::factory()->create();
     $dp = DigitalProgram::factory()->for($user)->create();
 
     $this->actingAs($user);
 
     Livewire::test(Index::class)
-        ->assertSee(route('digital-programs.configure', $dp));
+        ->assertSee(route('digital-programs.create.pro', $dp));
 });

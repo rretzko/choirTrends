@@ -18,12 +18,19 @@ class DigitalProgramRoster extends Model
 {
     /** @var list<string> */
     public const VOICE_PARTS = [
+        'Soprano',
         'Soprano I',
         'Soprano II',
         'Alto',
+        'Alto I',
+        'Alto II',
         'Tenor',
+        'Tenor I',
+        'Tenor II',
         'Baritone',
         'Bass',
+        'Bass I',
+        'Bass II',
         'Treble',
         'Cambiata',
         'Unison',

@@ -58,15 +58,20 @@
             /* Hide interactive / screen-only elements */
             .no-print { display: none !important; }
 
-            /* Preserve theme colors in print (PDF and colour printers) */
-            * {
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
+            /* Force white background and black text regardless of theme */
+            *, *::before, *::after {
+                background: white !important;
+                background-color: white !important;
+                color: black !important;
+                border-color: #ccc !important;
+                box-shadow: none !important;
             }
 
             html, body {
                 font-size: 10pt;
                 line-height: 1.5;
+                background: white !important;
+                color: black !important;
             }
 
             /* Header: keep on one block */
@@ -140,6 +145,17 @@
             /* Headings */
             h2 { font-size: 14pt; margin-bottom: 0.1in; }
             h3 { font-size: 11pt; }
+
+            /* Center welcome, acknowledgments, and sponsors sections */
+            .print-center { text-align: center; }
+
+            @if($dp->print_orientation !== 'Landscape')
+            /* Portrait: page break after each major section */
+            .portrait-break {
+                break-after: page;
+                page-break-after: always;
+            }
+            @endif
         }
     </style>
 </head>
@@ -189,7 +205,7 @@
 
     {{-- ── Welcome message ── --}}
     @if($dp->welcome_message)
-        <section class="mb-10 rounded-xl p-6"
+        <section class="portrait-break print-center mb-10 rounded-xl p-6"
             style="background: var(--dp-surface); border: 1px solid var(--dp-border);">
             <h2 class="mb-3 text-xs font-bold uppercase tracking-widest"
                 style="color: var(--dp-section-lbl);">
@@ -213,7 +229,7 @@
             $honorMap     = $groupHonors->keyBy('sort_order'); // sort_order = superscript number
         @endphp
 
-        <section class="mb-12">
+        <section class="portrait-break mb-12">
 
             {{-- Ensemble heading --}}
             @if($ensemble || $ek === 'general')
@@ -359,7 +375,7 @@
 
     {{-- ── Acknowledgments ── --}}
     @if($dp->acknowledgments)
-        <section class="mb-8 rounded-xl p-6"
+        <section class="portrait-break print-center mb-8 rounded-xl p-6"
             style="background: var(--dp-surface); border: 1px solid var(--dp-border);">
             <h2 class="mb-3 text-xs font-bold uppercase tracking-widest"
                 style="color: var(--dp-section-lbl);">
@@ -372,7 +388,7 @@
 
     {{-- ── Sponsors ── --}}
     @if($dp->sponsor_text)
-        <section class="mb-8 rounded-xl p-6"
+        <section class="portrait-break print-center mb-8 rounded-xl p-6"
             style="background: var(--dp-surface); border: 1px solid var(--dp-border);">
             <h2 class="mb-3 text-xs font-bold uppercase tracking-widest"
                 style="color: var(--dp-section-lbl);">
@@ -455,6 +471,10 @@
 
     </div>
 </footer>
+
+@if(request()->boolean('print'))
+<script>window.addEventListener('load', () => window.print());</script>
+@endif
 
 </body>
 </html>

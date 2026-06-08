@@ -161,6 +161,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $founderEmail && $this->email === $founderEmail;
     }
 
+    /** Temporary: gates Digital Programs beta access by email list (DIGITAL_PROGRAMS_EMAILS). */
+    public function canAccessDigitalPrograms(): bool
+    {
+        $allowed = config('app.digital_programs_emails', []);
+
+        return empty($allowed) || in_array($this->email, $allowed, true);
+    }
+
     /**
      * Generate "Last, First" format from the user's name.
      */

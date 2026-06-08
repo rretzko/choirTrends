@@ -30,11 +30,15 @@
                 <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate class="mb-4">{{ __('Dashboard') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="document-text" :href="route('programs.index')" :current="request()->routeIs('programs.*')" wire:navigate>{{ __('Programs') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="arrow-up-tray" :href="route('addProgram')" :current="request()->routeIs('addProgram')" wire:navigate>{{ __('Add Program') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="ticket" :href="route('digital-programs.index')" :current="request()->routeIs('digital-programs.*')" wire:navigate>{{ __('Digital Programs') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="musical-note" :href="route('artists.index')" :current="request()->routeIs('artists.*')" wire:navigate>{{ __('Composers/Arrangers') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="user-group" :href="route('ensembles.index')" :current="request()->routeIs('ensembles.*')" wire:navigate>{{ __('Ensembles') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="academic-cap" :href="route('schools.index')" :current="request()->routeIs('schools.*')" wire:navigate>{{ __('Schools') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="queue-list" :href="route('song-titles.index')" :current="request()->routeIs('song-titles.*')" wire:navigate>{{ __('Song Titles') }}</flux:sidebar.item>
+                @if(auth()->user()->canAccessDigitalPrograms())
+                <flux:separator class="my-2"/>
+                <flux:sidebar.item icon="document-plus" :href="route('founder.createProgram')" :current="request()->routeIs('founder.createProgram')" wire:navigate>{{ __('Create Program') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="ticket" :href="route('digital-programs.index')" :current="request()->routeIs('digital-programs.*')" wire:navigate>{{ __('Digital Programs') }}</flux:sidebar.item>
+                @endif
                 <flux:separator class="my-2"/>
                 <flux:sidebar.item icon="book-open" :href="route('user-guide.index')" :current="request()->routeIs('user-guide.*')" wire:navigate>{{ __("User's Guide") }}</flux:sidebar.item>
                 <flux:separator class="my-2"/>
@@ -69,7 +73,6 @@
                         <flux:sidebar.item icon="envelope" :href="route('founder.newsletter')" :current="request()->routeIs('founder.newsletter')" wire:navigate>{{ __('Newsletter') }}</flux:sidebar.item>
                         <flux:sidebar.item icon="book-open" :href="route('founder.userGuide')" :current="request()->routeIs('founder.userGuide')" wire:navigate>{{ __("User's Guide") }}</flux:sidebar.item>
                         <flux:sidebar.item icon="users" :href="route('founder.users')" :current="request()->routeIs('founder.users')" wire:navigate>{{ __('Users') }}</flux:sidebar.item>
-                        <flux:sidebar.item icon="document-plus" :href="route('founder.createProgram')" :current="request()->routeIs('founder.createProgram')" wire:navigate>{{ __('Create Program') }}</flux:sidebar.item>
                     </flux:sidebar.group>
                 </flux:sidebar.nav>
             @endif

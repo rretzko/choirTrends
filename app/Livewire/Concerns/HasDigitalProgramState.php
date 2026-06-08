@@ -68,6 +68,9 @@ trait HasDigitalProgramState
     /** @var array<string, array{type: string, message: string}> */
     public array $rosterCsvResults = [];
 
+    /** @var array{type: string, message: string}|array{} */
+    public array $songsCsvResult = [];
+
     /** @var array<string, list<array{label: string}>> */
     public array $honors = [];
 
@@ -109,13 +112,28 @@ trait HasDigitalProgramState
             'type' => $ensemble->type->value,
         ];
         $this->ensembleSongs[$index] = [];
+
+        // Seed an empty roster entry so the Roster section shows this ensemble immediately.
+        $key = (string) $ensembleId;
+
+        if (! isset($this->honors[$key])) {
+            $this->honors[$key] = [];
+            $this->rosters[$key] = [];
+        }
     }
 
     public function removeWizardEnsemble(int $index): void
     {
+        $ensembleId = $this->wizardEnsembles[$index]['id'] ?? null;
+
         array_splice($this->wizardEnsembles, $index, 1);
         array_splice($this->ensembleSongs, $index, 1);
         $this->ensembleSongs = array_values($this->ensembleSongs);
+
+        if ($ensembleId !== null) {
+            $key = (string) $ensembleId;
+            unset($this->honors[$key], $this->rosters[$key]);
+        }
     }
 
     public function moveWizardEnsembleUp(int $index): void

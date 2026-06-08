@@ -29,6 +29,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Digital Programs Beta Users
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated list of email addresses permitted to access the Digital
+    | Programs feature during user testing. Remove this key (and the sidebar
+    | guard) once the feature is released to all users.
+    |
+    */
+
+    'digital_programs_emails' => array_filter(
+        array_map('trim', explode(',', env('DIGITAL_PROGRAMS_EMAILS', '')))
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Version
     |--------------------------------------------------------------------------
     |

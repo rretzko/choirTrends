@@ -134,9 +134,9 @@
                             {{-- Right: actions --}}
                             <div class="flex shrink-0 flex-wrap items-center gap-2">
 
-                                {{-- Edit / configure --}}
+                                {{-- Edit --}}
                                 <flux:button
-                                    :href="route('digital-programs.configure', $dp)"
+                                    :href="route('digital-programs.create.pro', $dp)"
                                     variant="subtle"
                                     size="sm"
                                     icon="pencil-square"
@@ -153,6 +153,16 @@
                                         size="sm"
                                         icon="arrow-top-right-on-square">
                                         {{ __('View') }}
+                                    </flux:button>
+
+                                    {{-- Print --}}
+                                    <flux:button
+                                        href="{{ route('program.public', $dp->slug) }}?print=1"
+                                        target="_blank"
+                                        variant="subtle"
+                                        size="sm"
+                                        icon="printer">
+                                        {{ __('Print') }}
                                     </flux:button>
                                 @endif
 

@@ -98,7 +98,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('digital-programs')->name('digital-programs.')->group(function () {
         Route::get('/', App\Livewire\DigitalPrograms\Index::class)->name('index');
         Route::get('create/guided', GuidedWizard::class)->name('create.guided');
-        Route::get('create/pro', PowerUserForm::class)->name('create.pro');
+        Route::get('create/pro/{digitalProgram?}', PowerUserForm::class)->name('create.pro');
         Route::get('/{digitalProgram}/configure', Configure::class)->name('configure');
     });
 
