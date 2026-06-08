@@ -237,6 +237,8 @@ class PowerUserForm extends Component
 
     public function processSongsCsv(string $csvContent): void
     {
+        // Strip UTF-8 BOM if present (added by Excel and some other tools).
+        $csvContent = ltrim($csvContent, "\xEF\xBB\xBF");
         $content = str_replace(["\r\n", "\r"], "\n", $csvContent);
         $lines = array_values(array_filter(
             array_map('trim', explode("\n", $content)),
