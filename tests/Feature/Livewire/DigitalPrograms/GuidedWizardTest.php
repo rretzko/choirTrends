@@ -553,6 +553,38 @@ test('save as draft on step 7 redirects to index without publishing', function (
     expect($dp->fresh()->is_published)->toBeFalse();
 });
 
+test('assistant cannot publish on step 7', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    $dp = DigitalProgram::factory()->for($director)->create(['is_published' => false]);
+
+    $this->actingAs($assistant);
+
+    Livewire::test(GuidedWizard::class)
+        ->set('step', 7)
+        ->set('digitalProgramId', $dp->id)
+        ->call('publish')
+        ->assertForbidden();
+
+    expect($dp->fresh()->is_published)->toBeFalse();
+});
+
+test('assistant can save as draft on step 7', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    $dp = DigitalProgram::factory()->for($director)->create(['is_published' => false]);
+
+    $this->actingAs($assistant);
+
+    Livewire::test(GuidedWizard::class)
+        ->set('step', 7)
+        ->set('digitalProgramId', $dp->id)
+        ->call('saveDraft')
+        ->assertRedirect(route('digital-programs.index'));
+
+    expect($dp->fresh()->is_published)->toBeFalse();
+});
+
 test('previous step goes back one step', function () {
     $user = User::factory()->create();
 

@@ -513,7 +513,7 @@ trait HasDigitalProgramState
 
     protected function initializeSongSettings(int $programId): void
     {
-        $userId = auth()->id();
+        $userId = auth()->user()->digitalProgramsOwnerId();
         $songTitles = Program::find($programId)?->songTitles()->with('composer')->get() ?? collect();
         $songTitleIds = $songTitles->pluck('id')->all();
 

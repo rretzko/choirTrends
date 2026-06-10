@@ -27,7 +27,7 @@ class Configure extends Component
 
     public function mount(DigitalProgram $digitalProgram): void
     {
-        abort_unless($digitalProgram->user_id === auth()->id(), 403);
+        abort_unless($digitalProgram->user_id === auth()->user()->digitalProgramsOwnerId(), 403);
 
         $digitalProgram->load(['songSettings', 'honors', 'rosters.honors']);
 
@@ -80,12 +80,14 @@ class Configure extends Component
 
     public function save(bool $publish = false): void
     {
+        abort_if($publish && auth()->user()->isAssistant(), 403);
+
         $this->validate($this->updateRules());
 
         DB::transaction(function () use ($publish): void {
             $dp = DigitalProgram::query()
                 ->where('id', $this->digitalProgramId)
-                ->where('user_id', auth()->id())
+                ->where('user_id', auth()->user()->digitalProgramsOwnerId())
                 ->firstOrFail();
 
             $dp->update([
@@ -97,7 +99,7 @@ class Configure extends Component
                 'intermission_after_ensemble' => $this->intermissionAfterEnsemble,
                 'lyrics_copyright_acknowledged' => $this->lyricsCopyrightAcknowledged,
                 'student_names_acknowledged' => $this->studentNamesAcknowledged,
-                'is_published' => $publish,
+                'is_published' => auth()->user()->isAssistant() ? $dp->is_published : $publish,
             ]);
 
             // Persist song structure and lyrics from ensembleSongs

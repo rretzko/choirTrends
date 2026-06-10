@@ -167,3 +167,58 @@ test('draft badge shows for unpublished programs', function () {
     Livewire::test(Index::class)
         ->assertSee('Draft');
 });
+
+test('assistant can view the directors digital programs', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+
+    $school = School::factory()->create();
+    $program = Program::factory()->for($director)->for($school)->create(['event_name' => 'Spring Concert']);
+    DigitalProgram::factory()->for($director)->create(['program_id' => $program->id]);
+
+    $this->actingAs($assistant);
+
+    Livewire::test(Index::class)
+        ->assertSee('Spring Concert');
+});
+
+test('assistant cannot toggle publish', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    $dp = DigitalProgram::factory()->for($director)->create(['is_published' => false]);
+
+    $this->actingAs($assistant);
+
+    Livewire::test(Index::class)
+        ->call('togglePublish', $dp->id)
+        ->assertForbidden();
+
+    expect($dp->fresh()->is_published)->toBeFalse();
+});
+
+test('assistant cannot delete a digital program', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    $dp = DigitalProgram::factory()->for($director)->create();
+
+    $this->actingAs($assistant);
+
+    Livewire::test(Index::class)
+        ->set('confirmingDeleteId', $dp->id)
+        ->call('delete')
+        ->assertForbidden();
+
+    expect(DigitalProgram::find($dp->id))->not->toBeNull();
+});
+
+test('publish, unpublish, and delete buttons are hidden for assistants', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    DigitalProgram::factory()->for($director)->create(['is_published' => false]);
+
+    $this->actingAs($assistant);
+
+    Livewire::test(Index::class)
+        ->assertDontSee('Publish')
+        ->assertDontSee('wire:click="confirmDelete', false);
+});

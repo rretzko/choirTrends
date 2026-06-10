@@ -49,7 +49,7 @@ class PowerUserForm extends Component
             return;
         }
 
-        abort_unless($digitalProgram->user_id === auth()->id(), 403);
+        abort_unless($digitalProgram->user_id === auth()->user()->digitalProgramsOwnerId(), 403);
 
         $this->startChoice = 'existing';
         $this->selectedProgramId = $digitalProgram->program_id;
@@ -65,7 +65,7 @@ class PowerUserForm extends Component
         if ($this->startChoice === 'existing') {
             $program = Program::query()
                 ->where('id', $this->selectedProgramId)
-                ->where('user_id', auth()->id())
+                ->where('user_id', auth()->user()->digitalProgramsOwnerId())
                 ->firstOrFail();
 
             $this->resolvedProgramId = $program->id;
@@ -79,7 +79,7 @@ class PowerUserForm extends Component
             $this->initializeWizardEnsembles($this->resolvedProgramId);
 
             // Prefer an existing digital program that has content (same ordering as the wizard).
-            $existingDp = DigitalProgram::where('user_id', auth()->id())
+            $existingDp = DigitalProgram::where('user_id', auth()->user()->digitalProgramsOwnerId())
                 ->where('program_id', $this->resolvedProgramId)
                 ->orderByRaw('CASE WHEN welcome_message IS NOT NULL OR acknowledgments IS NOT NULL OR sponsor_text IS NOT NULL THEN 1 ELSE 0 END DESC')
                 ->orderByDesc('updated_at')
@@ -124,6 +124,8 @@ class PowerUserForm extends Component
 
     public function save(bool $publish = false): void
     {
+        abort_if($publish && auth()->user()->isAssistant(), 403);
+
         $this->validate($this->formRules());
 
         DB::transaction(function () use ($publish): void {
@@ -131,15 +133,15 @@ class PowerUserForm extends Component
             if ($this->startChoice === 'existing') {
                 $program = Program::query()
                     ->where('id', $this->selectedProgramId)
-                    ->where('user_id', auth()->id())
+                    ->where('user_id', auth()->user()->digitalProgramsOwnerId())
                     ->firstOrFail();
             } else {
                 $school = School::firstOrCreate(['school_name' => trim($this->newSchoolName)]);
-                auth()->user()->schools()->syncWithoutDetaching([$school->id]);
+                auth()->user()->digitalProgramsOwner()->schools()->syncWithoutDetaching([$school->id]);
 
                 $program = Program::firstOrCreate(
                     [
-                        'user_id' => auth()->id(),
+                        'user_id' => auth()->user()->digitalProgramsOwnerId(),
                         'event_name' => trim($this->newEventName),
                         'event_date' => $this->newEventDate,
                     ],
@@ -165,10 +167,15 @@ class PowerUserForm extends Component
             // 2. Update existing DigitalProgram or create a new one
             if ($this->digitalProgramId) {
                 $dp = DigitalProgram::findOrFail($this->digitalProgramId);
+
+                if (auth()->user()->isAssistant()) {
+                    $dpData['is_published'] = $dp->is_published;
+                }
+
                 $dp->update($dpData);
             } else {
                 $dp = DigitalProgram::create(array_merge($dpData, [
-                    'user_id' => auth()->id(),
+                    'user_id' => auth()->user()->digitalProgramsOwnerId(),
                     'program_id' => $program->id,
                 ]));
             }
@@ -469,7 +476,7 @@ class PowerUserForm extends Component
     public function render(): View
     {
         $userPrograms = Program::query()
-            ->where('user_id', auth()->id())
+            ->where('user_id', auth()->user()->digitalProgramsOwnerId())
             ->with('school')
             ->orderByDesc('event_date')
             ->get();

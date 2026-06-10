@@ -42,6 +42,18 @@ test('email is not sent when founder config is null', function () {
     Mail::assertNotSent(NewUserRegistered::class);
 });
 
+test('email is not sent when the new user is an assistant account', function () {
+    Mail::fake();
+    config(['app.founder' => 'founder@example.com']);
+
+    $director = User::factory()->withoutTwoFactor()->create();
+    Mail::fake();
+
+    User::factory()->withoutTwoFactor()->assistant($director)->create();
+
+    Mail::assertNotSent(NewUserRegistered::class);
+});
+
 test('email subject includes user name', function () {
     config(['app.founder' => 'founder@example.com']);
 

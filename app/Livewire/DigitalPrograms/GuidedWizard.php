@@ -81,7 +81,7 @@ class GuidedWizard extends Component
 
             $program = Program::query()
                 ->where('id', $this->selectedProgramId)
-                ->where('user_id', auth()->id())
+                ->where('user_id', auth()->user()->digitalProgramsOwnerId())
                 ->firstOrFail();
 
             $this->newEventName = $program->event_name;
@@ -97,12 +97,12 @@ class GuidedWizard extends Component
         $this->validate($this->step1Rules());
 
         $school = School::firstOrCreate(['school_name' => trim($this->newSchoolName)]);
-        auth()->user()->schools()->syncWithoutDetaching([$school->id]);
+        auth()->user()->digitalProgramsOwner()->schools()->syncWithoutDetaching([$school->id]);
 
         if ($this->startChoice === 'existing') {
             $program = Program::query()
                 ->where('id', $this->selectedProgramId)
-                ->where('user_id', auth()->id())
+                ->where('user_id', auth()->user()->digitalProgramsOwnerId())
                 ->firstOrFail();
 
             $program->update([
@@ -114,7 +114,7 @@ class GuidedWizard extends Component
         } else {
             $program = Program::firstOrCreate(
                 [
-                    'user_id' => auth()->id(),
+                    'user_id' => auth()->user()->digitalProgramsOwnerId(),
                     'event_name' => trim($this->newEventName),
                     'event_date' => $this->newEventDate,
                 ],
@@ -130,7 +130,7 @@ class GuidedWizard extends Component
         // Prefer an existing digital program that has content; fall back to most recently
         // updated; create a new one only when none exists. This prevents empty wizard-stub
         // records from shadowing a record that was already populated.
-        $digitalProgram = DigitalProgram::where('user_id', auth()->id())
+        $digitalProgram = DigitalProgram::where('user_id', auth()->user()->digitalProgramsOwnerId())
             ->where('program_id', $this->resolvedProgramId)
             ->orderByRaw('CASE WHEN welcome_message IS NOT NULL OR acknowledgments IS NOT NULL OR sponsor_text IS NOT NULL THEN 1 ELSE 0 END DESC')
             ->orderByDesc('updated_at')
@@ -138,7 +138,7 @@ class GuidedWizard extends Component
 
         if (! $digitalProgram) {
             $digitalProgram = DigitalProgram::firstOrCreate(
-                ['user_id' => auth()->id(), 'program_id' => $this->resolvedProgramId],
+                ['user_id' => auth()->user()->digitalProgramsOwnerId(), 'program_id' => $this->resolvedProgramId],
                 ['theme' => $this->theme, 'print_orientation' => $this->printOrientation]
             );
         }
@@ -274,6 +274,8 @@ class GuidedWizard extends Component
 
     public function publish(): void
     {
+        abort_if(auth()->user()->isAssistant(), 403);
+
         $this->fetchDigitalProgram()->update(['is_published' => true]);
         session()->flash('success', 'Your digital program has been published!');
         $this->redirectRoute('digital-programs.index');
@@ -319,7 +321,7 @@ class GuidedWizard extends Component
     public function render(): View
     {
         $userPrograms = Program::query()
-            ->where('user_id', auth()->id())
+            ->where('user_id', auth()->user()->digitalProgramsOwnerId())
             ->with('school')
             ->orderByDesc('event_date')
             ->get();

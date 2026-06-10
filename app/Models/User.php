@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Enums\ReferralSource;
+use App\Enums\UserRole;
 use App\Mail\NewUserRegistered;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -41,7 +43,7 @@ class User extends Authenticatable implements MustVerifyEmail
         static::created(function (User $user) {
             $founderEmail = config('app.founder');
 
-            if ($founderEmail) {
+            if ($founderEmail && ! $user->isAssistant()) {
                 Mail::to($founderEmail)->send(new NewUserRegistered($user));
             }
         });
@@ -66,6 +68,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'survey_emails_sent_count',
         'referral_source',
         'referral_detail',
+        'role',
+        'parent_user_id',
     ];
 
     /**
@@ -97,6 +101,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'quick_tip_emails_enabled' => 'boolean',
             'survey_emails_sent_count' => 'integer',
             'referral_source' => ReferralSource::class,
+            'role' => UserRole::class,
         ];
     }
 
@@ -115,6 +120,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function programs(): HasMany
     {
         return $this->hasMany(Program::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'parent_user_id');
+    }
+
+    public function assistant(): HasOne
+    {
+        return $this->hasOne(User::class, 'parent_user_id');
     }
 
     public function schools(): BelongsToMany
@@ -164,6 +179,10 @@ class User extends Authenticatable implements MustVerifyEmail
     /** Temporary: gates Digital Programs beta access by email list (DIGITAL_PROGRAMS_EMAILS). */
     public function canAccessDigitalPrograms(): bool
     {
+        if ($this->isAssistant()) {
+            return $this->parent?->canAccessDigitalPrograms() ?? false;
+        }
+
         if ($this->isFounder()) {
             return true;
         }
@@ -171,6 +190,22 @@ class User extends Authenticatable implements MustVerifyEmail
         $allowed = config('app.digital_programs_emails', []);
 
         return ! empty($allowed) && in_array($this->email, $allowed, true);
+    }
+
+    public function isAssistant(): bool
+    {
+        return $this->role === UserRole::Assistant;
+    }
+
+    /** The user whose digital programs this account manages (itself, unless this is an assistant account). */
+    public function digitalProgramsOwner(): self
+    {
+        return $this->parent ?? $this;
+    }
+
+    public function digitalProgramsOwnerId(): int
+    {
+        return $this->parent_user_id ?? $this->id;
     }
 
     /**

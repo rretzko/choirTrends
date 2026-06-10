@@ -42,7 +42,9 @@
         @else
             <div class="flex gap-3">
                 <flux:button wire:click="saveDraft" variant="subtle">{{ __('Save as Draft') }}</flux:button>
-                <flux:button wire:click="publish" variant="primary" icon="check">{{ __('Publish') }}</flux:button>
+                @unless(auth()->user()->isAssistant())
+                    <flux:button wire:click="publish" variant="primary" icon="check">{{ __('Publish') }}</flux:button>
+                @endunless
             </div>
         @endif
     </div>
@@ -610,7 +612,9 @@
         @else
             <div class="flex gap-3">
                 <flux:button wire:click="saveDraft" variant="subtle">{{ __('Save as Draft') }}</flux:button>
-                <flux:button wire:click="publish" variant="primary" icon="check">{{ __('Publish') }}</flux:button>
+                @unless(auth()->user()->isAssistant())
+                    <flux:button wire:click="publish" variant="primary" icon="check">{{ __('Publish') }}</flux:button>
+                @endunless
             </div>
         @endif
     </div>

@@ -11,6 +11,7 @@ use App\Http\Controllers\UserGuidePdfController;
 use App\Http\Controllers\VideoController;
 use App\Http\Middleware\EnsureUserIsFounder;
 use App\Http\Middleware\EnsureUserIsFounderOrImpersonating;
+use App\Http\Middleware\RestrictAssistantToDigitalPrograms;
 use App\Livewire\Catalog\Index;
 use App\Livewire\DigitalPrograms\Configure;
 use App\Livewire\DigitalPrograms\GuidedWizard;
@@ -62,7 +63,7 @@ Route::get('p/{slug}/qr.svg', DigitalProgramQrController::class)
 Route::get('p/{slug}/booklet', [DigitalProgramPublicController::class, 'booklet'])
     ->name('program.booklet');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', RestrictAssistantToDigitalPrograms::class])->group(function () {
 
     Route::get('videos/program/{program}', [VideoController::class, 'programVideo'])->name('videos.program');
     Route::get('videos/song/{program}/{songTitle}', [VideoController::class, 'songVideo'])->name('videos.song');

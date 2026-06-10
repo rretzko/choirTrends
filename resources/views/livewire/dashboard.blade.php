@@ -60,6 +60,18 @@
         </div>
     </a>
 
+    <a href="{{ route('digital-programs.index') }}" class="block rounded-xl border border-neutral-200 bg-white p-6 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700">
+        <div class="flex items-center gap-4">
+            <div class="flex size-12 items-center justify-center rounded-lg bg-fuchsia-100 dark:bg-fuchsia-900">
+                <flux:icon name="device-phone-mobile" class="size-6 text-fuchsia-600 dark:text-fuchsia-400" />
+            </div>
+            <div>
+                <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">{{ __('Digital Programs') }}</flux:text>
+                <flux:heading size="xl">{{ number_format($digitalProgramsCount) }}</flux:heading>
+            </div>
+        </div>
+    </a>
+
     @if (auth()->user()->isFounder())
         <a href="{{ route('founder.users') }}" class="block rounded-xl border border-neutral-200 bg-white p-6 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700">
     @else

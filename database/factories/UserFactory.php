@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\ReferralSource;
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -113,6 +114,18 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'catalog_token' => Str::uuid()->toString(),
             'catalog_enabled_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the user is an assistant (proxy) account belonging to the given director.
+     */
+    public function assistant(User $director): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Assistant,
+            'parent_user_id' => $director->id,
+            'email_verified_at' => now(),
         ]);
     }
 

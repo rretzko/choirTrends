@@ -6,6 +6,7 @@ namespace App\Livewire;
 
 use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\Artist;
+use App\Models\DigitalProgram;
 use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
@@ -20,6 +21,8 @@ class Dashboard extends Component
     use ChecksProgramCompliance;
 
     public int $artistsCount = 0;
+
+    public int $digitalProgramsCount = 0;
 
     public int $ensemblesCount = 0;
 
@@ -49,7 +52,8 @@ class Dashboard extends Component
         $this->programsCount = Program::query()->count();
         $this->schoolsCount = School::query()->count();
         $this->songTitlesCount = SongTitle::query()->count();
-        $this->usersCount = User::query()->whereNotNull('email_verified_at')->count();
+        $this->digitalProgramsCount = DigitalProgram::query()->count();
+        $this->usersCount = User::query()->whereNotNull('email_verified_at')->whereNull('parent_user_id')->count();
     }
 
     public function toggleCatalog(): void

@@ -241,6 +241,63 @@ test('save replaces honors and rosters', function () {
     expect(DigitalProgramRoster::where('digital_program_id', $dp->id)->value('student_name'))->toBe('Alice');
 });
 
+test('assistant can access the directors configure page', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    $dp = DigitalProgram::factory()->for($director)->create();
+
+    $this->actingAs($assistant)
+        ->get(route('digital-programs.configure', $dp))
+        ->assertOk()
+        ->assertSeeLivewire(Configure::class);
+});
+
+test('assistant can save a draft', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    $dp = DigitalProgram::factory()->for($director)->create([
+        'theme' => 'Formal',
+        'is_published' => false,
+    ]);
+
+    $this->actingAs($assistant);
+
+    Livewire::test(Configure::class, ['digitalProgram' => $dp])
+        ->set('theme', 'Holiday')
+        ->call('save', false)
+        ->assertRedirect(route('digital-programs.index'));
+
+    expect($dp->fresh()->theme)->toBe('Holiday');
+    expect($dp->fresh()->is_published)->toBeFalse();
+});
+
+test('assistant cannot publish', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    $dp = DigitalProgram::factory()->for($director)->create(['is_published' => false]);
+
+    $this->actingAs($assistant);
+
+    Livewire::test(Configure::class, ['digitalProgram' => $dp])
+        ->call('save', true)
+        ->assertForbidden();
+
+    expect($dp->fresh()->is_published)->toBeFalse();
+});
+
+test('assistant saving a draft does not unpublish an already published program', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    $dp = DigitalProgram::factory()->for($director)->published()->create();
+
+    $this->actingAs($assistant);
+
+    Livewire::test(Configure::class, ['digitalProgram' => $dp])
+        ->call('save', false);
+
+    expect($dp->fresh()->is_published)->toBeTrue();
+});
+
 test('index page shows edit button linking to power user form', function () {
     $user = User::factory()->create();
     $dp = DigitalProgram::factory()->for($user)->create();

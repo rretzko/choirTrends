@@ -183,6 +183,67 @@ test('save with publish true creates a published digital program', function () {
     expect($dp->print_orientation)->toBe('Landscape');
 });
 
+test('assistant can save a draft for the directors program', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($director)->for($school)->create();
+
+    $this->actingAs($assistant);
+
+    Livewire::test(PowerUserForm::class)
+        ->set('startChoice', 'existing')
+        ->set('selectedProgramId', $program->id)
+        ->set('programLoaded', true)
+        ->set('resolvedProgramId', $program->id)
+        ->set('theme', 'Formal')
+        ->set('printOrientation', 'Portrait')
+        ->call('save', false)
+        ->assertRedirect(route('digital-programs.index'));
+
+    $dp = DigitalProgram::where('program_id', $program->id)->where('user_id', $director->id)->first();
+    expect($dp)->not->toBeNull();
+    expect($dp->is_published)->toBeFalse();
+});
+
+test('assistant cannot publish via save', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($director)->for($school)->create();
+
+    $this->actingAs($assistant);
+
+    Livewire::test(PowerUserForm::class)
+        ->set('startChoice', 'existing')
+        ->set('selectedProgramId', $program->id)
+        ->set('programLoaded', true)
+        ->set('resolvedProgramId', $program->id)
+        ->set('theme', 'Formal')
+        ->set('printOrientation', 'Portrait')
+        ->call('save', true)
+        ->assertForbidden();
+
+    expect(DigitalProgram::where('program_id', $program->id)->exists())->toBeFalse();
+});
+
+test('assistant saving a draft does not unpublish an already published program', function () {
+    $director = User::factory()->create();
+    $assistant = User::factory()->assistant($director)->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($director)->for($school)->create();
+    $dp = DigitalProgram::factory()->for($director)->published()->create([
+        'program_id' => $program->id,
+    ]);
+
+    $this->actingAs($assistant);
+
+    Livewire::test(PowerUserForm::class, ['digitalProgram' => $dp])
+        ->call('save', false);
+
+    expect($dp->fresh()->is_published)->toBeTrue();
+});
+
 test('save creates a new program when start choice is new', function () {
     $user = User::factory()->create();
 

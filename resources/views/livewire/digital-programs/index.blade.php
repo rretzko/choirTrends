@@ -26,6 +26,11 @@
         </flux:callout>
     @endif
 
+    {{-- ── Assistant access management ── --}}
+    @unless(auth()->user()->isAssistant())
+        <livewire:digital-programs.assistant-access />
+    @endunless
+
     {{-- ── Empty state ── --}}
     @if($digitalPrograms->isEmpty())
         <div class="rounded-2xl border border-dashed border-zinc-300 px-6 py-16 text-center dark:border-zinc-700">
@@ -179,33 +184,35 @@
                                 @endif
 
                                 {{-- Toggle publish --}}
-                                @if($dp->is_published)
+                                @unless(auth()->user()->isAssistant())
+                                    @if($dp->is_published)
+                                        <flux:button
+                                            wire:click="togglePublish({{ $dp->id }})"
+                                            wire:confirm="{{ __('Unpublish this program? The public link will return a 404 until republished.') }}"
+                                            variant="ghost"
+                                            size="sm"
+                                            icon="eye-slash">
+                                            {{ __('Unpublish') }}
+                                        </flux:button>
+                                    @else
+                                        <flux:button
+                                            wire:click="togglePublish({{ $dp->id }})"
+                                            variant="primary"
+                                            size="sm"
+                                            icon="globe-alt">
+                                            {{ __('Publish') }}
+                                        </flux:button>
+                                    @endif
+
+                                    {{-- Delete --}}
                                     <flux:button
-                                        wire:click="togglePublish({{ $dp->id }})"
-                                        wire:confirm="{{ __('Unpublish this program? The public link will return a 404 until republished.') }}"
+                                        wire:click="confirmDelete({{ $dp->id }})"
                                         variant="ghost"
                                         size="sm"
-                                        icon="eye-slash">
-                                        {{ __('Unpublish') }}
+                                        icon="trash"
+                                        class="text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30">
                                     </flux:button>
-                                @else
-                                    <flux:button
-                                        wire:click="togglePublish({{ $dp->id }})"
-                                        variant="primary"
-                                        size="sm"
-                                        icon="globe-alt">
-                                        {{ __('Publish') }}
-                                    </flux:button>
-                                @endif
-
-                                {{-- Delete --}}
-                                <flux:button
-                                    wire:click="confirmDelete({{ $dp->id }})"
-                                    variant="ghost"
-                                    size="sm"
-                                    icon="trash"
-                                    class="text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30">
-                                </flux:button>
+                                @endunless
 
                             </div>
                         </div>

@@ -18,9 +18,11 @@ class Index extends Component
 
     public function togglePublish(int $id): void
     {
+        abort_if(auth()->user()->isAssistant(), 403);
+
         $dp = DigitalProgram::query()
             ->where('id', $id)
-            ->where('user_id', auth()->id())
+            ->where('user_id', auth()->user()->digitalProgramsOwnerId())
             ->firstOrFail();
 
         $dp->update(['is_published' => ! $dp->is_published]);
@@ -40,13 +42,15 @@ class Index extends Component
 
     public function delete(): void
     {
+        abort_if(auth()->user()->isAssistant(), 403);
+
         if (! $this->confirmingDeleteId) {
             return;
         }
 
         DigitalProgram::query()
             ->where('id', $this->confirmingDeleteId)
-            ->where('user_id', auth()->id())
+            ->where('user_id', auth()->user()->digitalProgramsOwnerId())
             ->firstOrFail()
             ->delete();
 
@@ -61,7 +65,7 @@ class Index extends Component
     public function render(): View
     {
         $digitalPrograms = DigitalProgram::query()
-            ->where('user_id', auth()->id())
+            ->where('user_id', auth()->user()->digitalProgramsOwnerId())
             ->with(['program' => fn ($q) => $q->withCount('songTitles')->with('school')])
             ->withCount('rosters')
             ->latest()

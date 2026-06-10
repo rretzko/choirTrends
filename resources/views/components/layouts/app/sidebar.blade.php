@@ -27,6 +27,7 @@
             @endif
 
             <flux:sidebar.nav>
+                @unless(auth()->user()->isAssistant())
                 <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate class="mb-4">{{ __('Dashboard') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="document-text" :href="route('programs.index')" :current="request()->routeIs('programs.*')" wire:navigate>{{ __('Programs') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="arrow-up-tray" :href="route('addProgram')" :current="request()->routeIs('addProgram')" wire:navigate>{{ __('Add Program') }}</flux:sidebar.item>
@@ -34,8 +35,11 @@
                 <flux:sidebar.item icon="user-group" :href="route('ensembles.index')" :current="request()->routeIs('ensembles.*')" wire:navigate>{{ __('Ensembles') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="academic-cap" :href="route('schools.index')" :current="request()->routeIs('schools.*')" wire:navigate>{{ __('Schools') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="queue-list" :href="route('song-titles.index')" :current="request()->routeIs('song-titles.*')" wire:navigate>{{ __('Song Titles') }}</flux:sidebar.item>
+                @endunless
                 @if(auth()->user()->canAccessDigitalPrograms())
+                @unless(auth()->user()->isAssistant())
                 <flux:separator class="my-2"/>
+                @endunless
                 @if(auth()->user()->isFounder())
                     <flux:sidebar.item icon="document-plus" :href="route('founder.createProgram')" :current="request()->routeIs('founder.createProgram')" wire:navigate>{{ __('Create Program') }}</flux:sidebar.item>
                 @else
@@ -43,6 +47,7 @@
                 @endif
                 <flux:sidebar.item icon="ticket" :href="route('digital-programs.index')" :current="request()->routeIs('digital-programs.index')" wire:navigate>{{ __('Digital Programs') }}</flux:sidebar.item>
                 @endif
+                @unless(auth()->user()->isAssistant())
                 <flux:separator class="my-2"/>
                 <flux:sidebar.item icon="book-open" :href="route('user-guide.index')" :current="request()->routeIs('user-guide.*')" wire:navigate>{{ __("User's Guide") }}</flux:sidebar.item>
                 <flux:separator class="my-2"/>
@@ -57,6 +62,7 @@
                     <flux:sidebar.item icon="academic-cap" :href="route('documentation.schools-guide')" :current="request()->routeIs('documentation.schools-guide')" wire:navigate>{{ __('Schools Guide') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="queue-list" :href="route('documentation.song-titles-guide')" :current="request()->routeIs('documentation.song-titles-guide')" wire:navigate>{{ __('Song Titles Guide') }}</flux:sidebar.item>
                 </flux:sidebar.group>
+                @endunless
                 <flux:sidebar.item icon="moon" x-data x-show="!$flux.dark" x-on:click.prevent="$flux.dark = true">{{ __('Dark Mode') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="sun" x-data x-show="$flux.dark" x-on:click.prevent="$flux.dark = false">{{ __('Light Mode') }}</flux:sidebar.item>
             </flux:sidebar.nav>
@@ -111,11 +117,13 @@
 
                     <flux:menu.separator />
 
+                    @unless(auth()->user()->isAssistant())
                     <flux:menu.radio.group>
                         <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>{{ __('Profile') }}</flux:menu.item>
                     </flux:menu.radio.group>
 
                     <flux:menu.separator />
+                    @endunless
 
                     <form method="POST" action="{{ route('logout') }}" class="w-full">
                         @csrf
@@ -171,11 +179,13 @@
 
                     <flux:menu.separator />
 
+                    @unless(auth()->user()->isAssistant())
                     <flux:menu.radio.group>
                         <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>{{ __('Profile') }}</flux:menu.item>
                     </flux:menu.radio.group>
 
                     <flux:menu.separator />
+                    @endunless
 
                     <form method="POST" action="{{ route('logout') }}" class="w-full">
                         @csrf

@@ -16,7 +16,9 @@
                         </a>
                     @endif
                     <flux:button wire:click="save(false)" variant="subtle" size="sm">{{ __('Save Draft') }}</flux:button>
-                    <flux:button wire:click="save(true)" variant="primary" size="sm" icon="check">{{ __('Publish') }}</flux:button>
+                    @unless(auth()->user()->isAssistant())
+                        <flux:button wire:click="save(true)" variant="primary" size="sm" icon="check">{{ __('Publish') }}</flux:button>
+                    @endunless
                 </div>
             @endif
         </div>
@@ -511,7 +513,9 @@
                     {{-- ── Bottom actions ── --}}
                     <div class="flex justify-end gap-3 pb-6">
                         <flux:button wire:click="save(false)" variant="subtle">{{ __('Save as Draft') }}</flux:button>
-                        <flux:button wire:click="save(true)" variant="primary" icon="check">{{ __('Publish') }}</flux:button>
+                        @unless(auth()->user()->isAssistant())
+                            <flux:button wire:click="save(true)" variant="primary" icon="check">{{ __('Publish') }}</flux:button>
+                        @endunless
                     </div>
 
                 @endif

@@ -14,9 +14,11 @@
                 <flux:button wire:click="save(false)" variant="subtle" size="sm" icon="arrow-down-tray">
                     {{ __('Save Draft') }}
                 </flux:button>
-                <flux:button wire:click="save(true)" variant="primary" size="sm" icon="globe-alt">
-                    {{ __('Save & Publish') }}
-                </flux:button>
+                @unless(auth()->user()->isAssistant())
+                    <flux:button wire:click="save(true)" variant="primary" size="sm" icon="globe-alt">
+                        {{ __('Save & Publish') }}
+                    </flux:button>
+                @endunless
             </div>
         </div>
     </div>
