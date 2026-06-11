@@ -47,7 +47,7 @@ class UsersSeeder extends Seeder
 
         User::create([
             'name' => 'Jason Allen',
-            'email' => strtolower('jallen@ewrsk.k12.nj.us'),
+            'email' => strtolower('jallen@ewrsd.k12.nj.us'),
             'email_verified_at' => '2026-01-24 11:18:18',
             'password' => Hash::make('password'),
             'two_factor_secret' => null,

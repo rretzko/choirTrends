@@ -42,7 +42,7 @@
             <flux:label>{{ __('Introduction (optional)') }}</flux:label>
             <div
                 wire:ignore
-                x-data="{ value: @entangle('introduction') }"
+                x-data="{ value: $wire.entangle('introduction') }"
                 x-init="
                     const editor = $refs.trixIntroduction;
                     editor.editor.loadHTML(value);
@@ -63,7 +63,7 @@
             <flux:label>{{ __('Tip') }}</flux:label>
             <div
                 wire:ignore
-                x-data="{ value: @entangle('tip') }"
+                x-data="{ value: $wire.entangle('tip') }"
                 x-init="
                     const editor = $refs.trixTip;
                     editor.editor.loadHTML(value);

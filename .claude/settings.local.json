@@ -75,7 +75,20 @@
       "Bash(npm install *)",
       "Bash(npx playwright *)",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}, indent=2\\)\\)\")",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(git log *)",
+      "Skill(run)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://choirtrends.test/)",
+      "Read(//c//**)",
+      "Bash(npm list *)",
+      "Bash(where chromium-cli *)",
+      "Bash(find . -path ./node_modules -prune -o -iname \"QuickTipFactory.php\" -print)",
+      "Bash(find . -path ./node_modules -prune -o -iname \"Pest.php\" -print)",
+      "Bash(find . -maxdepth 1 -iname \"*.hot\" -o -name \"hot\")",
+      "Bash(ls public/hot)",
+      "Bash(rm -f tests/Browser/Founder/QuickTipFormDiagnosticTest.php tests/Browser/Screenshots/it_shows_trix_editor_content_when_editing_a_quick_tip_with_div_based_html.png)",
+      "Bash(rmdir tests/Browser/Founder)"
     ]
   },
   "enableAllProjectMcpServers": true,

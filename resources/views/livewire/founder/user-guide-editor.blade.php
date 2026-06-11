@@ -40,7 +40,7 @@
                 <flux:label>{{ __('Body') }}</flux:label>
                 <div
                     wire:ignore
-                    x-data="{ value: @entangle('editBody') }"
+                    x-data="{ value: $wire.entangle('editBody') }"
                     x-init="
                         const editor = $refs.trixBody;
                         editor.editor.loadHTML(value);
