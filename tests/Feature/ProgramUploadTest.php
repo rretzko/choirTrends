@@ -133,6 +133,52 @@ test('status endpoint returns not found when no analysis exists', function () {
     $response->assertJson(['status' => 'not_found']);
 });
 
+test('status endpoint flips stale processing entry to failed', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    cache()->put(
+        "program_analysis_{$user->id}",
+        ['status' => 'processing', 'started_at' => now()->subMinutes(10)->toIso8601String()],
+        now()->addHours(2)
+    );
+
+    $response = $this->actingAs($user)->get(route('addProgram.status'));
+
+    $response->assertSuccessful();
+    $response->assertJson(['status' => 'failed']);
+    expect(cache()->get("program_analysis_{$user->id}")['status'])->toBe('failed');
+});
+
+test('status endpoint leaves recent processing entry untouched', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    cache()->put(
+        "program_analysis_{$user->id}",
+        ['status' => 'processing', 'started_at' => now()->subMinutes(1)->toIso8601String()],
+        now()->addHours(2)
+    );
+
+    $response = $this->actingAs($user)->get(route('addProgram.status'));
+
+    $response->assertSuccessful();
+    $response->assertJson(['status' => 'processing']);
+});
+
+test('index page flips stale processing entry to failed', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    cache()->put(
+        "program_analysis_{$user->id}",
+        ['status' => 'processing', 'started_at' => now()->subMinutes(10)->toIso8601String()],
+        now()->addHours(2)
+    );
+
+    $response = $this->actingAs($user)->get(route('addProgram'));
+
+    $response->assertSuccessful();
+    expect($response->viewData('analysis')['status'])->toBe('failed');
+});
+
 test('file is stored in concert-programs directory when uploaded', function () {
     Queue::fake();
 

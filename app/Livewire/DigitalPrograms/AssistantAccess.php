@@ -36,8 +36,7 @@ class AssistantAccess extends Component
             'role' => UserRole::Assistant,
         ]);
 
-        $assistant->email_verified_at = now();
-        $assistant->save();
+        $assistant->forceFill(['email_verified_at' => now()])->save();
 
         $this->generatedPassword = $password;
     }

@@ -15,6 +15,7 @@ use App\Models\SongTitle;
 use App\Services\ArtistNameParser;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -22,10 +23,15 @@ use Mews\Purifier\Facades\Purifier;
 
 class AddProgramController extends Controller
 {
+    /**
+     * Job timeout (300s) plus a buffer for SQS/Lambda overhead before a
+     * "processing" analysis is considered stalled and surfaced as failed.
+     */
+    private const PROCESSING_TIMEOUT_SECONDS = 360;
+
     public function index(Request $request)
     {
-        // Check if there's a completed analysis for this user
-        $analysis = cache()->get("program_analysis_{$request->user()->id}");
+        $analysis = $this->resolveAnalysis($request->user()->id);
 
         $userSchools = $request->user()->schools()->get(['schools.id', 'school_name', 'abbreviation']);
 
@@ -91,7 +97,7 @@ class AddProgramController extends Controller
             // Set processing status
             cache()->put(
                 "program_analysis_{$request->user()->id}",
-                ['status' => 'processing'],
+                ['status' => 'processing', 'started_at' => now()->toIso8601String()],
                 now()->addHours(2)
             );
 
@@ -115,7 +121,7 @@ class AddProgramController extends Controller
 
     public function status(Request $request)
     {
-        $analysis = cache()->get("program_analysis_{$request->user()->id}");
+        $analysis = $this->resolveAnalysis($request->user()->id);
 
         return response()->json($analysis ?? ['status' => 'not_found']);
     }
@@ -125,6 +131,37 @@ class AddProgramController extends Controller
         cache()->forget("program_analysis_{$request->user()->id}");
 
         return redirect()->route('addProgram');
+    }
+
+    /**
+     * Fetch the cached analysis for a user, flipping a stalled "processing"
+     * entry to "failed" if it has exceeded the expected processing window.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function resolveAnalysis(int $userId): ?array
+    {
+        $cacheKey = "program_analysis_{$userId}";
+        $analysis = cache()->get($cacheKey);
+
+        if (($analysis['status'] ?? null) !== 'processing' || ! isset($analysis['started_at'])) {
+            return $analysis;
+        }
+
+        $deadline = Carbon::parse($analysis['started_at'])->addSeconds(self::PROCESSING_TIMEOUT_SECONDS);
+
+        if ($deadline->isFuture()) {
+            return $analysis;
+        }
+
+        $analysis = [
+            'status' => 'failed',
+            'error' => 'Processing is taking longer than expected and may have failed. Please start over and try again.',
+        ];
+
+        cache()->put($cacheKey, $analysis, now()->addHours(2));
+
+        return $analysis;
     }
 
     public function confirm(ConfirmProgramRequest $request)

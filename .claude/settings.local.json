@@ -88,7 +88,11 @@
       "Bash(find . -maxdepth 1 -iname \"*.hot\" -o -name \"hot\")",
       "Bash(ls public/hot)",
       "Bash(rm -f tests/Browser/Founder/QuickTipFormDiagnosticTest.php tests/Browser/Screenshots/it_shows_trix_editor_content_when_editing_a_quick_tip_with_div_based_html.png)",
-      "Bash(rmdir tests/Browser/Founder)"
+      "Bash(rmdir tests/Browser/Founder)",
+      "Bash(cp app/Models/User.php /tmp/User.php.bak)",
+      "Bash(python3 -)",
+      "Bash(cp /tmp/User.php.bak app/Models/User.php)",
+      "Bash(cp /tmp/AssistantAccess.php.bak app/Livewire/DigitalPrograms/AssistantAccess.php)"
     ]
   },
   "enableAllProjectMcpServers": true,

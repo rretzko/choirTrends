@@ -122,11 +122,13 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Program::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function parent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'parent_user_id');
     }
 
+    /** @return HasOne<User, $this> */
     public function assistant(): HasOne
     {
         return $this->hasOne(User::class, 'parent_user_id');
