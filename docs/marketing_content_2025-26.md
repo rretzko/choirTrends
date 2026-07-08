@@ -92,7 +92,7 @@ All three: bar chart of Gjeilo (7 performances/6 programs) vs. Uusberg and Ešen
 > Thank you for your consideration,
 > Rick Retzko
 > Founder, ChoirTrends.com & TheDirectorsRoom.com
-> rick.retzko@gmail.com
+> rick@mfrholdings.com
 
 ### Article
 
@@ -122,7 +122,7 @@ All three: bar chart of Gjeilo (7 performances/6 programs) vs. Uusberg and Ešen
 >
 > ---
 >
-> Rick Retzko is the founder of ChoirTrends.com and TheDirectorsRoom.com.
+> Rick Retzko is the founder of ChoirTrends.com and TheDirectorsRoom.com. Rick can be reached at rick@mfrholdings.com.
 >
 > ChoirTrends.com is a free resource offered as a gift to the choral community, requiring only the commitment to upload at least two choral programs per year.
 >
