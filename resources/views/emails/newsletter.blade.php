@@ -25,7 +25,7 @@
 
     @if (!empty($data['cta_text']) && !empty($data['cta_url']))
         <div style="margin-top: 32px; text-align: center;">
-            <a href="{{ $data['cta_url'] }}" style="display: inline-block; background: #3b82f6; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">{{ $data['cta_text'] }}</a>
+            <a href="{{ $data['cta_url'] }}" style="display: inline-block; background: #3b82f6; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">{!! $data['cta_text'] !!}</a>
         </div>
     @endif
 

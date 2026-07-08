@@ -92,7 +92,8 @@
       "Bash(cp app/Models/User.php /tmp/User.php.bak)",
       "Bash(python3 -)",
       "Bash(cp /tmp/User.php.bak app/Models/User.php)",
-      "Bash(cp /tmp/AssistantAccess.php.bak app/Livewire/DigitalPrograms/AssistantAccess.php)"
+      "Bash(cp /tmp/AssistantAccess.php.bak app/Livewire/DigitalPrograms/AssistantAccess.php)",
+      "mcp__laravel-boost__get-absolute-url"
     ]
   },
   "enableAllProjectMcpServers": true,

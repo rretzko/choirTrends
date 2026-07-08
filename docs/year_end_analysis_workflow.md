@@ -12,6 +12,8 @@ The minimum threshold for "trends" is **3+ performances**. Report top 5 per cate
 
 ## Step 1 — Overall Dataset Stats
 
+**Note on total_directors:** `COUNT(DISTINCT p.user_id)` counts distinct `programs.user_id` regardless of `users.role` — if Assistant-role accounts (`parent_user_id` set) start logging programs directly, this figure will include them rather than just Directors.
+
 ```sql
 SELECT
   COUNT(DISTINCT p.id) as total_programs,
