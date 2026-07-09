@@ -2,7 +2,7 @@
 
 Compiled 2026-07-08 from the 2025–26 year-end programming trends analysis (`docs/year_end_analysis_workflow.md` / `docs/year_end_email_template.md`). All items below are drafted and ready for review; nothing has been published or sent externally. Newsletter #2 exists as an unsent draft in the app.
 
-**Source numbers used throughout:** 57 concerts · 37 schools · 35 directors · 631 unique titles · 664 performances · Sep 2025–Jul 2026. Ola Gjeilo 7 performances/6 programs (Norway); Pärt Uusberg 3/3 (Estonia); Eriks Ešenvalds 3/3 (Latvia).
+**Source numbers used throughout (updated 2026-07-09):** 63 concerts · 40 schools · 37 directors · 694 unique titles · 736 performances · Sep 2025–Jul 2026. Ola Gjeilo 8 performances/7 programs (Norway); Pärt Uusberg 3/3 (Estonia); Eriks Ešenvalds 3/3 (Latvia).
 
 ---
 
@@ -23,13 +23,13 @@ Compiled 2026-07-08 from the 2025–26 year-end programming trends analysis (`do
 
 > **Why is everyone singing Gjeilo?**
 >
-> We looked at 664 choral performances logged by directors this year — and Ola Gjeilo showed up in 6 different programs, more than almost any other living composer.
+> We looked at 736 choral performances logged by directors this year — and Ola Gjeilo showed up in 7 different programs, more than almost any other living composer.
 >
 > He's not alone. Alongside Gjeilo (Norway), we're seeing real staying power from Pärt Uusberg (Estonia) and Eriks Ešenvalds (Latvia) — a distinct "Nordic/Baltic" sound built on spacious harmony and text-centered writing that's become one of the clearest trends in what directors are actually programming this season.
 >
 > A few other things the data showed:
-> • 631 unique titles out of 664 performances — directors are barely repeating each other
-> • The most-performed single piece: "Time" by Jennifer Lucy Cook, 6 performances
+> • 694 unique titles out of 736 performances — directors are barely repeating each other
+> • The most-performed single piece: "Time" by Jennifer Lucy Cook, 7 performances
 > • Living composers dominate the top 5 — history shows up mostly in December
 >
 > We track this kind of programming data at ChoirTrends so directors can see what their peers are choosing — not to copy, but to know what's actually resonating right now. Curious what's driving the Nordic sound's staying power? [link]
@@ -40,10 +40,10 @@ Compiled 2026-07-08 from the 2025–26 year-end programming trends analysis (`do
 
 > 🎵 **Why is everyone singing Gjeilo?**
 >
-> We crunched the numbers on this year's uploaded concert programs, and Ola Gjeilo showed up in 6 different schools' programs — more than almost any other composer we tracked. Add in Pärt Uusberg and Eriks Ešenvalds, and there's a clear "Nordic sound" moment happening in choir rooms right now.
+> We crunched the numbers on this year's uploaded concert programs, and Ola Gjeilo showed up in 7 different schools' programs — more than almost any other composer we tracked. Add in Pärt Uusberg and Eriks Ešenvalds, and there's a clear "Nordic sound" moment happening in choir rooms right now.
 >
-> Some other fun finds from 664 total performances:
-> ✅ 631 unique titles — almost nobody's programming is the same
+> Some other fun finds from 736 total performances:
+> ✅ 694 unique titles — almost nobody's programming is the same
 > ✅ "Time" by Jennifer Lucy Cook was the most-performed piece this year
 > ✅ Living composers dominate — outside of the holidays, directors are leaning modern
 >
@@ -69,7 +69,7 @@ Compiled 2026-07-08 from the 2025–26 year-end programming trends analysis (`do
 | LinkedIn | 1200×630 (landscape) | https://claude.ai/code/artifact/c0d29418-5b1e-42be-a594-12ccf503b97b | Two-column layout, has CTA pill |
 | Facebook group (no CTA) | 1080×1080 (square) | https://claude.ai/code/artifact/6f228af1-a658-4ca3-a972-527cfba38b67 | CTA pill removed, kicker text neutral (no brand color) |
 
-All three: bar chart of Gjeilo (7 performances/6 programs) vs. Uusberg and Ešenvalds (3/3 each), footer citing 664 performances / 57 programs / Sep 2025–Jul 2026. Widen the browser before screenshotting for full resolution.
+All three: bar chart of Gjeilo (8 performances/7 programs) vs. Uusberg and Ešenvalds (3/3 each), footer citing 736 performances / 63 programs / Sep 2025–Jul 2026. Widen the browser before screenshotting for full resolution. Redeployed 2026-07-09 to match final data (same URLs, no link changes needed).
 
 ---
 
@@ -79,11 +79,11 @@ All three: bar chart of Gjeilo (7 performances/6 programs) vs. Uusberg and Ešen
 
 ### Pitch note (query email)
 
-> **Subject:** Pitch: What 664 Logged Performances Reveal About Repertoire Trends — Data Feature for Choral Journal
+> **Subject:** Pitch: What 736 Logged Performances Reveal About Repertoire Trends — Data Feature for Choral Journal
 >
 > Dear Choral Journal Editors,
 >
-> I'd like to propose a data-driven feature on choral programming trends, drawn from concert programs logged by directors on ChoirTrends, a repertoire-tracking platform I founded. Over the 2025–26 school year, directors uploaded 57 concert programs spanning 37 schools — enough to surface real patterns in what's actually being programmed, from the dominance of living composers to a distinct "Nordic/Baltic" stylistic thread running through both winter and spring concerts.
+> I'd like to propose a data-driven feature on choral programming trends, drawn from concert programs logged by directors on ChoirTrends, a repertoire-tracking platform I founded. Over the 2025–26 school year, directors uploaded 63 concert programs spanning 40 schools — enough to surface real patterns in what's actually being programmed, from the dominance of living composers to a distinct "Nordic/Baltic" stylistic thread running through both winter and spring concerts.
 >
 > I want to be upfront about scope: this is not a scientifically representative national sample — it reflects early adopters of one platform, concentrated in the Northeast. I think that's still useful to your readers as an early signal, and I've written the piece to be transparent about that limitation rather than oversell it. The draft is attached, roughly 1,300 words, with room to adjust length or add a data sidebar/table if useful for layout. Happy to update the analysis with a larger dataset for a later issue if this one is too early-stage for you.
 >
@@ -96,7 +96,7 @@ All three: bar chart of Gjeilo (7 performances/6 programs) vs. Uusberg and Ešen
 
 ### Article
 
-> ### What 664 Performances Reveal About Choral Programming in 2025–26
+> ### What 736 Performances Reveal About Choral Programming in 2025–26
 >
 > *A first look at repertoire trends from a season of logged concert programs*
 >
@@ -104,19 +104,19 @@ All three: bar chart of Gjeilo (7 performances/6 programs) vs. Uusberg and Ešen
 >
 > Every fall, choral directors make hundreds of small decisions — what to open the winter concert with, which arranger's "Auld Lang Syne" arrangement to use, whether this is finally the year to program that Ešenvalds octavo sitting in the folder. Multiply those decisions across even a few dozen programs and patterns start to emerge: which composers are actually being sung right now, not just anthologized; which arrangers quietly dominate a season without anyone naming them "trending"; and whether the field is moving in a direction any one director might not notice from inside their own program.
 >
-> This article is a first attempt to look at those patterns directly, using data from ChoirTrends, a platform where directors log their concert programs — repertoire, ensembles, dates, and schools — as they build each season. Over the 2025–26 school year (September 2025 through July 2026), directors logged 57 concert programs from 37 schools, totaling 664 individual performances of 631 unique titles.
+> This article is a first attempt to look at those patterns directly, using data from ChoirTrends, a platform where directors log their concert programs — repertoire, ensembles, dates, and schools — as they build each season. Over the 2025–26 school year (September 2025 through July 2026), directors logged 63 concert programs from 40 schools, totaling 736 individual performances of 694 unique titles.
 >
-> **A note on the data, up front.** This is a small, self-selected sample — early users of one platform, concentrated in New Jersey (33 of 57 programs), with smaller representation from Rhode Island, New York, Pennsylvania, Wisconsin, Maryland, and Tennessee, plus a first international data point from a school in Trier, Germany. It is not a scientific survey of American choral programming. What it offers instead is a real, unfiltered look at actual concert programs as directors built them — no anthologizing, no self-reporting bias toward "important" repertoire, just what got performed. As the dataset grows in future seasons, we expect these patterns to sharpen; for now, treat what follows as a signal worth watching rather than a settled conclusion.
+> **A note on the data, up front.** This is a small, self-selected sample — early users of one platform, concentrated in New Jersey (40 of 63 programs), with smaller representation from Rhode Island, New York, Pennsylvania, Wisconsin, Maryland, and Tennessee, plus a first international data point from two schools in Trier, Germany. It is not a scientific survey of American choral programming. What it offers instead is a real, unfiltered look at actual concert programs as directors built them — no anthologizing, no self-reporting bias toward "important" repertoire, just what got performed. As the dataset grows in future seasons, we expect these patterns to sharpen; for now, treat what follows as a signal worth watching rather than a settled conclusion.
 >
-> **Living composers, not historical ones, dominate the season.** Outside the December repertoire, the most-programmed composers were overwhelmingly working composers: Elaine Hagenberg, Jennifer Lucy Cook, Ola Gjeilo, and Kyle Pederson each appeared in the season's top tier, all writing music from within the last decade. The one historical name to break into the top five — George Frideric Handel — owed his position almost entirely to holiday programming; strip out December, and the top of the list is entirely contemporary. This tracks with a broader shift many directors have felt anecdotally: that today's active repertoire pipeline is increasingly built around living voices, not the historical canon, except where the calendar itself calls for tradition.
+> **Living composers, not historical ones, dominate the season.** Outside the December repertoire, the most-programmed composers were overwhelmingly working composers: Elaine Hagenberg, Ola Gjeilo, Jennifer Lucy Cook, and Eric Whitacre each appeared in the season's top tier, all writing music from within the last decade. The one historical name to break into the top five — George Frideric Handel — owed his position almost entirely to holiday programming; strip out December, and the top of the list is entirely contemporary. This tracks with a broader shift many directors have felt anecdotally: that today's active repertoire pipeline is increasingly built around living voices, not the historical canon, except where the calendar itself calls for tradition.
 >
-> **A distinct Nordic/Baltic sound runs through the season.** One of the clearest stylistic threads in the data is a cluster of composers writing spacious, atmospheric, text-centered choral music from the Nordic and Baltic countries: Ola Gjeilo (Norway), Pärt Uusberg (Estonia), and Eriks Ešenvalds (Latvia). Gjeilo alone was performed 7 times across 6 different programs — more than any composer except Traditional/anonymous settings — with "Tundra" and "Northern Lights" each appearing twice. Uusberg and Ešenvalds each appeared 3 times across 3 programs, clearing the "trend" threshold on a much smaller total sample size than Gjeilo. Taken together, this Nordic/Baltic aesthetic was present in roughly one in ten logged programs — notable given that none of these composers write primarily in English or draw on American choral tradition. It's a pattern consistent with what several state ACDA reading sessions have highlighted in recent years, and this data suggests it's translating into actual programming, not just conference buzz.
+> **A distinct Nordic/Baltic sound runs through the season.** One of the clearest stylistic threads in the data is a cluster of composers writing spacious, atmospheric, text-centered choral music from the Nordic and Baltic countries: Ola Gjeilo (Norway), Pärt Uusberg (Estonia), and Eriks Ešenvalds (Latvia). Gjeilo alone was performed 8 times across 7 different programs — trailing only Elaine Hagenberg and generic "Traditional/anonymous" attributions among all composers in the dataset — with "Tundra" appearing three times on its own. Uusberg and Ešenvalds each appeared 3 times across 3 programs, clearing the "trend" threshold on a much smaller total sample size than Gjeilo. Taken together, this Nordic/Baltic aesthetic was present in roughly one in ten logged programs — notable given that none of these composers write primarily in English or draw on American choral tradition. It's a pattern consistent with what several state ACDA reading sessions have highlighted in recent years, and this data suggests it's translating into actual programming, not just conference buzz.
 >
-> **One piece stood out above the rest.** "Time," by Jennifer Lucy Cook, was the most-performed single title in the dataset — 6 performances, entirely concentrated in the spring semester. No other title came close during spring; the next tier ("Glow" by Eric Whitacre, "Veni, Veni Emmanuel" by Michael John Trotta, and "Muusika" by Pärt Uusberg) each landed 3 performances across the full year. What's more striking than any single title, though, is how rare repeats were at all: of 664 total performances, only 33 involved a title performed more than once anywhere in the dataset. Directors, at least in this sample, are not reaching for the same shelf.
+> **One piece stood out above the rest.** "Time," by Jennifer Lucy Cook, was the most-performed single title in the dataset — 7 performances, all but two of them in the spring semester. No other title came close during spring; the next tier ("Tundra" by Ola Gjeilo, "Glow" by Eric Whitacre, "Veni, Veni Emmanuel" by Michael John Trotta, "Muusika" by Pärt Uusberg, and "O Love" by Elaine Hagenberg) each landed 3 performances across the full year. What's more striking than any single title, though, is how rare repeats were at all: of 736 total performances, only 42 involved a title performed more than once anywhere in the dataset. Directors, at least in this sample, are not reaching for the same shelf.
 >
-> **Winter and spring tell different stories.** Splitting the season in two reveals a clear seasonal divide. Winter programming (September through January, 22 concerts) leaned sacred and seasonal — Handel, Byrd, Victoria, and Vivaldi appeared alongside Gjeilo's wintry soundscapes and Trotta's "Veni, Veni Emmanuel." On the arranging side, Roger Emerson was the dominant voice of the winter season by a wide margin: 10 performances across 7 programs, nearly double the next most-used arranger. Spring programming (February through July, 35 concerts) shifted decisively toward contemporary American voices — Cook, Hagenberg, Pederson, Rollo Dilworth, and Marta Keen led the composer list, while the arranger landscape broadened considerably, with Mark Brymer, Kirby Shaw, Craig Hella Johnson, and Audrey Snyder all posting strong numbers. Pop crossover repertoire also surfaced in spring specifically — arrangements of "Dust in the Wind" and "Homeward Bound" appeared multiple times, suggesting some directors are deliberately bridging choral and popular repertoire for spring audiences in a way that doesn't show up in winter programming at all.
+> **Winter and spring tell different stories.** Splitting the season in two reveals a clear seasonal divide. Winter programming (September through January, 24 concerts) leaned sacred and seasonal — Handel, Byrd, Victoria, and Vivaldi appeared alongside Gjeilo's wintry soundscapes and Trotta's "Veni, Veni Emmanuel." On the arranging side, Roger Emerson was the dominant voice of the winter season by a wide margin: 10 performances across 7 programs, nearly double the next most-used arranger. Spring programming (February through July, 39 concerts) shifted decisively toward contemporary American voices — Hagenberg, Cook, Pederson, Rollo Dilworth, and Marta Keen led the composer list, while the arranger landscape broadened considerably, with Mark Brymer, Kirby Shaw, Craig Hella Johnson, and Audrey Snyder all posting strong numbers. Pop crossover repertoire also surfaced in spring specifically — arrangements of "Dust in the Wind" and "Homeward Bound" appeared multiple times, suggesting some directors are deliberately bridging choral and popular repertoire for spring audiences in a way that doesn't show up in winter programming at all.
 >
-> **What we don't yet know.** Ensemble-level detail — whether a piece was sung by an SATB choir, a treble ensemble, a TTBB group, or performed a cappella — was only reliably recorded for about 18% of performances in this dataset; the rest are logged simply as "Unknown" ensemble type. Where we do have that detail, some patterns emerge (SATB choirs accounted for the largest typed share, and a cappella performances were concentrated there as well), but with this much missing data, we're not treating the ensemble-type breakdown as reliable yet — it's included for context, not as a finding.
+> **What we don't yet know.** Ensemble-level detail — whether a piece was sung by an SATB choir, a treble ensemble, a TTBB group, or performed a cappella — was only reliably recorded for about 23% of performances in this dataset; the rest are logged simply as "Unknown" ensemble type. Where we do have that detail, some patterns emerge (SATB choirs accounted for the largest typed share, and a cappella performances were concentrated there as well), but with this much missing data, we're not treating the ensemble-type breakdown as reliable yet — it's included for context, not as a finding.
 >
 > **Where this goes next.** This is a first snapshot from a single season and a still-small, geographically concentrated dataset. The value of this kind of analysis compounds with scale: as more directors log more seasons, patterns like the Nordic/Baltic thread, the winter/spring arranger divide, and shifts in the historical-versus-contemporary balance will become sharper and more defensible. We'd welcome the chance to revisit this analysis for Choral Journal in a future issue with a larger, more geographically diverse sample — and we'd welcome any director's data as part of that picture.
 >
@@ -142,7 +142,7 @@ Reuses the same article body and methodology sidebar as the Choral Journal draft
 >
 > Dear Chorus America Editors,
 >
-> I'd like to propose a short data feature on choral repertoire trends for your readers, drawn from concert programs logged on ChoirTrends, a repertoire-tracking platform I founded. Over the 2025–26 school year, directors logged 57 concert programs across 37 schools, and a few patterns stood out that I think will resonate beyond the scholastic world your Chorus America membership sits alongside: living composers dominating programming outside the holiday season, and a distinct "Nordic/Baltic" aesthetic — Ola Gjeilo, Pärt Uusberg, Eriks Ešenvalds — showing up across roughly one in ten programs.
+> I'd like to propose a short data feature on choral repertoire trends for your readers, drawn from concert programs logged on ChoirTrends, a repertoire-tracking platform I founded. Over the 2025–26 school year, directors logged 63 concert programs across 40 schools, and a few patterns stood out that I think will resonate beyond the scholastic world your Chorus America membership sits alongside: living composers dominating programming outside the holiday season, and a distinct "Nordic/Baltic" aesthetic — Ola Gjeilo, Pärt Uusberg, Eriks Ešenvalds — showing up across roughly one in ten programs.
 >
 > I want to be transparent about the dataset's current shape: this season's sample is drawn primarily from scholastic choral programs, not yet from the community and professional choruses that make up the core of Chorus America's membership. I think the repertoire trends still cross over — programming decisions in school choirs are often a leading indicator of what's moving through community and professional ensembles a season or two later — but I wanted to name that limitation rather than overstate the fit. If there's interest, I'd welcome the chance to expand this analysis with community/professional chorus data specifically for a future piece.
 >
@@ -163,7 +163,7 @@ Also reuses the same article body and methodology sidebar as Section 4.
 >
 > Dear NJMEA Tempo Editors,
 >
-> I'd like to propose a repertoire-trends feature for Tempo, drawn from concert program data logged on ChoirTrends, a platform I founded that directors use to track their season's repertoire. This one should be of particular interest to your readership: of the 57 concert programs in this year's dataset, 33 — well over half — came from New Jersey schools, 25 of them distinct. This is, in large part, a snapshot of what New Jersey choral programs specifically looked like in 2025–26: living composers dominating outside the holiday season, a "Nordic/Baltic" stylistic thread (Gjeilo, Uusberg, Ešenvalds) running through roughly one in ten programs, and a clear split between sacred/seasonal winter programming and contemporary American spring programming.
+> I'd like to propose a repertoire-trends feature for Tempo, drawn from concert program data logged on ChoirTrends, a platform I founded that directors use to track their season's repertoire. This one should be of particular interest to your readership: of the 63 concert programs in this year's dataset, 40 — nearly two-thirds — came from New Jersey schools, 29 of them distinct. This is, in large part, a snapshot of what New Jersey choral programs specifically looked like in 2025–26: living composers dominating outside the holiday season, a "Nordic/Baltic" stylistic thread (Gjeilo, Uusberg, Ešenvalds) running through roughly one in ten programs, and a clear split between sacred/seasonal winter programming and contemporary American spring programming.
 >
 > I know Tempo covers all music disciplines rather than choral exclusively, so I've kept the piece self-contained and framed it as a "what's actually being programmed" trend piece rather than assuming choral-specific context — it should read fine alongside band/orchestra content in the same issue. Happy to trim it if space is tight; the core data findings hold up in half the word count if needed.
 >

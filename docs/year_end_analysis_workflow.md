@@ -219,10 +219,15 @@ ORDER BY e.type, performances DESC
 
 ---
 
-## Analysis Notes (2025–26 Baseline)
+## Analysis Notes (2025–26 Final — re-run 2026-07-09 after geo fix + late uploads)
 
+- Final 2025–26 totals: **63 programs, 40 schools, 37 directors, 694 unique titles, 736 performances** — up from the 57/37/35/631/664 numbers originally baked into `docs/year_end_email_template.md` and `docs/marketing_content_2025-26.md`. Both docs (including the 3 chart Artifacts referenced from the marketing doc) were refreshed to match as of 2026-07-09. Re-verify before final send/publish in case more programs land — this dataset moved three times in one day.
 - Run all queries via the `database-query` MCP tool (Steps 1–14 can be parallelized in groups)
 - Compare results to the 2025–26 baseline email for year-over-year narrative
-- Watch for: new composers breaking into top 5, "Time" (Cook) holding or losing its top-title position, Roger Emerson's arranger dominance
-- The Germany (Trier) school is the first international data point — note if more international schools join
+- Trier, Germany still has **2 schools** — international presence is holding, not a one-off. Keep watching for more.
+- Step 2 (Geography) is clean — the null `geo_state`/`country` row from earlier is gone (Rick fixed the underlying school records). All 63 programs now resolve to 8 state/country rows: NJ 40 programs/29 schools, RI 7/1, WI 4/2, NY 4/2, PA 3/2, MD 2/1, Trier DE 2/2, TN 1/1. NJ's share of the dataset grew to ~63% (was ~58% at baseline) — worth naming explicitly if writing NJMEA-specific copy.
+- "Time" (Jennifer Lucy Cook) is still the most-performed title overall (7 performances), 5 of them in spring — no longer *entirely* a spring piece as the baseline email claimed.
+- Roger Emerson remains the dominant winter arranger (10 performances / 7 programs, winter-only), unchanged from the earlier snapshot and still ~2x the next arranger.
+- **Composer ranking shifted**: Elaine Hagenberg (10) now leads outright; Ola Gjeilo (8) is second among *named* composers (behind only "Traditional," a placeholder attribution, and tied with Handel and Cook at 8). Kyle Pederson (5) has dropped out of the overall top tier — Eric Whitacre (6) and Andy Beck (6) took his place. If reusing "top four living composers" language, use Hagenberg, Gjeilo, Cook, Whitacre — not Pederson.
+- "Traditional" still leads the overall composer list by raw count (11 performances) — keep excluding/footnoting it rather than treating it as a "top composer."
 - The email template is in `docs/year_end_email_template.md`

@@ -84,32 +84,34 @@ Here's what the data shows.
 
 **The Big Picture**
 
-This year's dataset covers **57 concerts from 37 schools** representing **8 U.S. states** (NJ, NY, PA, MD, RI, WI, TN) and, for the first time, an international school in **Trier, Germany**. Thirty-five directors contributed programs, performing a combined **664 pieces** — drawn from **631 unique titles.**
+This year's dataset covers **63 concerts from 40 schools** representing **7 U.S. states** (NJ, RI, WI, NY, PA, MD, TN) and, for the first time, two international schools in **Trier, Germany**. Thirty-seven directors contributed programs, performing a combined **736 pieces** — drawn from **694 unique titles.**
 
-That last number is the one that stands out most. With only 33 "repeat" performances across the entire dataset, the diversity of repertoire is remarkable. Directors are not reaching for the same shelf.
+That last number is the one that stands out most. With only 42 "repeat" performances across the entire dataset, the diversity of repertoire is remarkable. Directors are not reaching for the same shelf.
 
 ---
 
 **Living Composers Are Having a Moment**
 
-Outside of the holiday season, the programming is overwhelmingly weighted toward **living or recently active composers.** The year's four most-programmed composers were all writing music within the last decade: Elaine Hagenberg, Jennifer Lucy Cook, Ola Gjeilo, and Kyle Pederson. The lone historical voice in the top five? George Frideric Handel — and he owes his spot almost entirely to December.
+Outside of the holiday season, the programming is overwhelmingly weighted toward **living or recently active composers.** The year's four most-programmed composers were all writing music within the last decade: Elaine Hagenberg, Ola Gjeilo, Jennifer Lucy Cook, and Eric Whitacre. The lone historical voice in the top five? George Frideric Handel — and he owes his spot almost entirely to December.
 
 ---
 
 **The Nordic Sound Is Everywhere**
 
-One of the clearest stylistic threads running through 2025–26 is what might be called the **Nordic/Baltic aesthetic** — spacious, atmospheric, text-centered choral writing from composers like Ola Gjeilo (Norway), Pärt Uusberg (Estonia), and Eriks Ešenvalds (Latvia). Gjeilo alone appeared in 6 programs, with "Tundra" and "Northern Lights" each performed twice. This isn't a local quirk — it reflects a broader national trend in choral programming that shows no signs of fading.
+One of the clearest stylistic threads running through 2025–26 is what might be called the **Nordic/Baltic aesthetic** — spacious, atmospheric, text-centered choral writing from composers like Ola Gjeilo (Norway), Pärt Uusberg (Estonia), and Eriks Ešenvalds (Latvia). Gjeilo alone appeared in 7 programs, with "Tundra" performed three times and "Northern Lights" twice. This isn't a local quirk — it reflects a broader national trend in choral programming that shows no signs of fading.
 
 ---
 
 **The Most-Performed Piece of the Year**
 
-If there's a single piece that defined 2025–26, it's **"Time"** by Jennifer Lucy Cook — performed by 6 different ensembles in the spring semester alone. In a dataset where nearly every piece was unique, that kind of consensus is notable. If you haven't looked at it, it's worth your time.
+If there's a single piece that defined 2025–26, it's **"Time"** by Jennifer Lucy Cook — performed by 7 different ensembles, all but two of them in the spring semester. In a dataset where nearly every piece was unique, that kind of consensus is notable. If you haven't looked at it, it's worth your time.
 
-Only three other titles reached the threshold of three or more performances:
+Only five other titles reached the threshold of three or more performances:
+- *Tundra* — Ola Gjeilo
 - *Glow* — Eric Whitacre
 - *Veni, Veni Emmanuel* — Michael John Trotta
 - *Muusika* — Pärt Uusberg
+- *O Love* — Elaine Hagenberg
 
 ---
 
@@ -117,9 +119,9 @@ Only three other titles reached the threshold of three or more performances:
 
 The data tells two different stories depending on the semester.
 
-**Winter (Sep–Jan, 22 concerts)** is defined by the sacred and the seasonal. Handel, Byrd, Victoria, and Vivaldi appear alongside Gjeilo's wintry soundscapes and Trotta's "Veni, Veni Emmanuel." For arranged music, Roger Emerson was the dominant voice — appearing in 7 different programs with 10 total performances, nearly double the next arranger on the list.
+**Winter (Sep–Jan, 24 concerts)** is defined by the sacred and the seasonal. Handel, Byrd, Victoria, and Vivaldi appear alongside Gjeilo's wintry soundscapes and Trotta's "Veni, Veni Emmanuel." For arranged music, Roger Emerson was the dominant voice — appearing in 7 different programs with 10 total performances, nearly double the next arranger on the list.
 
-**Spring (Feb–Jul, 35 concerts)** shifts decisively toward contemporary American voices. The top composers are all living: Cook, Hagenberg, Pederson, Rollo Dilworth, and Marta Keen. The arranger landscape broadens considerably, with Mark Brymer, Kirby Shaw, Craig Hella Johnson, and Audrey Snyder all making strong showings. And pop crossover makes its presence felt — *Dust in the Wind*, *Homeward Bound*, and similar arrangements suggest directors are deliberately bridging the choral and popular worlds for their spring audiences.
+**Spring (Feb–Jul, 39 concerts)** shifts decisively toward contemporary American voices. The top composers are all living: Hagenberg, Cook, Pederson, Rollo Dilworth, and Marta Keen. The arranger landscape broadens considerably, with Mark Brymer, Kirby Shaw, Craig Hella Johnson, and Audrey Snyder all making strong showings. And pop crossover makes its presence felt — *Dust in the Wind*, *Homeward Bound*, and similar arrangements suggest directors are deliberately bridging the choral and popular worlds for their spring audiences.
 
 ---
 
