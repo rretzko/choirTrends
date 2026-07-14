@@ -1,12 +1,12 @@
 <section class="mt-10 space-y-6">
     <div class="relative mb-5">
-        <flux:heading>{{ __('Schools') }}</flux:heading>
-        <flux:subheading>{{ __('Manage the schools associated with your account.') }}</flux:subheading>
+        <flux:heading>{{ __('Schools/Orgs') }}</flux:heading>
+        <flux:subheading>{{ __('Manage the schools/orgs associated with your account.') }}</flux:subheading>
     </div>
 
     @if ($schools->isEmpty())
         <flux:text class="italic">
-            {{ __('You haven\'t added any schools yet. Add your first school to get started!') }}
+            {{ __('You haven\'t added any schools/orgs yet. Add your first one to get started!') }}
         </flux:text>
     @else
         <div class="space-y-3">
@@ -15,6 +15,7 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <flux:text class="font-medium">{{ $school->school_name }}</flux:text>
+                            <flux:badge size="sm">{{ $school->school_type->label() }}</flux:badge>
                             @if ($school->abbreviation)
                                 <flux:badge size="sm">{{ $school->abbreviation }}</flux:badge>
                             @endif
@@ -29,7 +30,7 @@
                         <flux:button variant="ghost" size="sm" wire:click="openEditModal({{ $school->id }})" title="{{ __('Edit') }}">
                             <flux:icon name="pencil-square" class="size-4" />
                         </flux:button>
-                        <flux:button variant="ghost" size="sm" wire:click="removeSchool({{ $school->id }})" wire:confirm="{{ __('Remove this school from your profile?') }}" title="{{ __('Remove') }}">
+                        <flux:button variant="ghost" size="sm" wire:click="removeSchool({{ $school->id }})" wire:confirm="{{ __('Remove this school/org from your profile?') }}" title="{{ __('Remove') }}">
                             <flux:icon name="x-mark" class="size-4" />
                         </flux:button>
                     </div>
@@ -39,22 +40,32 @@
     @endif
 
     <flux:button variant="primary" wire:click="openAddModal">
-        {{ __('Add School') }}
+        {{ __('Add School/Org') }}
     </flux:button>
 
     <flux:modal name="school-form" class="md:w-96">
         <form wire:submit="saveSchool" class="space-y-6">
             <div>
-                <flux:heading size="lg">{{ $isEditing ? __('Edit School') : __('Add School') }}</flux:heading>
-                <flux:text class="mt-2">{{ $isEditing ? __('Update the school details.') : __('Add a school to your profile.') }}</flux:text>
+                <flux:heading size="lg">{{ $isEditing ? __('Edit School/Org') : __('Add School/Org') }}</flux:heading>
+                <flux:text class="mt-2">{{ $isEditing ? __('Update the details.') : __('Add a school or organization to your profile.') }}</flux:text>
             </div>
 
             <flux:input
                 wire:model.live.debounce.500ms="schoolName"
-                :label="__('School Name')"
+                :label="__('Name')"
                 :description="__('Use full name, please.')"
                 required
             />
+
+            <flux:field>
+                <flux:label>{{ __('Type') }}</flux:label>
+                <select wire:model="schoolType" class="block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-0 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                    @foreach (\App\Enums\SchoolType::cases() as $schoolTypeOption)
+                        <option value="{{ $schoolTypeOption->value }}">{{ $schoolTypeOption->label() }}</option>
+                    @endforeach
+                </select>
+                <flux:error name="schoolType" />
+            </flux:field>
 
             <flux:input
                 wire:model="abbreviation"

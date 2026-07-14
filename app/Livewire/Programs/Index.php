@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Livewire\Programs;
 
+use App\Enums\SchoolType;
 use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -21,6 +23,8 @@ class Index extends Component
 
     /** @var array<int, string> */
     public array $schoolFilter = [];
+
+    public string $typeFilter = '';
 
     public string $sortBy = 'school';
 
@@ -138,6 +142,12 @@ class Index extends Component
             $query->whereIn('school_id', $this->schoolFilter);
         }
 
+        if ($this->typeFilter !== '') {
+            $query->whereHas('school', function ($q) {
+                $q->where('school_type', $this->typeFilter);
+            });
+        }
+
         $query->join('schools', 'programs.school_id', '=', 'schools.id')
             ->select('programs.*');
 
@@ -182,35 +192,58 @@ class Index extends Component
         // Load schools for dropdown (respects privacy, independent of schoolFilter)
         $schools = School::query()
             ->whereHas('programs', function ($q) use ($currentUserId) {
-                if ($this->filter === 'my') {
-                    $q->where('user_id', $currentUserId);
-                } else {
-                    $q->where('user_id', $currentUserId)
-                        ->orWhereHas('user', function ($uq) {
-                            $uq->whereDoesntHave('privacy')
-                                ->orWhereHas('privacy', function ($pq) {
-                                    $pq->where(function ($inner) {
-                                        $inner->where('school', false)->orWhereNull('school');
-                                    });
-                                });
-                        });
-                }
+                $this->applyProgramVisibility($q, $currentUserId);
             })
             ->orderBy('school_name')
             ->get();
 
         $schoolFilterLabel = match (true) {
-            $this->schoolFilter === [] => __('All Schools'),
-            count($this->schoolFilter) === 1 => $schools->firstWhere('id', (int) $this->schoolFilter[0])->school_name ?? __('1 School'),
-            default => count($this->schoolFilter).' '.__('Schools'),
+            $this->schoolFilter === [] => __('All Schools/Orgs'),
+            count($this->schoolFilter) === 1 => $schools->firstWhere('id', (int) $this->schoolFilter[0])->school_name ?? __('1 School/Org'),
+            default => count($this->schoolFilter).' '.__('Schools/Orgs'),
         };
+
+        // Load type counts for dropdown (respects privacy, independent of schoolFilter/typeFilter)
+        $typeCountsQuery = Program::query()->join('schools', 'programs.school_id', '=', 'schools.id');
+        $this->applyProgramVisibility($typeCountsQuery, $currentUserId);
+        $typeCounts = $typeCountsQuery
+            ->groupBy('schools.school_type')
+            ->selectRaw('schools.school_type as school_type, COUNT(*) as aggregate')
+            ->pluck('aggregate', 'school_type');
+
+        $schoolTypes = collect(SchoolType::cases())
+            ->map(fn (SchoolType $type): array => ['type' => $type, 'count' => (int) ($typeCounts[$type->value] ?? 0)])
+            ->filter(fn (array $item): bool => $item['count'] > 0)
+            ->values();
 
         return view('livewire.programs.index', [
             'programs' => $programs,
             'displayData' => $displayData,
             'schools' => $schools,
             'schoolFilterLabel' => $schoolFilterLabel,
+            'schoolTypes' => $schoolTypes,
         ])->layout('components.layouts.app', ['title' => __('Programs')]);
+    }
+
+    /**
+     * @param  Builder<Program>  $query
+     */
+    private function applyProgramVisibility(Builder $query, int $currentUserId): void
+    {
+        $query->where(function ($q) use ($currentUserId) {
+            $q->where('programs.user_id', $currentUserId);
+
+            if ($this->filter !== 'my') {
+                $q->orWhereHas('user', function ($uq) {
+                    $uq->whereDoesntHave('privacy')
+                        ->orWhereHas('privacy', function ($pq) {
+                            $pq->where(function ($inner) {
+                                $inner->where('school', false)->orWhereNull('school');
+                            });
+                        });
+                });
+            }
+        });
     }
 
     private function getDisplaySchool(Program $program, int $currentUserId): string

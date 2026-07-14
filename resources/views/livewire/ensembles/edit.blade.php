@@ -10,7 +10,7 @@
     <form wire:submit="save" class="space-y-6">
         <div class="max-w-md space-y-6">
             <flux:field>
-                <flux:label>{{ __('School') }}</flux:label>
+                <flux:label>{{ __('School/Org') }}</flux:label>
                 <flux:input :value="$schoolName" disabled />
             </flux:field>
 

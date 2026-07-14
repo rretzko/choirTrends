@@ -7,7 +7,7 @@
             <section>
                 <flux:heading size="lg">{{ __('Overview') }}</flux:heading>
                 <flux:text class="mt-2">
-                    {{ __('The Ensembles page shows every performing ensemble extracted from submitted concert programs. Ensembles are grouped by school so you can see which groups belong together.') }}
+                    {{ __('The Ensembles page shows every performing ensemble extracted from submitted concert programs. Ensembles are grouped by school/org so you can see which groups belong together.') }}
                 </flux:text>
             </section>
 

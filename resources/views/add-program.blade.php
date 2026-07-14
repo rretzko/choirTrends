@@ -308,7 +308,7 @@
                     </flux:field>
 
                     <flux:field>
-                        <flux:label>{{ __('School Name: Please use the full name!') }}</flux:label>
+                        <flux:label>{{ __('School/Org Name: Please use the full name!') }}</flux:label>
                         <flux:input
                             type="text"
                             name="school_name"
@@ -506,7 +506,7 @@
                             </li>
                             <li class="flex items-center gap-2">
                                 <flux:icon name="check" class="size-3.5 text-zinc-400 shrink-0" />
-                                {{ __('School and director') }}
+                                {{ __('School/Org and director') }}
                             </li>
                             <li class="flex items-center gap-2">
                                 <flux:icon name="check" class="size-3.5 text-zinc-400 shrink-0" />

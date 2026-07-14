@@ -282,7 +282,7 @@
                     </flux:field>
 
                     <flux:field>
-                        <flux:label>{{ __('School Name: Please use the full name!') }}</flux:label>
+                        <flux:label>{{ __('School/Org Name: Please use the full name!') }}</flux:label>
                         <flux:input
                             type="text"
                             name="school_name"

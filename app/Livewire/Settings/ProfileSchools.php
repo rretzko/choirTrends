@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Livewire\Settings;
 
+use App\Enums\SchoolType;
 use App\Models\School;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\Rules\Enum;
 use Livewire\Component;
 
 class ProfileSchools extends Component
@@ -16,6 +18,8 @@ class ProfileSchools extends Component
     public Collection $schools;
 
     public string $schoolName = '';
+
+    public string $schoolType = SchoolType::HighSchool->value;
 
     public string $abbreviation = '';
 
@@ -52,6 +56,7 @@ class ProfileSchools extends Component
 
         $this->editingSchoolId = $school->id;
         $this->schoolName = $school->school_name;
+        $this->schoolType = $school->school_type->value;
         $this->abbreviation = $school->abbreviation ?? '';
         $this->postalCode = $school->postal_code ?? '';
         $this->geoState = $school->geo_state ?? '';
@@ -100,6 +105,7 @@ class ProfileSchools extends Component
     {
         $validated = $this->validate([
             'schoolName' => ['required', 'string', 'max:255'],
+            'schoolType' => ['required', new Enum(SchoolType::class)],
             'abbreviation' => ['nullable', 'string', 'max:20'],
             'postalCode' => ['nullable', 'string', 'max:20'],
             'geoState' => ['nullable', 'string', 'max:10'],
@@ -114,6 +120,7 @@ class ProfileSchools extends Component
             if ($school) {
                 $school->update([
                     'school_name' => $validated['schoolName'],
+                    'school_type' => $validated['schoolType'],
                     'abbreviation' => $validated['abbreviation'],
                     'postal_code' => $validated['postalCode'],
                     'geo_state' => $validated['geoState'],
@@ -129,6 +136,7 @@ class ProfileSchools extends Component
             if (! $school) {
                 $school = School::create([
                     'school_name' => $validated['schoolName'],
+                    'school_type' => $validated['schoolType'],
                     'abbreviation' => $validated['abbreviation'],
                     'postal_code' => $validated['postalCode'],
                     'geo_state' => $validated['geoState'],
@@ -161,7 +169,7 @@ class ProfileSchools extends Component
 
     private function resetForm(): void
     {
-        $this->reset(['schoolName', 'abbreviation', 'postalCode', 'geoState', 'country', 'editingSchoolId', 'isEditing']);
+        $this->reset(['schoolName', 'schoolType', 'abbreviation', 'postalCode', 'geoState', 'country', 'editingSchoolId', 'isEditing']);
         $this->resetValidation();
     }
 }

@@ -25,7 +25,7 @@
                         <flux:icon name="document-text" variant="outline" class="mt-0.5 size-5 shrink-0 text-zinc-500 dark:text-zinc-400" />
                         <div>
                             <flux:text class="font-semibold">{{ __('Programs') }}</flux:text>
-                            <flux:text class="text-sm">{{ __('Click the drop-down to browse all submitted concert programs. Click on an individual school name to see their contribution. Filter the program selections by one, many or all schools.') }}</flux:text>
+                            <flux:text class="text-sm">{{ __('Click the drop-down to browse all submitted concert programs. Click on an individual school/org name to see their contribution. Filter the program selections by one, many or all schools/orgs.') }}</flux:text>
                         </div>
                     </div>
                     <div class="flex items-start gap-3">
@@ -52,8 +52,8 @@
                     <div class="flex items-start gap-3">
                         <flux:icon name="academic-cap" variant="outline" class="mt-0.5 size-5 shrink-0 text-zinc-500 dark:text-zinc-400" />
                         <div>
-                            <flux:text class="font-semibold">{{ __('Schools') }}</flux:text>
-                            <flux:text class="text-sm">{{ __('See the list of schools that have uploaded programs.') }}</flux:text>
+                            <flux:text class="font-semibold">{{ __('Schools/Orgs') }}</flux:text>
+                            <flux:text class="text-sm">{{ __('See the list of schools and organizations that have uploaded programs. Filter by type: High School, Middle School, Elementary School, Community Choir, Church Choir, University Choir, Honors Choir, or Other.') }}</flux:text>
                         </div>
                     </div>
                     <div class="flex items-start gap-3">
@@ -89,7 +89,7 @@
                     </div>
                     <div>
                         <flux:text class="font-semibold">{{ __('Filter Toggles') }}</flux:text>
-                        <flux:text class="text-sm">{{ __('Use the My/All buttons to switch between your data and all community data. Search bars let you filter by keyword. School drop-down let you select one, many, or all schools. For Composers/Arrangers and Song Titles, search by names and titles.') }}</flux:text>
+                        <flux:text class="text-sm">{{ __('Use the My/All buttons to switch between your data and all community data. Search bars let you filter by keyword. School/Org drop-down let you select one, many, or all schools/orgs. For Composers/Arrangers and Song Titles, search by names and titles.') }}</flux:text>
                     </div>
                     <div>
                         <flux:text class="font-semibold">{{ __('Edit Icons') }}</flux:text>

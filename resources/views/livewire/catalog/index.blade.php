@@ -13,7 +13,7 @@
                     wire:model.live="schoolFilter"
                     class="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
                 >
-                    <option value="">{{ __('All Schools') }}</option>
+                    <option value="">{{ __('All Schools/Orgs') }}</option>
                     @foreach ($schools as $school)
                         <option value="{{ $school->id }}">{{ $school->school_name }}</option>
                     @endforeach
@@ -28,7 +28,7 @@
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
                     <th class="w-1/4 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        {{ __('School') }}
+                        {{ __('School/Org') }}
                     </th>
                     <th class="w-1/4 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         <div>

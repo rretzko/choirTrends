@@ -15,7 +15,7 @@
         </flux:field>
 
         <flux:field>
-            <flux:label>{{ __('School Name') }}</flux:label>
+            <flux:label>{{ __('School/Org Name') }}</flux:label>
             <flux:input wire:model="schoolName" type="text" />
             <flux:text class="text-xs">{{ __('Leave blank if not yet known') }}</flux:text>
             <flux:error name="schoolName" />

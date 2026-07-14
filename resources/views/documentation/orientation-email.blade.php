@@ -18,7 +18,7 @@
                         <strong>{{ __('Dashboard') }}</strong> &mdash; {{ __('Your home page with a summary of your activity and the setup checklist.') }}
                     </flux:text>
                     <flux:text>
-                        <strong>{{ __('Programs') }}</strong> &mdash; {{ __('Browse all submitted concert programs. Filter the program selections by one, many or all schools.') }}
+                        <strong>{{ __('Programs') }}</strong> &mdash; {{ __('Browse all submitted concert programs. Filter the program selections by one, many or all schools/orgs.') }}
                     </flux:text>
                     <flux:text>
                         <strong>{{ __('Add Program') }}</strong> &mdash; {{ __('Upload a photo or PDF of a concert program. Our AI extracts the details automatically.  Note: Your student rosters are NOT uploaded.') }}
@@ -30,7 +30,7 @@
                         <strong>{{ __('Ensembles') }}</strong> &mdash; {{ __('View the performing ensembles from submitted programs, including the type of ensemble and if the ensemble primarily performs a cappella literature.') }}
                     </flux:text>
                     <flux:text>
-                        <strong>{{ __('Schools') }}</strong> &mdash; {{ __('See the schools associated with programs and directors, including the number of programs, ensembles, composers/arrangers and song titles attributed to the school.') }}
+                        <strong>{{ __('Schools/Orgs') }}</strong> &mdash; {{ __('See the schools and organizations associated with programs and directors, including the number of programs, ensembles, composers/arrangers and song titles attributed to each.') }}
                     </flux:text>
                     <flux:text>
                         <strong>{{ __('Song Titles') }}</strong> &mdash; {{ __('Discover the most popular song titles across all programs and how many times the songs have been performed.') }}
@@ -51,7 +51,7 @@
                         <strong>{{ __('Sortable Columns') }}</strong> &mdash; {{ __('Click column headers to sort. Chevron icons show the current sort direction.') }}
                     </flux:text>
                     <flux:text>
-                        <strong>{{ __('Filter Toggles') }}</strong> &mdash; {{ __('Use the My/All buttons to switch between your data and all community data. Search bars let you filter by keyword. School drop-down let you select one, many, or all schools.') }}
+                        <strong>{{ __('Filter Toggles') }}</strong> &mdash; {{ __('Use the My/All buttons to switch between your data and all community data. Search bars let you filter by keyword. School/Org drop-down let you select one, many, or all schools/orgs.') }}
                     </flux:text>
                     <flux:text>
                         <strong>{{ __('Edit Icons') }}</strong> &mdash; {{ __('Look for the pencil icon on items you own to make edits.') }}

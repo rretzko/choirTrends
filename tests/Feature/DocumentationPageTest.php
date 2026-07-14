@@ -160,7 +160,7 @@ test('schools guide page is accessible to authenticated users', function () {
     $this->actingAs($user)
         ->get('/documentation/schools-guide')
         ->assertOk()
-        ->assertSee('Schools Guide');
+        ->assertSee('Schools/Orgs Guide');
 });
 
 test('schools guide page requires authentication', function () {

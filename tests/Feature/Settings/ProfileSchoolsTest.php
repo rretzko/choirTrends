@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SchoolType;
 use App\Livewire\Settings\ProfileSchools;
 use App\Models\School;
 use App\Models\User;
@@ -18,7 +19,7 @@ test('empty state message is displayed when user has no schools', function () {
     $this->actingAs(User::factory()->create());
 
     Livewire::test(ProfileSchools::class)
-        ->assertSee("You haven't added any schools yet");
+        ->assertSee("You haven't added any schools/orgs yet");
 });
 
 test('user schools are displayed', function () {
@@ -189,4 +190,40 @@ test('school name auto-generates abbreviation', function () {
     Livewire::test(ProfileSchools::class)
         ->set('schoolName', 'Central Valley High School')
         ->assertSet('abbreviation', 'CVHS');
+});
+
+test('school type defaults to high school when adding', function () {
+    $this->actingAs(User::factory()->create());
+
+    Livewire::test(ProfileSchools::class)
+        ->call('openAddModal')
+        ->assertSet('schoolType', SchoolType::HighSchool->value);
+});
+
+test('user can add a school with a non-school type', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Http::fake();
+
+    Livewire::test(ProfileSchools::class)
+        ->set('schoolName', 'First Baptist Choir')
+        ->set('schoolType', SchoolType::ChurchChoir->value)
+        ->call('saveSchool')
+        ->assertHasNoErrors();
+
+    expect($user->fresh()->schools->first()->school_type)->toBe(SchoolType::ChurchChoir);
+});
+
+test('editing a school loads its type', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create(['school_type' => SchoolType::CommunityChoir]);
+    $user->schools()->attach($school);
+
+    $this->actingAs($user);
+
+    Livewire::test(ProfileSchools::class)
+        ->call('openEditModal', $school->id)
+        ->assertSet('schoolType', SchoolType::CommunityChoir->value);
 });

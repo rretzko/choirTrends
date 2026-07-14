@@ -32,7 +32,7 @@
 
             <flux:field>
                 <flux:label class="!flex w-full justify-between">
-                    <span>{{ __('School Name') }}</span>
+                    <span>{{ __('School/Org Name') }}</span>
                     @unless ($schoolEditable)
                         <span class="mr-2 inline-flex items-center gap-1 text-amber-600 dark:text-amber-400"><flux:icon name="lock-closed" class="size-3" /> {{ __('Shared') }}</span>
                     @endunless

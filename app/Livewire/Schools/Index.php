@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Schools;
 
+use App\Enums\SchoolType;
 use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\Program;
 use App\Models\School;
@@ -19,6 +20,8 @@ class Index extends Component
     use ChecksProgramCompliance;
 
     public string $filter = 'all';
+
+    public string $typeFilter = '';
 
     public string $sortBy = 'school_name';
 
@@ -50,7 +53,11 @@ class Index extends Component
             });
         }
 
-        if (in_array($this->sortBy, ['school_name', 'programs_count', 'ensembles_count'])) {
+        if ($this->typeFilter !== '') {
+            $query->where('school_type', $this->typeFilter);
+        }
+
+        if (in_array($this->sortBy, ['school_name', 'school_type', 'programs_count', 'ensembles_count'])) {
             $query->orderBy($this->sortBy, $this->sortDirection);
         }
 
@@ -91,7 +98,8 @@ class Index extends Component
             'artistsCounts' => $artistsCounts,
             'myCount' => $myCount,
             'allCount' => $allCount,
-        ])->layout('components.layouts.app', ['title' => __('Schools')]);
+            'schoolTypes' => SchoolType::cases(),
+        ])->layout('components.layouts.app', ['title' => __('Schools/Orgs')]);
     }
 
     /**

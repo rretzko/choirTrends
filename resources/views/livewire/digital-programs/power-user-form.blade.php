@@ -114,7 +114,7 @@
                             </flux:field>
 
                             <flux:field class="sm:col-span-2">
-                                <flux:label>{{ __('School Name') }}</flux:label>
+                                <flux:label>{{ __('School/Org Name') }}</flux:label>
                                 <flux:input wire:model="newSchoolName" placeholder="{{ __('e.g. Lincoln High School') }}" />
                                 <flux:error name="newSchoolName" />
                             </flux:field>
@@ -292,7 +292,7 @@
                         {{-- School ensembles picker --}}
                         @if($schoolEnsembles->isNotEmpty())
                             <div class="-mx-6 mb-5 rounded-xl bg-zinc-50 px-6 py-4 dark:bg-zinc-800/50">
-                                <flux:text class="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ __("Your School's Ensembles") }}</flux:text>
+                                <flux:text class="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ __('Ensembles at Your School/Org') }}</flux:text>
                                 <div class="grid gap-2 sm:grid-cols-2">
                                     @foreach($schoolEnsembles as $ens)
                                         @php $alreadyAdded = collect($wizardEnsembles)->contains('id', $ens->id); @endphp

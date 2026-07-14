@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SchoolType;
 use App\Livewire\Programs\Index;
 use App\Models\Artist;
 use App\Models\Ensemble;
@@ -330,6 +331,49 @@ test('school filter supports multiple schools', function () {
         ->assertSee('Alpha Concert')
         ->assertSee('Beta Concert')
         ->assertDontSee('Gamma Concert');
+});
+
+test('type filter filters programs by school type', function () {
+    $user = User::factory()->create();
+    $highSchool = School::factory()->create(['school_name' => 'Lincoln High', 'school_type' => SchoolType::HighSchool]);
+    $churchChoir = School::factory()->create(['school_name' => 'First Baptist Choir', 'school_type' => SchoolType::ChurchChoir]);
+
+    Program::factory()->for($user)->for($highSchool)->create(['event_name' => 'Lincoln Concert']);
+    Program::factory()->for($user)->for($churchChoir)->create(['event_name' => 'Baptist Concert']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('schoolFilter', [])
+        ->assertSee('Lincoln Concert')
+        ->assertSee('Baptist Concert')
+        ->set('typeFilter', SchoolType::ChurchChoir->value)
+        ->assertSee('Baptist Concert')
+        ->assertDontSee('Lincoln Concert')
+        ->set('typeFilter', '')
+        ->assertSee('Lincoln Concert')
+        ->assertSee('Baptist Concert');
+});
+
+test('type filter dropdown only lists types with programs and shows counts', function () {
+    $user = User::factory()->create();
+    $highSchoolA = School::factory()->create(['school_name' => 'Lincoln High', 'school_type' => SchoolType::HighSchool]);
+    $highSchoolB = School::factory()->create(['school_name' => 'Roosevelt High', 'school_type' => SchoolType::HighSchool]);
+    $churchChoir = School::factory()->create(['school_name' => 'First Baptist Choir', 'school_type' => SchoolType::ChurchChoir]);
+
+    Program::factory()->for($user)->for($highSchoolA)->create();
+    Program::factory()->for($user)->for($highSchoolB)->create();
+    Program::factory()->for($user)->for($churchChoir)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('schoolFilter', [])
+        ->assertSeeHtml('High School (2)')
+        ->assertSeeHtml('Church Choir (1)')
+        ->assertDontSeeHtml('Community Choir')
+        ->assertDontSeeHtml('University Choir')
+        ->assertDontSeeHtml('Honors Choir');
 });
 
 test('school filter defaults to user schools', function () {

@@ -46,7 +46,7 @@
                     {{ $schoolFilterLabel }}
                 </flux:button>
                 <flux:menu keep-open>
-                    <flux:menu.item wire:click="clearSchoolFilter" icon="building-library">{{ __('All Schools') }}</flux:menu.item>
+                    <flux:menu.item wire:click="clearSchoolFilter" icon="building-library">{{ __('All Schools/Orgs') }}</flux:menu.item>
                     <flux:menu.separator />
                     <div class="space-y-1 p-2">
                         <flux:checkbox.group wire:model.live="schoolFilter">
@@ -57,6 +57,13 @@
                     </div>
                 </flux:menu>
             </flux:dropdown>
+
+            <select wire:model.live="typeFilter" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-0 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                <option value="">{{ __('All Types') }}</option>
+                @foreach ($schoolTypes as $schoolType)
+                    <option value="{{ $schoolType['type']->value }}">{{ $schoolType['type']->label() }} ({{ $schoolType['count'] }})</option>
+                @endforeach
+            </select>
         </div>
     </div>
 
@@ -115,7 +122,7 @@
                 <tr>
                     <th wire:click="sort('school')" class="cursor-pointer px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
                         <div class="flex items-center gap-1">
-                            {{ __('School') }}
+                            {{ __('School/Org') }}
                             @if ($sortBy === 'school')
                                 <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
                             @else
@@ -218,7 +225,7 @@
                         <flux:text>{{ $selectedProgram->event_date->format('M j, Y') }}</flux:text>
                     </div>
                     <div>
-                        <flux:text class="font-medium text-neutral-500 dark:text-neutral-400">{{ __('School') }}</flux:text>
+                        <flux:text class="font-medium text-neutral-500 dark:text-neutral-400">{{ __('School/Org') }}</flux:text>
                         <flux:text>{{ $displayData[$selectedProgram->id]['school'] ?? '' }}</flux:text>
                     </div>
                     <div>

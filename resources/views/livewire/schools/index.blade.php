@@ -1,14 +1,14 @@
 <div>
     <div class="mb-6 space-y-4">
-        <flux:heading size="xl">{{ __('Schools') }}</flux:heading>
+        <flux:heading size="xl">{{ __('Schools/Orgs') }}</flux:heading>
 
         {{-- First-Time Orientation Callout --}}
         <div x-data="{ dismissed: localStorage.getItem('schoolsOrientationDismissed') === 'true' }" x-show="! dismissed" x-collapse>
             <div x-show="! dismissed" x-transition>
                 <flux:callout icon="light-bulb" color="sky">
-                    <flux:callout.heading>{{ __('Schools at a glance') }}</flux:callout.heading>
+                    <flux:callout.heading>{{ __('Schools/Orgs at a glance') }}</flux:callout.heading>
                     <flux:callout.text>
-                        {{ __('See every school that has submitted programs, along with counts for programs, ensembles, composers/arrangers, and songs. Click any column header to sort. Use My/All to toggle between your schools and all participating schools.') }}
+                        {{ __('See every school or organization that has submitted programs, along with counts for programs, ensembles, composers/arrangers, and songs. Click any column header to sort. Use My/All to toggle between yours and all participants.') }}
                     </flux:callout.text>
                     <x-slot name="controls">
                         <flux:button icon="x-mark" variant="ghost" x-on:click="dismissed = true; localStorage.setItem('schoolsOrientationDismissed', 'true')" />
@@ -17,12 +17,12 @@
             </div>
         </div>
 
-        <div class="flex justify-center gap-2">
-            <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('My schools') }}">
+        <div class="flex flex-wrap items-center justify-center gap-2">
+            <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('My schools/orgs') }}">
                 {{ __('My') }} ({{ $myCount }})
             </flux:button>
             @if ($compliance['canViewAll'])
-                <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('Schools of submitting directors') }}">
+                <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('Schools/orgs of submitting directors') }}">
                     {{ __('All') }} ({{ $allCount }})
                 </flux:button>
             @else
@@ -34,6 +34,13 @@
                     </div>
                 </flux:tooltip>
             @endif
+
+            <select wire:model.live="typeFilter" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-0 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                <option value="">{{ __('All Types') }}</option>
+                @foreach ($schoolTypes as $schoolType)
+                    <option value="{{ $schoolType->value }}">{{ $schoolType->label() }}</option>
+                @endforeach
+            </select>
         </div>
     </div>
 
@@ -41,8 +48,11 @@
     <div class="space-y-2 md:hidden">
         @forelse ($schools as $school)
             <div wire:key="school-card-{{ $school->id }}" class="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-                <div class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                    {{ $displayNames[$school->id] }}
+                <div class="flex items-center gap-2">
+                    <div class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ $displayNames[$school->id] }}
+                    </div>
+                    <flux:badge size="sm">{{ $school->school_type->label() }}</flux:badge>
                 </div>
                 <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
                     <span>{{ __('Programs') }}: {{ $school->programs_count }}</span>
@@ -54,8 +64,8 @@
         @empty
             <div class="rounded-xl border border-neutral-200 px-6 py-12 text-center dark:border-neutral-700">
                 <flux:icon name="academic-cap" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
-                <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No schools found') }}</p>
-                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">{{ __('Schools appear here once you upload a concert program.') }}</p>
+                <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No schools/orgs found') }}</p>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">{{ __('Schools/orgs appear here once you upload a concert program.') }}</p>
                 <flux:button href="{{ route('addProgram') }}" variant="primary" size="sm" icon="plus">
                     {{ __('Add Program') }}
                 </flux:button>
@@ -68,6 +78,7 @@
         <table class="min-w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
             <colgroup>
                 <col />
+                <col class="w-32" />
                 <col class="w-24" />
                 <col class="w-24" />
                 <col class="w-36" />
@@ -77,8 +88,18 @@
                 <tr>
                     <th wire:click="sort('school_name')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         <div class="flex items-center gap-1">
-                            {{ __('School Name') }}
+                            {{ __('Name') }}
                             @if ($sortBy === 'school_name')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
+                    </th>
+                    <th wire:click="sort('school_type')" class="cursor-pointer px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <div class="flex items-center gap-1">
+                            {{ __('Type') }}
+                            @if ($sortBy === 'school_type')
                                 <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
                             @else
                                 <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
@@ -133,6 +154,9 @@
                         <td class="whitespace-nowrap px-6 py-2 text-sm text-neutral-900 dark:text-neutral-100">
                             {{ $displayNames[$school->id] }}
                         </td>
+                        <td class="whitespace-nowrap px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100">
+                            {{ $school->school_type->label() }}
+                        </td>
                         <td class="whitespace-nowrap px-3 py-2 text-center text-sm text-neutral-900 dark:text-neutral-100">
                             {{ $school->programs_count }}
                         </td>
@@ -148,11 +172,11 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center">
+                        <td colspan="6" class="px-6 py-12 text-center">
                             <div class="mx-auto max-w-sm">
                                 <flux:icon name="academic-cap" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
-                                <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No schools found') }}</p>
-                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">{{ __('Schools appear here once you upload a concert program.') }}</p>
+                                <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No schools/orgs found') }}</p>
+                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">{{ __('Schools/orgs appear here once you upload a concert program.') }}</p>
                                 <flux:button href="{{ route('addProgram') }}" variant="primary" size="sm" icon="plus">
                                     {{ __('Add Program') }}
                                 </flux:button>

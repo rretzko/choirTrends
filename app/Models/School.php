@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\SchoolType;
 use Database\Factories\SchoolFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,7 @@ use Illuminate\Support\Str;
  * @property-read Collection<int, Ensemble> $ensembles
  * @property-read Collection<int, User> $users
  * @property-read Collection<int, Program> $programs
+ * @property SchoolType $school_type
  */
 class School extends Model
 {
@@ -24,11 +26,19 @@ class School extends Model
 
     protected $fillable = [
         'school_name',
+        'school_type',
         'abbreviation',
         'postal_code',
         'geo_state',
         'country',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'school_type' => SchoolType::class,
+        ];
+    }
 
     /** @var list<string> */
     private const SKIP_WORDS = ['of', 'the', 'and', 'at', 'in', 'for'];

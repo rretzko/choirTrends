@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SchoolType;
 use App\Livewire\Schools\Index;
 use App\Models\Artist;
 use App\Models\Ensemble;
@@ -183,4 +184,37 @@ test('schools index columns are sortable', function () {
         ->call('sort', 'programs_count')
         ->assertSet('sortDirection', 'desc')
         ->assertSeeInOrder(['Beta School', 'Alpha School']);
+});
+
+test('school factory defaults to high school type', function () {
+    $school = School::factory()->create();
+
+    expect($school->school_type)->toBe(SchoolType::HighSchool);
+});
+
+test('schools index displays school type', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create(['school_name' => 'Downtown Community Choir', 'school_type' => SchoolType::CommunityChoir]);
+    $user->schools()->attach($school);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('filter', 'my')
+        ->assertSee('Community Choir');
+});
+
+test('schools index can filter by school type', function () {
+    $user = User::factory()->create();
+    $highSchool = School::factory()->create(['school_name' => 'Lincoln High', 'school_type' => SchoolType::HighSchool]);
+    $churchChoir = School::factory()->create(['school_name' => 'First Baptist Choir', 'school_type' => SchoolType::ChurchChoir]);
+    $user->schools()->attach([$highSchool->id, $churchChoir->id]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('filter', 'my')
+        ->set('typeFilter', SchoolType::ChurchChoir->value)
+        ->assertSee('First Baptist Choir')
+        ->assertDontSee('Lincoln High');
 });

@@ -53,8 +53,8 @@
                     <div class="flex items-start gap-3">
                         <flux:icon name="academic-cap" variant="outline" class="mt-0.5 size-5 shrink-0 text-zinc-500 dark:text-zinc-400" />
                         <div>
-                            <flux:text class="font-semibold">{{ __('School Name') }}</flux:text>
-                            <flux:text class="text-sm">{{ __('Please use the full school name. If you have previously submitted programs, ChoirTrends will suggest matching schools so your data stays consistent.') }}</flux:text>
+                            <flux:text class="font-semibold">{{ __('School/Org Name') }}</flux:text>
+                            <flux:text class="text-sm">{{ __('Please use the full name. If you have previously submitted programs, ChoirTrends will suggest matching schools/orgs so your data stays consistent.') }}</flux:text>
                         </div>
                     </div>
                     <div class="flex items-start gap-3">
@@ -98,7 +98,7 @@
                         <flux:icon name="shield-check" variant="outline" class="mt-0.5 size-5 shrink-0 text-zinc-500 dark:text-zinc-400" />
                         <div>
                             <flux:text class="font-semibold">{{ __('Privacy') }}</flux:text>
-                            <flux:text class="text-sm">{{ __('Student rosters are NOT uploaded or stored. Only event, ensemble, and song information is extracted. You can control whether your name, school name, and ensemble names are visible to others in your privacy settings.') }}</flux:text>
+                            <flux:text class="text-sm">{{ __('Student rosters are NOT uploaded or stored. Only event, ensemble, and song information is extracted. You can control whether your name, school/org name, and ensemble names are visible to others in your privacy settings.') }}</flux:text>
                         </div>
                     </div>
                     <div class="flex items-start gap-3">

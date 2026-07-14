@@ -61,7 +61,7 @@ class UserGuideSeeder extends Seeder
                 'body' => $this->ensembles(),
             ],
             [
-                'title' => 'Schools',
+                'title' => 'Schools/Orgs',
                 'slug' => 'schools',
                 'body' => $this->schools(),
             ],
@@ -121,7 +121,7 @@ class UserGuideSeeder extends Seeder
         <p>Click <strong>"Add Program"</strong> in the left sidebar. This is where the magic happens:</p>
         <ul>
         <li>Choose a file from your computer &mdash; a <strong>photo</strong> (JPG, PNG) or a <strong>PDF</strong> of any concert program, up to 20 MB.</li>
-        <li>Click <strong>"Upload"</strong> and wait a moment while ChoirTrends reads your program and pulls out the event name, date, school, ensembles, song titles, composers, and arrangers.</li>
+        <li>Click <strong>"Upload"</strong> and wait a moment while ChoirTrends reads your program and pulls out the event name, date, school/org, ensembles, song titles, composers, and arrangers.</li>
         <li>Review and fix anything that does not look right &mdash; change the event name, correct a composer's spelling, or add a missing song.</li>
         <li>Click <strong>"Confirm &amp; Save"</strong> when everything looks good.</li>
         </ul>
@@ -168,7 +168,7 @@ HTML;
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#127979;</span>
-    <div><p><strong>Schools</strong> &mdash; The schools associated with your programs.</p></div>
+    <div><p><strong>Schools/Orgs</strong> &mdash; The schools and organizations associated with your programs.</p></div>
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#127926;</span>
@@ -199,7 +199,7 @@ HTML;
     {
         return <<<'HTML'
 <h3>Uploading a Concert Program</h3>
-<p>This is the heart of ChoirTrends. When you upload a concert program, the site reads it automatically and extracts all the important details: event name, date, school, ensembles, song titles, composers, and arrangers.</p>
+<p>This is the heart of ChoirTrends. When you upload a concert program, the site reads it automatically and extracts all the important details: event name, date, school/org, ensembles, song titles, composers, and arrangers.</p>
 
 <h4>What You Can Upload</h4>
 
@@ -253,7 +253,7 @@ HTML;
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#127979;</span>
-    <div><p><strong>School Name</strong> &mdash; The school where the concert happened. You may see a "Did you mean?" suggestion if ChoirTrends finds a close match.</p></div>
+    <div><p><strong>School/Org Name</strong> &mdash; The school, church, or organization where the concert happened. You may see a "Did you mean?" suggestion if ChoirTrends finds a close match.</p></div>
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#128100;</span>
@@ -274,7 +274,7 @@ HTML;
 <div class="guide-screenshot">Screenshot: Confirmation screen with ensemble and song details</div>
 
 <h4>Uploading by Web Address</h4>
-<p>If your concert program is already posted online (for example, on your school's website), you can paste the web address instead of uploading a file. Just enter the web address in the text area provided, one per line.</p>
+<p>If your concert program is already posted online (for example, on your school's or organization's website), you can paste the web address instead of uploading a file. Just enter the web address in the text area provided, one per line.</p>
 HTML;
     }
 
@@ -289,7 +289,7 @@ HTML;
 
 <div class="guide-feature">
     <span class="guide-feature-icon">&#127979;</span>
-    <div><p><strong>School</strong> &mdash; The school where the concert took place.</p></div>
+    <div><p><strong>School/Org</strong> &mdash; The school or organization where the concert took place.</p></div>
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#128196;</span>
@@ -323,7 +323,11 @@ HTML;
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#127979;</span>
-    <div><p><strong>Filtering by School</strong> &mdash; Use the school filter drop-down at the top to narrow the list to one or more specific schools. This is especially helpful when the community has many programs.</p></div>
+    <div><p><strong>Filtering by School/Org</strong> &mdash; Use the school/org filter drop-down at the top to narrow the list to one or more specific schools or organizations. This is especially helpful when the community has many programs.</p></div>
+</div>
+<div class="guide-feature">
+    <span class="guide-feature-icon">&#127991;&#65039;</span>
+    <div><p><strong>Filtering by Type</strong> &mdash; Use the Type drop-down next to the school/org filter to narrow the list to a specific kind of organization: High School, Middle School, Elementary School, Community Choir, Church Choir, University Choir, Honors Choir, or Other.</p></div>
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#128270;</span>
@@ -377,7 +381,7 @@ HTML;
     {
         return <<<'HTML'
 <h3>Viewing Your Ensembles</h3>
-<p>The Ensembles page lists all the performing groups found in uploaded programs. Ensembles are grouped by school.</p>
+<p>The Ensembles page lists all the performing groups found in uploaded programs. Ensembles are grouped by school/org.</p>
 
 <h4>My vs. All</h4>
 <p>Just like the Composers/Arrangers page, you can switch between viewing only your ensembles or all ensembles in the community.</p>
@@ -387,7 +391,7 @@ HTML;
 
 <div class="guide-feature">
     <span class="guide-feature-icon">&#127979;</span>
-    <div><p><strong>School</strong> &mdash; Which school the ensemble belongs to.</p></div>
+    <div><p><strong>School/Org</strong> &mdash; Which school or organization the ensemble belongs to.</p></div>
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#127932;</span>
@@ -422,43 +426,50 @@ HTML;
     private function schools(): string
     {
         return <<<'HTML'
-<h3>Schools in ChoirTrends</h3>
-<p>The Schools page shows all the schools that have contributed concert programs to ChoirTrends.</p>
+<h3>Schools/Orgs in ChoirTrends</h3>
+<p>The Schools/Orgs page shows all the schools, church choirs, community choirs, and other organizations that have contributed concert programs to ChoirTrends.</p>
 
 <h4>My vs. All</h4>
-<p>Use the toggle buttons to switch between your schools and all schools in the community.</p>
+<p>Use the toggle buttons to switch between your schools/orgs and all schools/orgs in the community.</p>
+
+<h4>Filtering by Type</h4>
+<p>Use the Type drop-down to narrow the list to a specific kind of organization: High School, Middle School, Elementary School, Community Choir, Church Choir, University Choir, Honors Choir, or Other.</p>
 
 <h4>What You Will See</h4>
-<p>For each school, the page shows a summary of its contributions:</p>
+<p>For each school/org, the page shows a summary of its contributions:</p>
 
 <div class="guide-feature">
     <span class="guide-feature-icon">&#127979;</span>
-    <div><p><strong>School Name</strong></p></div>
+    <div><p><strong>Name</strong></p></div>
+</div>
+<div class="guide-feature">
+    <span class="guide-feature-icon">&#127991;&#65039;</span>
+    <div><p><strong>Type</strong> &mdash; High School, Middle School, Elementary School, Community Choir, Church Choir, University Choir, Honors Choir, or Other.</p></div>
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#128212;</span>
-    <div><p><strong>Programs</strong> &mdash; How many concert programs have been uploaded from this school.</p></div>
+    <div><p><strong>Programs</strong> &mdash; How many concert programs have been uploaded from this school/org.</p></div>
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#127932;</span>
-    <div><p><strong>Ensembles</strong> &mdash; How many different ensembles are associated with this school.</p></div>
+    <div><p><strong>Ensembles</strong> &mdash; How many different ensembles are associated with this school/org.</p></div>
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#127925;</span>
-    <div><p><strong>Composers/Arrangers</strong> &mdash; How many unique composers and arrangers appear in this school's programs.</p></div>
+    <div><p><strong>Composers/Arrangers</strong> &mdash; How many unique composers and arrangers appear in this school/org's programs.</p></div>
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#127926;</span>
-    <div><p><strong>Song Titles</strong> &mdash; How many individual pieces of music are in this school's catalog.</p></div>
+    <div><p><strong>Song Titles</strong> &mdash; How many individual pieces of music are in this school/org's catalog.</p></div>
 </div>
 
 <p>All columns are sortable. Click a column header to sort, and click again to reverse the order.</p>
 
-<div class="guide-screenshot">Screenshot: Schools table with sortable columns</div>
+<div class="guide-screenshot">Screenshot: Schools/Orgs table with sortable columns</div>
 
 <div class="guide-tip guide-tip-info">
     <span class="guide-tip-icon">&#128241;</span>
-    <p>On smaller screens, each school appears as a card showing all the same statistics in a compact layout.</p>
+    <p>On smaller screens, each school/org appears as a card showing all the same statistics in a compact layout.</p>
 </div>
 HTML;
     }
@@ -584,8 +595,8 @@ HTML;
 <h4>Profile</h4>
 <p>Here you can update your name and email address. If you change your email, you will need to verify the new address before it takes effect.</p>
 
-<h4>Your Schools</h4>
-<p>On the Profile page, you will also see a section for managing the schools associated with your account. You can add new schools by entering the school name and location details.</p>
+<h4>Your Schools/Orgs</h4>
+<p>On the Profile page, you will also see a section for managing the schools and organizations associated with your account. You can add new ones by entering the name, type (High School, Middle School, Elementary School, Community Choir, Church Choir, University Choir, Honors Choir, or Other), and location details.</p>
 
 <h4>Privacy Settings</h4>
 <p>ChoirTrends respects your privacy. On the Profile page, you will find toggles to control what information is visible to other users:</p>
@@ -596,7 +607,7 @@ HTML;
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#128065;</span>
-    <div><p><strong>Don't display my school</strong> &mdash; Your school name will be hidden.</p></div>
+    <div><p><strong>Don't display my school/org</strong> &mdash; Your school/org name will be hidden.</p></div>
 </div>
 <div class="guide-feature">
     <span class="guide-feature-icon">&#128065;</span>
@@ -639,7 +650,7 @@ HTML;
 <div class="guide-feature">
     <span class="guide-feature-icon">&#128100;&#127758;</span>
     <div>
-        <p><strong>My vs. All Toggle</strong> &mdash; On pages like Composers/Arrangers, Ensembles, Schools, and Song Titles, use the <strong>"My"</strong> and <strong>"All"</strong> buttons to switch between your data and the full community. Each button shows a count. The "All" button becomes available after you upload at least one program.</p>
+        <p><strong>My vs. All Toggle</strong> &mdash; On pages like Composers/Arrangers, Ensembles, Schools/Orgs, and Song Titles, use the <strong>"My"</strong> and <strong>"All"</strong> buttons to switch between your data and the full community. Each button shows a count. The "All" button becomes available after you upload at least one program.</p>
     </div>
 </div>
 
