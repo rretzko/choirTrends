@@ -376,6 +376,29 @@ test('type filter dropdown only lists types with programs and shows counts', fun
         ->assertDontSeeHtml('Honors Choir');
 });
 
+test('type filter dropdown counts include programs with masked school privacy', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    UserPrivacy::factory()->create([
+        'user_id' => $otherUser->id,
+        'school' => true,
+    ]);
+
+    $universityA = School::factory()->create(['school_name' => 'Private University', 'school_type' => SchoolType::University]);
+    $universityB = School::factory()->create(['school_name' => 'Public University', 'school_type' => SchoolType::University]);
+
+    Program::factory()->for($otherUser)->for($universityA)->count(2)->create();
+    Program::factory()->for($user)->for($universityB)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('filter', 'all')
+        ->set('schoolFilter', [])
+        ->assertSeeHtml('University Choir (3)');
+});
+
 test('school filter defaults to user schools', function () {
     $user = User::factory()->create();
     $school = School::factory()->create();

@@ -203,9 +203,11 @@ class Index extends Component
             default => count($this->schoolFilter).' '.__('Schools/Orgs'),
         };
 
-        // Load type counts for dropdown (respects privacy, independent of schoolFilter/typeFilter)
+        // Load type counts for dropdown (matches the visibility of the programs table: 'my' vs 'all', independent of schoolFilter/typeFilter)
         $typeCountsQuery = Program::query()->join('schools', 'programs.school_id', '=', 'schools.id');
-        $this->applyProgramVisibility($typeCountsQuery, $currentUserId);
+        if ($this->filter === 'my') {
+            $typeCountsQuery->where('programs.user_id', $currentUserId);
+        }
         $typeCounts = $typeCountsQuery
             ->groupBy('schools.school_type')
             ->selectRaw('schools.school_type as school_type, COUNT(*) as aggregate')
