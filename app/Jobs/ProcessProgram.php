@@ -71,9 +71,23 @@ class ProcessProgram implements ShouldQueue
                 $extension = pathinfo($this->filePath, PATHINFO_EXTENSION);
                 $tempFilePath = sys_get_temp_dir().'/program_'.uniqid().'.'.$extension;
 
+                Log::info('ProcessProgram downloading file from storage', [
+                    'user_id' => $this->userId,
+                    'file_path' => $this->filePath,
+                    'storage_size_bytes' => Storage::size($this->filePath),
+                    'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+                ]);
+
                 // Download file from storage (works for both local and S3)
                 $fileContents = Storage::get($this->filePath);
                 file_put_contents($tempFilePath, $fileContents);
+
+                Log::info('ProcessProgram file downloaded', [
+                    'user_id' => $this->userId,
+                    'downloaded_bytes' => strlen($fileContents),
+                    'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+                    'memory_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 1),
+                ]);
 
                 $uploadedFile = new UploadedFile(
                     $tempFilePath,
@@ -84,7 +98,19 @@ class ProcessProgram implements ShouldQueue
                 );
             }
 
-            $content = $contentExtractor->extract($uploadedFile, $this->uris);
+            Log::info('ProcessProgram extracting content', [
+                'user_id' => $this->userId,
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+            ]);
+
+            $content = $contentExtractor->extract($uploadedFile, $this->uris, $this->userId);
+
+            Log::info('ProcessProgram content extracted', [
+                'user_id' => $this->userId,
+                'content_length' => strlen($content),
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+                'memory_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 1),
+            ]);
 
             // For base64-encoded PDFs and images, we cannot truncate the content
             // as it would corrupt the base64 data. Only truncate plain text content.
@@ -108,6 +134,7 @@ class ProcessProgram implements ShouldQueue
                 'user_id' => $this->userId,
                 'content_length' => strlen($content),
                 'is_pdf_or_image' => $isPdfOrImage,
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
             ]);
 
             $extractedData = $analysisService->analyzeProgram($content);
@@ -115,6 +142,8 @@ class ProcessProgram implements ShouldQueue
             Log::info('ProcessProgram Claude API response received', [
                 'user_id' => $this->userId,
                 'has_data' => ! empty($extractedData),
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+                'memory_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 1),
             ]);
 
             // Store results in cache with user-specific key
@@ -167,6 +196,9 @@ class ProcessProgram implements ShouldQueue
                 'user_id' => $this->userId,
                 'file_path' => $this->filePath,
                 'error' => $e->getMessage(),
+                'exception_class' => get_class($e),
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+                'memory_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 1),
             ]);
 
             // Store error in cache

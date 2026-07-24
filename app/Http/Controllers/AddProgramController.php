@@ -17,6 +17,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Mews\Purifier\Facades\Purifier;
@@ -50,6 +51,15 @@ class AddProgramController extends Controller
 
     public function store(StoreProgramRequest $request)
     {
+        $userId = $request->user()->id;
+
+        Log::info('AddProgramController store request received', [
+            'user_id' => $userId,
+            'has_vapor_file_key' => $request->filled('vapor_file_key'),
+            'has_program_file' => $request->hasFile('program_file'),
+            'has_program_uris' => $request->filled('program_uris'),
+        ]);
+
         try {
             $filePath = null;
             $uris = $request->input('program_uris');
@@ -84,34 +94,61 @@ class AddProgramController extends Controller
                 Storage::delete($vaporKey);
 
                 $filePath = $permanentPath;
+
+                Log::info('AddProgramController Vapor file moved to permanent storage', [
+                    'user_id' => $userId,
+                    'vapor_key' => $vaporKey,
+                    'permanent_path' => $permanentPath,
+                ]);
             }
             // Handle traditional file upload (local development)
             elseif ($request->hasFile('program_file')) {
                 $file = $request->file('program_file');
                 $filePath = $file->store('concert-programs');
+
+                Log::info('AddProgramController traditional file upload stored', [
+                    'user_id' => $userId,
+                    'file_path' => $filePath,
+                ]);
             }
 
             // Clear any previous analysis
-            cache()->forget("program_analysis_{$request->user()->id}");
+            cache()->forget("program_analysis_{$userId}");
 
             // Set processing status
             cache()->put(
-                "program_analysis_{$request->user()->id}",
+                "program_analysis_{$userId}",
                 ['status' => 'processing', 'started_at' => now()->toIso8601String()],
                 now()->addHours(2)
             );
 
+            Log::info('AddProgramController dispatching ProcessProgram job', [
+                'user_id' => $userId,
+                'file_path' => $filePath ?? '',
+                'has_uris' => ! empty($uris),
+            ]);
+
             // Dispatch the job
             ProcessProgram::dispatch(
-                $request->user()->id,
+                $userId,
                 $filePath ?? '',
                 $uris
             );
 
+            Log::info('AddProgramController ProcessProgram job dispatched', [
+                'user_id' => $userId,
+            ]);
+
             return redirect()
                 ->route('addProgram')
                 ->with('success', 'Your program is being processed. This page will update automatically when complete.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('AddProgramController store failed', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+                'exception_class' => get_class($e),
+            ]);
+
             return redirect()
                 ->back()
                 ->withInput()

@@ -11,6 +11,7 @@
 
     <div style="background: #f9fafb; border-left: 4px solid #3b82f6; padding: 16px; margin: 24px 0;">
         <p style="margin: 8px 0;"><strong>Submitted By:</strong> {{ $feedback->user->name }}</p>
+        <p style="margin: 8px 0;"><strong>Email:</strong> {{ $feedback->user->email }}</p>
         <p style="margin: 8px 0;"><strong>Type:</strong> {{ $feedback->type->value }}</p>
 
         @if($feedback->from_page)

@@ -13,10 +13,10 @@ class ProgramContentExtractor
         private PdfParser $pdfParser
     ) {}
 
-    public function extract(?UploadedFile $file, ?string $uris): string
+    public function extract(?UploadedFile $file, ?string $uris, ?int $userId = null): string
     {
         if ($file) {
-            return $this->extractFromFile($file);
+            return $this->extractFromFile($file, $userId);
         }
 
         if ($uris) {
@@ -26,19 +26,19 @@ class ProgramContentExtractor
         throw new \Exception('No file or URIs provided for extraction');
     }
 
-    private function extractFromFile(UploadedFile $file): string
+    private function extractFromFile(UploadedFile $file, ?int $userId): string
     {
         $extension = strtolower($file->getClientOriginalExtension());
 
         return match ($extension) {
-            'pdf' => $this->extractFromPdf($file->getRealPath()),
+            'pdf' => $this->extractFromPdf($file->getRealPath(), $userId),
             'txt' => $this->extractFromText($file->getRealPath()),
             'png', 'jpg', 'jpeg', 'gif', 'webp' => $this->extractFromImage($file->getRealPath()),
             default => throw new \Exception('Unsupported file type: '.$extension),
         };
     }
 
-    private function extractFromPdf(string $path): string
+    private function extractFromPdf(string $path, ?int $userId = null): string
     {
         // Claude's API supports PDFs directly, which preserves the visual layout
         // and structure much better than text extraction.
@@ -66,7 +66,7 @@ class ProgramContentExtractor
             }
 
             // Detect page orientation from PDF metadata
-            $orientation = $this->detectPdfOrientation($path);
+            $orientation = $this->detectPdfOrientation($path, $userId);
 
             // Encode as base64 - base64_encode() doesn't add whitespace in PHP
             $base64 = base64_encode($pdfData);
@@ -87,16 +87,36 @@ class ProgramContentExtractor
             return "PDF_DATA|||application/pdf|||{$base64}|||{$orientation}";
 
         } catch (\Throwable $e) {
+            Log::warning('ProgramContentExtractor native PDF processing failed, falling back to text extraction', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+                'exception_class' => get_class($e),
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+            ]);
+
             // Fallback to text extraction if PDF reading fails
-            return $this->extractPdfAsText($path);
+            return $this->extractPdfAsText($path, $userId);
         }
     }
 
-    private function detectPdfOrientation(string $path): string
+    private function detectPdfOrientation(string $path, ?int $userId = null): string
     {
         try {
+            Log::info('ProgramContentExtractor parsing PDF for orientation', [
+                'user_id' => $userId,
+                'file_size_bytes' => filesize($path),
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+            ]);
+
             $pdf = $this->pdfParser->parseFile($path);
             $pages = $pdf->getPages();
+
+            Log::info('ProgramContentExtractor PDF parsed for orientation', [
+                'user_id' => $userId,
+                'page_count' => count($pages),
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+                'memory_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 1),
+            ]);
 
             foreach ($pages as $page) {
                 $details = $page->getDetails();
@@ -112,15 +132,26 @@ class ProgramContentExtractor
                 }
             }
         } catch (\Throwable $e) {
-            Log::info('Could not detect PDF orientation', ['error' => $e->getMessage()]);
+            Log::info('Could not detect PDF orientation', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+                'exception_class' => get_class($e),
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+            ]);
         }
 
         return 'unknown';
     }
 
-    private function extractPdfAsText(string $path): string
+    private function extractPdfAsText(string $path, ?int $userId = null): string
     {
         try {
+            Log::info('ProgramContentExtractor parsing PDF as text fallback', [
+                'user_id' => $userId,
+                'file_size_bytes' => filesize($path),
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+            ]);
+
             $pdf = $this->pdfParser->parseFile($path);
             $pages = $pdf->getPages();
             $formattedText = [];
@@ -134,12 +165,27 @@ class ProgramContentExtractor
                 }
             }
 
+            Log::info('ProgramContentExtractor PDF parsed as text fallback', [
+                'user_id' => $userId,
+                'page_count' => count($pages),
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+                'memory_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 1),
+            ]);
+
             if (empty($formattedText)) {
                 throw new \Exception('No text could be extracted from the PDF');
             }
 
             return implode("\n\n", $formattedText);
         } catch (\Throwable $e) {
+            Log::error('ProgramContentExtractor PDF text fallback failed', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+                'exception_class' => get_class($e),
+                'memory_usage_mb' => round(memory_get_usage(true) / 1048576, 1),
+                'memory_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 1),
+            ]);
+
             throw new \Exception('Failed to extract text from PDF: '.$e->getMessage());
         }
     }
