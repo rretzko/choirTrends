@@ -162,15 +162,7 @@ Also reuses the same article body and methodology sidebar as Section 4.
 
 > **Subject:** Pitch for Tempo: What New Jersey Choral Programs Reveal About Repertoire Trends
 >
-> Dear NJMEA Tempo Editors,
 >
-> I'd like to propose a repertoire-trends feature for Tempo, drawn from concert program data logged on ChoirTrends, a platform I founded that directors use to track their season's repertoire. This one should be of particular interest to your readership: of the 63 concert programs in this year's dataset, 40 — nearly two-thirds — came from New Jersey schools, 29 of them distinct. This is, in large part, a snapshot of what New Jersey choral programs specifically looked like in 2025–26: living composers dominating outside the holiday season, a "Nordic/Baltic" stylistic thread (Gjeilo, Uusberg, Ešenvalds) running through roughly one in ten programs, and a clear split between sacred/seasonal winter programming and contemporary American spring programming.
->
-> I know Tempo covers all music disciplines rather than choral exclusively, so I've kept the piece self-contained and framed it as a "what's actually being programmed" trend piece rather than assuming choral-specific context — it should read fine alongside band/orchestra content in the same issue. Happy to trim it if space is tight; the core data findings hold up in half the word count if needed.
->
-> The draft is attached, roughly 1,300 words with a methodology sidebar. Let me know if this is a fit and what NJMEA's submission process looks like.
->
-> Thank you for your consideration,
 > Rick Retzko
 > Founder, ChoirTrends.com & TheDirectorsRoom.com
 > rick.retzko@gmail.com

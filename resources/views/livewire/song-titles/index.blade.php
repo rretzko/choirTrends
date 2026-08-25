@@ -16,8 +16,16 @@
                 </flux:callout>
             </div>
         </div>
+    </div>
 
-        <div class="flex justify-center gap-2">
+    <flux:tab.group>
+        <flux:tabs wire:model="mode" variant="segmented" class="mb-6">
+            <flux:tab name="browse" icon="queue-list">{{ __('Browse') }}</flux:tab>
+            <flux:tab name="ai_search" icon="sparkles">{{ __('Ask AI') }}</flux:tab>
+        </flux:tabs>
+
+        <flux:tab.panel name="browse">
+        <div class="mb-6 flex justify-center gap-2">
             <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('Songs from my programs') }}">
                 {{ __('My') }} ({{ $myCount }})
             </flux:button>
@@ -35,16 +43,33 @@
                 </flux:tooltip>
             @endif
         </div>
-    </div>
 
-    <div class="mb-4 md:w-1/2">
+        <div class="mb-4 md:w-1/2">
         <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Search song titles, composers, arrangers...') }}" icon="magnifying-glass" />
         @if ($compliance['canViewAll'])
             <div class="mt-2">
                 <flux:checkbox wire:model.live="searchLyrics" label="{{ __('Also search lyrics') }}" />
             </div>
         @endif
-    </div>
+        </div>
+
+        <div class="mb-4 flex flex-wrap items-center gap-2">
+            <span class="text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">{{ __('Ensemble Type') }}</span>
+            @foreach ($ensembleTypes as $type)
+                <flux:button
+                    wire:click="toggleEnsembleTypeFilter('{{ $type->value }}')"
+                    :variant="in_array($type->value, $ensembleTypeFilter) ? 'primary' : 'ghost'"
+                    size="sm"
+                >
+                    {{ $type->label() }}
+                </flux:button>
+            @endforeach
+            @if (! empty($ensembleTypeFilter))
+                <flux:button wire:click="$set('ensembleTypeFilter', [])" variant="ghost" size="sm" icon="x-mark">
+                    {{ __('Clear') }}
+                </flux:button>
+            @endif
+        </div>
 
     {{-- Mobile card layout --}}
     <div class="space-y-2 md:hidden">
@@ -63,6 +88,13 @@
                                 arr. {{ $songTitle->arranger?->artist_name }}
                             @endif
                         </div>
+                        @if ($ensembleTypeMap->has($songTitle->id))
+                            <div class="mt-1.5 flex flex-wrap gap-1">
+                                @foreach ($ensembleTypeMap->get($songTitle->id) as $type)
+                                    <flux:badge size="sm" rounded>{{ $type->label() }}</flux:badge>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                     <div class="flex items-center gap-2">
                         @if ($viewableVideoMap->has($songTitle->id))
@@ -100,11 +132,12 @@
         <table class="w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
             <colgroup>
                 <col class="w-[5%]" />
-                <col class="w-[35%]" />
-                <col class="w-[30%]" />
-                <col class="w-[12%]" />
-                <col class="w-[9%]" />
-                <col class="w-[9%]" />
+                <col class="w-[27%]" />
+                <col class="w-[20%]" />
+                <col class="w-[15%]" />
+                <col class="w-[11%]" />
+                <col class="w-[11%]" />
+                <col class="w-[11%]" />
             </colgroup>
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
@@ -141,6 +174,9 @@
                             </div>
                         </div>
                     </th>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        {{ __('Ensemble Type') }}
+                    </th>
                     <th wire:click="sort('performed')" class="cursor-pointer px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
                         <div class="flex items-center justify-center gap-1">
                             {{ __('Programmed') }}
@@ -176,6 +212,13 @@
                                 <div class="truncate text-xs">arr. {{ $songTitle->arranger->artist_name }}</div>
                             @endif
                         </td>
+                        <td class="px-4 py-2">
+                            <div class="flex flex-wrap gap-1">
+                                @foreach ($ensembleTypeMap->get($songTitle->id, collect()) as $type)
+                                    <flux:badge size="sm" rounded>{{ $type->label() }}</flux:badge>
+                                @endforeach
+                            </div>
+                        </td>
                         <td class="whitespace-nowrap px-4 py-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $songTitle->performed_count }}
                         </td>
@@ -203,7 +246,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
+                        <td colspan="7" class="px-6 py-12 text-center">
                             <div class="mx-auto max-w-sm">
                                 <flux:icon name="queue-list" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
                                 <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No song titles found') }}</p>
@@ -218,6 +261,60 @@
             </tbody>
         </table>
     </div>
+        </flux:tab.panel>
+
+        <flux:tab.panel name="ai_search">
+            <div class="max-w-3xl space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Ask about repertoire') }}</flux:heading>
+                    <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                        {{ __('Describe what you\'re looking for in plain language — voicing, difficulty balance, theme, or occasion.') }}
+                    </p>
+                </div>
+
+                <form wire:submit="askAi" class="space-y-3">
+                    <flux:textarea
+                        wire:model="aiQuery"
+                        rows="3"
+                        :disabled="$aiSearching"
+                        placeholder="{{ __('e.g. High school SATB pieces that are easy for the men and challenging for the women') }}"
+                    />
+                    @error('aiQuery')
+                        <flux:text size="sm" class="text-red-600 dark:text-red-400">{{ $message }}</flux:text>
+                    @enderror
+
+                    <div class="flex items-center gap-3">
+                        <flux:button type="submit" variant="primary" :disabled="$aiSearching">
+                            {{ $aiSearching ? __('Searching…') : __('Search') }}
+                        </flux:button>
+                        @if ($aiResultQueryId || $aiError)
+                            <flux:button type="button" variant="ghost" wire:click="resetAiSearch">
+                                {{ __('New search') }}
+                            </flux:button>
+                        @endif
+                    </div>
+                </form>
+
+                @if ($aiSearching)
+                    <div wire:poll.2s="checkAiSearchStatus" class="flex items-center gap-3 rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
+                        <flux:icon name="arrow-path" class="size-4 animate-spin" />
+                        {{ __('Searching the catalog and the web — this can take up to 30 seconds…') }}
+                    </div>
+                @endif
+
+                @if ($aiError)
+                    <flux:callout icon="exclamation-triangle" color="red">
+                        <flux:callout.heading>{{ __('Search failed') }}</flux:callout.heading>
+                        <flux:callout.text>{{ $aiError }}</flux:callout.text>
+                    </flux:callout>
+                @endif
+
+                @if ($aiResult)
+                    <x-repertoire.results :result="$aiResult" />
+                @endif
+            </div>
+        </flux:tab.panel>
+    </flux:tab.group>
 
     {{-- Media Player Modal --}}
     <flux:modal name="song-video-player" class="max-w-3xl">

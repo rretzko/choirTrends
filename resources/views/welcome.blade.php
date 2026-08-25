@@ -103,6 +103,13 @@
             </div>
         </section>
 
+        {{-- AI Repertoire Finder --}}
+        <section class="py-16 lg:py-24">
+            <div class="max-w-6xl mx-auto px-6">
+                <livewire:guest.repertoire-finder />
+            </div>
+        </section>
+
         {{-- How It Works --}}
         <section class="py-16 lg:py-24 bg-zinc-50 dark:bg-zinc-900/50">
             <div class="max-w-6xl mx-auto px-6">

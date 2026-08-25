@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
+use App\Services\Concerns\CallsAnthropicApi;
 use Illuminate\Support\Facades\Log;
 
 class ClaudeAnalysisService
 {
+    use CallsAnthropicApi;
+
     private string $apiKey;
 
     private string $apiVersion;
@@ -357,63 +359,15 @@ PROMPT;
 
     private function sendToClaudeAPI(array $messages): array
     {
-        $maxRetries = 2;
-        $baseDelay = 2; // seconds
-        $attempt = 0;
-
-        while (true) {
-            $response = Http::withHeaders([
-                'x-api-key' => $this->apiKey,
-                'anthropic-version' => $this->apiVersion,
-                'content-type' => 'application/json',
-            ])->timeout(90)->post('https://api.anthropic.com/v1/messages', array_filter([
-                'model' => $this->model,
-                'max_tokens' => 16000,
-                'thinking' => $this->useThinking ? [
-                    'type' => 'enabled',
-                    'budget_tokens' => 10000,
-                ] : null,
-                'messages' => $messages,
-            ]));
-
-            if ($response->successful()) {
-                return $response->json();
-            }
-
-            // Check if it's a retryable error (rate limit or overloaded)
-            $error = $response->json()['error'] ?? null;
-            $errorType = $error['type'] ?? 'unknown';
-            $isRetryable = $error && in_array($errorType, [
-                'rate_limit_error',
-                'overloaded_error',
-            ]);
-
-            // If it's the last attempt or not a retryable error, throw exception
-            if ($attempt >= $maxRetries || ! $isRetryable) {
-                $message = match ($errorType) {
-                    'overloaded_error' => 'The AI service is temporarily busy. Please try again in a few minutes.',
-                    'rate_limit_error' => 'Too many requests. Please wait a moment and try again.',
-                    default => 'Failed to analyze program: '.($error['message'] ?? 'Unknown error'),
-                };
-
-                throw new \Exception($message);
-            }
-
-            // Calculate exponential backoff delay (longer for overloaded errors)
-            $delay = $errorType === 'overloaded_error'
-                ? ($baseDelay * pow(2, $attempt)) + 3
-                : $baseDelay * pow(2, $attempt);
-
-            Log::info('Retryable API error, retrying', [
-                'error_type' => $errorType,
-                'attempt' => $attempt + 1,
-                'max_retries' => $maxRetries,
-                'delay_seconds' => $delay,
-            ]);
-
-            sleep($delay);
-            $attempt++;
-        }
+        return $this->postToAnthropic([
+            'model' => $this->model,
+            'max_tokens' => 16000,
+            'thinking' => $this->useThinking ? [
+                'type' => 'enabled',
+                'budget_tokens' => 10000,
+            ] : null,
+            'messages' => $messages,
+        ], 'Failed to analyze program');
     }
 
     private function parseResponse(array $response): array
