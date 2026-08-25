@@ -11,6 +11,15 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 
+beforeEach(function () {
+    config([
+        'services.anthropic.api_key' => 'test-api-key',
+        'services.anthropic.api_version' => '2023-06-01',
+        'services.anthropic.repertoire_search_model' => 'claude-sonnet-4-6',
+        'services.anthropic.repertoire_search_max_web_searches' => 6,
+    ]);
+});
+
 test('ask ai requires a query of at least 5 characters', function () {
     $user = User::factory()->create();
     $this->actingAs($user);

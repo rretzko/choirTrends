@@ -33,7 +33,7 @@ class RepertoireSearchService
 
     public function __construct()
     {
-        $this->apiKey = config('services.anthropic.api_key');
+        $this->apiKey = (string) config('services.anthropic.api_key');
         $this->apiVersion = config('services.anthropic.api_version');
         $this->model = config('services.anthropic.repertoire_search_model');
         $this->maxWebSearches = (int) config('services.anthropic.repertoire_search_max_web_searches');

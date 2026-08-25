@@ -20,6 +20,15 @@ use Livewire\Livewire;
  */
 const TEST_CLIENT_IP = '127.0.0.1';
 
+beforeEach(function () {
+    config([
+        'services.anthropic.api_key' => 'test-api-key',
+        'services.anthropic.api_version' => '2023-06-01',
+        'services.anthropic.repertoire_search_model' => 'claude-sonnet-4-6',
+        'services.anthropic.repertoire_search_max_web_searches' => 6,
+    ]);
+});
+
 function fakeTurnstileSuccess(): void
 {
     Http::fake([

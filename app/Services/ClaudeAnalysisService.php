@@ -19,7 +19,7 @@ class ClaudeAnalysisService
 
     public function __construct()
     {
-        $this->apiKey = config('services.anthropic.api_key');
+        $this->apiKey = (string) config('services.anthropic.api_key');
         $this->apiVersion = config('services.anthropic.api_version');
         $this->model = config('services.anthropic.model');
 
