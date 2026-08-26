@@ -19,10 +19,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class Index extends Component
 {
     use ChecksProgramCompliance;
+    use WithPagination;
 
     public string $mode = 'browse';
 
@@ -63,6 +65,8 @@ class Index extends Component
 
     public function sort(string $column): void
     {
+        $this->resetPage();
+
         if ($this->sortBy === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
@@ -73,11 +77,28 @@ class Index extends Component
 
     public function toggleEnsembleTypeFilter(string $type): void
     {
+        $this->resetPage();
+
         if (in_array($type, $this->ensembleTypeFilter, true)) {
             $this->ensembleTypeFilter = array_values(array_diff($this->ensembleTypeFilter, [$type]));
         } else {
             $this->ensembleTypeFilter[] = $type;
         }
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSearchLyrics(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilter(): void
+    {
+        $this->resetPage();
     }
 
     public function askAi(RepertoireSearchService $service): void
@@ -141,16 +162,19 @@ class Index extends Component
     }
 
     /**
-     * Build a map of song_title_id => [{program_id, program_name, is_audio}] for songs with viewable videos.
+     * Build a map of song_title_id => [{program_id, program_name, is_audio}] for songs with viewable videos,
+     * scoped to only the given song IDs (the current page) so this stays bounded as the catalog grows.
      *
+     * @param  Collection<int, int>  $songTitleIds
      * @return Collection<int|string, array{program_id: int, program_name: string, is_audio: bool}>
      */
-    private function getViewableVideoMap(): Collection
+    private function getViewableVideoMap(Collection $songTitleIds): Collection
     {
         $userId = Auth::id();
 
         $rows = DB::table('program_song_title')
             ->join('programs', 'programs.id', '=', 'program_song_title.program_id')
+            ->whereIn('program_song_title.song_title_id', $songTitleIds)
             ->whereNotNull('program_song_title.video_path')
             ->where(function ($q) use ($userId) {
                 $q->where('programs.user_id', $userId)
@@ -175,14 +199,17 @@ class Index extends Component
 
     /**
      * Build a map of song_title_id => distinct ensemble types that have performed it,
-     * scoped to the current My/All filter.
+     * scoped to the current My/All filter and to only the given song IDs (the current page)
+     * so this stays bounded as the catalog grows.
      *
+     * @param  Collection<int, int>  $songTitleIds
      * @return Collection<int|string, Collection<int, EnsembleType>>
      */
-    private function getEnsembleTypeMap(): Collection
+    private function getEnsembleTypeMap(Collection $songTitleIds): Collection
     {
         $rows = DB::table('program_song_title')
             ->join('ensembles', 'ensembles.id', '=', 'program_song_title.ensemble_id')
+            ->whereIn('program_song_title.song_title_id', $songTitleIds)
             ->when($this->filter === 'my', function ($q) {
                 $q->join('programs', 'programs.id', '=', 'program_song_title.program_id')
                     ->where('programs.user_id', Auth::id());
@@ -284,10 +311,11 @@ class Index extends Component
                 $query->orderBy($sortColumn, $this->sortDirection);
             }
 
-            $songTitles = $query->get();
+            $songTitles = $query->paginate(20);
 
-            $viewableVideoMap = $this->getViewableVideoMap();
-            $ensembleTypeMap = $this->getEnsembleTypeMap();
+            $songTitleIds = $songTitles->pluck('id');
+            $viewableVideoMap = $this->getViewableVideoMap($songTitleIds);
+            $ensembleTypeMap = $this->getEnsembleTypeMap($songTitleIds);
         }
 
         $aiResult = $this->aiResultQueryId ? RepertoireQuery::find($this->aiResultQueryId) : null;

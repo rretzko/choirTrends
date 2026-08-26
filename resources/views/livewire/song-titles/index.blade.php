@@ -261,6 +261,12 @@
             </tbody>
         </table>
     </div>
+
+    @if ($songTitles instanceof \Illuminate\Contracts\Pagination\Paginator)
+        <div class="mt-4">
+            <flux:pagination :paginator="$songTitles" />
+        </div>
+    @endif
         </flux:tab.panel>
 
         <flux:tab.panel name="ai_search">
