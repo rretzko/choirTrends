@@ -25,25 +25,6 @@
         </flux:tabs>
 
         <flux:tab.panel name="browse">
-        <div class="mb-6 flex justify-center gap-2">
-            <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('Songs from my programs') }}">
-                {{ __('My') }} ({{ $myCount }})
-            </flux:button>
-            @if ($compliance['canViewAll'])
-                <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('All songs from submitted programs') }}">
-                    {{ __('All') }} ({{ $allCount }})
-                </flux:button>
-            @else
-                <flux:tooltip content="{{ __('Upload programs to unlock community data') }}">
-                    <div>
-                        <flux:button disabled variant="ghost" size="sm">
-                            {{ __('All') }} ({{ $allCount }})
-                        </flux:button>
-                    </div>
-                </flux:tooltip>
-            @endif
-        </div>
-
         <div class="mb-4 md:w-1/2">
         <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Search song titles, composers, arrangers...') }}" icon="magnifying-glass" />
         @if ($compliance['canViewAll'])
@@ -53,22 +34,174 @@
         @endif
         </div>
 
-        <div class="mb-4 flex flex-wrap items-center gap-2">
-            <span class="text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">{{ __('Ensemble Type') }}</span>
-            @foreach ($ensembleTypes as $type)
-                <flux:button
-                    wire:click="toggleEnsembleTypeFilter('{{ $type->value }}')"
-                    :variant="in_array($type->value, $ensembleTypeFilter) ? 'primary' : 'ghost'"
-                    size="sm"
+        {{-- Filters --}}
+        <div class="mb-6 rounded-xl border border-neutral-200 dark:border-neutral-700">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
+                <div class="flex items-center gap-2">
+                    <flux:icon name="funnel" class="size-4 text-neutral-500 dark:text-neutral-400" />
+                    <flux:heading size="sm">{{ __('Filters') }}</flux:heading>
+                    @if ($activeFilterCount > 0)
+                        <flux:badge size="sm" rounded color="sky">{{ $activeFilterCount }} {{ __('active') }}</flux:badge>
+                    @endif
+                </div>
+                @if ($activeFilterCount > 0)
+                    <flux:button wire:click="clearAllFilters" variant="ghost" size="sm" icon="x-mark">
+                        {{ __('Clear all') }}
+                    </flux:button>
+                @endif
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 border-b border-neutral-200 bg-sky-50 px-4 py-3 dark:border-neutral-700 dark:bg-sky-400/10">
+                <span class="text-xs font-medium uppercase tracking-wider text-sky-700 dark:text-sky-300">{{ __('Applied') }}</span>
+
+                <flux:badge size="sm" rounded>
+                    {{ __('Scope') }}: {{ $filter === 'my' ? __('My') : __('All') }}
+                </flux:badge>
+
+                @if ($programStatus === 'programmed')
+                    <flux:badge size="sm" rounded>
+                        {{ __('Status') }}: {{ __('Programmed') }}
+                    </flux:badge>
+                @else
+                    <flux:badge as="button" wire:click="$set('programStatus', 'programmed')" size="sm" rounded color="sky" icon:trailing="x-mark">
+                        {{ __('Status') }}: {{ $programStatus === 'all' ? __('Any') : __('Not Programmed') }}
+                    </flux:badge>
+                @endif
+
+                @foreach ($ensembleTypeFilter as $typeValue)
+                    @php $typeLabel = collect($ensembleTypes)->first(fn ($t) => $t->value === $typeValue)?->label() ?? $typeValue; @endphp
+                    <flux:badge as="button" wire:click="toggleEnsembleTypeFilter('{{ $typeValue }}')" size="sm" rounded color="sky" icon:trailing="x-mark">
+                        {{ $typeLabel }}
+                    </flux:badge>
+                @endforeach
+
+                @foreach ($difficultyFilter as $levelValue)
+                    @php $levelLabel = collect($difficultyLevels)->first(fn ($l) => $l->value === $levelValue)?->label() ?? $levelValue; @endphp
+                    <flux:badge as="button" wire:click="toggleDifficultyFilter('{{ $levelValue }}')" size="sm" rounded color="sky" icon:trailing="x-mark">
+                        {{ $levelLabel }}
+                    </flux:badge>
+                @endforeach
+
+                @foreach ($tagFilter as $tag)
+                    <flux:badge as="button" wire:click="toggleTagFilter('{{ $tag }}')" size="sm" rounded color="sky" icon:trailing="x-mark">
+                        {{ $tag }}
+                    </flux:badge>
+                @endforeach
+            </div>
+
+            <div class="space-y-3 p-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="w-24 shrink-0 text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">{{ __('Scope') }}</span>
+                    <flux:button wire:click="$set('filter', 'my')" :variant="$filter === 'my' ? 'primary' : 'ghost'" size="sm" title="{{ __('Songs from my programs') }}">
+                        {{ __('My') }} ({{ $myCount }})
+                    </flux:button>
+                    @if ($compliance['canViewAll'])
+                        <flux:button wire:click="$set('filter', 'all')" :variant="$filter === 'all' ? 'primary' : 'ghost'" size="sm" title="{{ __('All songs from submitted programs') }}">
+                            {{ __('All') }} ({{ $allCount }})
+                        </flux:button>
+                    @else
+                        <flux:tooltip content="{{ __('Upload programs to unlock community data') }}">
+                            <div>
+                                <flux:button disabled variant="ghost" size="sm">
+                                    {{ __('All') }} ({{ $allCount }})
+                                </flux:button>
+                            </div>
+                        </flux:tooltip>
+                    @endif
+                </div>
+            </div>
+
+            <div class="border-t border-neutral-200 dark:border-neutral-700" x-data="{ advancedOpen: {{ $activeFilterCount > 0 ? 'true' : 'false' }} }">
+                <button
+                    type="button"
+                    x-on:click="advancedOpen = ! advancedOpen"
+                    class="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800/50"
                 >
-                    {{ $type->label() }}
-                </flux:button>
-            @endforeach
-            @if (! empty($ensembleTypeFilter))
-                <flux:button wire:click="$set('ensembleTypeFilter', [])" variant="ghost" size="sm" icon="x-mark">
-                    {{ __('Clear') }}
-                </flux:button>
-            @endif
+                    {{ __('Advanced Filters') }}
+                    <flux:icon name="chevron-down" x-bind:class="{ 'rotate-180': advancedOpen }" class="size-4 text-neutral-500 transition-transform dark:text-neutral-400" />
+                </button>
+
+                <div x-show="advancedOpen" x-collapse class="space-y-3 px-4 pb-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="w-24 shrink-0 text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">{{ __('Status') }}</span>
+                        <flux:button wire:click="$set('programStatus', 'programmed')" :variant="$programStatus === 'programmed' ? 'primary' : 'ghost'" size="sm" title="{{ __('Songs that have been performed') }}">
+                            {{ __('Programmed') }}
+                        </flux:button>
+                        @if ($compliance['canViewAll'])
+                            <flux:button wire:click="$set('programStatus', 'not_programmed')" :variant="$programStatus === 'not_programmed' ? 'primary' : 'ghost'" size="sm" title="{{ __('Songs not yet performed') }}">
+                                {{ __('Not Programmed') }}
+                            </flux:button>
+                            @if ($programStatus !== 'all')
+                                <flux:button wire:click="$set('programStatus', 'all')" variant="ghost" size="sm" icon="x-mark" title="{{ __('Every song regardless of programmed status') }}">
+                                    {{ __('Clear') }}
+                                </flux:button>
+                            @endif
+                        @else
+                            <flux:tooltip content="{{ __('Upload programs to unlock community data') }}">
+                                <div>
+                                    <flux:button disabled variant="ghost" size="sm">{{ __('Not Programmed') }}</flux:button>
+                                </div>
+                            </flux:tooltip>
+                        @endif
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="w-24 shrink-0 text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">{{ __('Ensemble Type') }}</span>
+                        @foreach ($ensembleTypes as $type)
+                            <flux:button
+                                wire:click="toggleEnsembleTypeFilter('{{ $type->value }}')"
+                                :variant="in_array($type->value, $ensembleTypeFilter) ? 'primary' : 'ghost'"
+                                size="sm"
+                            >
+                                {{ $type->label() }}
+                            </flux:button>
+                        @endforeach
+                        @if (! empty($ensembleTypeFilter))
+                            <flux:button wire:click="$set('ensembleTypeFilter', [])" variant="ghost" size="sm" icon="x-mark">
+                                {{ __('Clear') }}
+                            </flux:button>
+                        @endif
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="w-24 shrink-0 text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">{{ __('Difficulty') }}</span>
+                        @foreach ($difficultyLevels as $level)
+                            <flux:button
+                                wire:click="toggleDifficultyFilter('{{ $level->value }}')"
+                                :variant="in_array($level->value, $difficultyFilter) ? 'primary' : 'ghost'"
+                                size="sm"
+                            >
+                                {{ $level->label() }}
+                            </flux:button>
+                        @endforeach
+                        @if (! empty($difficultyFilter))
+                            <flux:button wire:click="$set('difficultyFilter', [])" variant="ghost" size="sm" icon="x-mark">
+                                {{ __('Clear') }}
+                            </flux:button>
+                        @endif
+                    </div>
+
+                    @if ($availableTags->isNotEmpty())
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="w-24 shrink-0 text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">{{ __('Tags') }}</span>
+                            @foreach ($availableTags as $tag)
+                                <flux:button
+                                    wire:click="toggleTagFilter('{{ $tag }}')"
+                                    :variant="in_array($tag, $tagFilter) ? 'primary' : 'ghost'"
+                                    size="sm"
+                                >
+                                    {{ $tag }}
+                                </flux:button>
+                            @endforeach
+                            @if (! empty($tagFilter))
+                                <flux:button wire:click="$set('tagFilter', [])" variant="ghost" size="sm" icon="x-mark">
+                                    {{ __('Clear') }}
+                                </flux:button>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
 
     @if ($songTitles instanceof \Illuminate\Contracts\Pagination\Paginator)
@@ -83,8 +216,13 @@
             <div wire:key="song-title-card-{{ $songTitle->id }}" class="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
                 <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0">
-                        <div class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ $songTitle->song_title }}
+                        <div class="flex items-center gap-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                            <span class="truncate">{{ $songTitle->song_title }}</span>
+                            @if ($description = $songTitle->preferredDescription())
+                                <flux:tooltip content="{{ $description->description }}">
+                                    <flux:icon name="information-circle" class="size-4 shrink-0 text-sky-500" />
+                                </flux:tooltip>
+                            @endif
                         </div>
                         <div class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $songTitle->composer?->artist_name }}
@@ -94,13 +232,24 @@
                                 arr. {{ $songTitle->arranger?->artist_name }}
                             @endif
                         </div>
-                        @if ($ensembleTypeMap->has($songTitle->id))
-                            <div class="mt-1.5 flex flex-wrap gap-1">
-                                @foreach ($ensembleTypeMap->get($songTitle->id) as $type)
-                                    <flux:badge size="sm" rounded>{{ $type->label() }}</flux:badge>
-                                @endforeach
-                            </div>
-                        @endif
+                        <div class="mt-1.5 flex flex-wrap gap-1">
+                            @foreach ($ensembleTypeMap->get($songTitle->id, collect()) as $type)
+                                <flux:badge size="sm" rounded>{{ $type->label() }}</flux:badge>
+                            @endforeach
+                            @if ($difficultyMap->has($songTitle->id))
+                                @php $difficultyEntry = $difficultyMap->get($songTitle->id); @endphp
+                                <flux:tooltip content="{{ $difficultyEntry['summary'] }}">
+                                    <flux:badge size="sm" rounded :color="$difficultyEntry['overall']->badgeColor()">
+                                        {{ $difficultyEntry['overall']->label() }}
+                                    </flux:badge>
+                                </flux:tooltip>
+                            @endif
+                            @if ($songTitle->tags->isNotEmpty())
+                                <flux:tooltip content="{{ $songTitle->tags->pluck('tag')->unique()->sort()->values()->implode(', ') }}">
+                                    <flux:badge size="sm" rounded color="teal">{{ __('Tags') }}</flux:badge>
+                                </flux:tooltip>
+                            @endif
+                        </div>
                     </div>
                     <div class="flex items-center gap-2">
                         @if ($viewableVideoMap->has($songTitle->id))
@@ -137,13 +286,15 @@
     <div class="hidden overflow-hidden rounded-xl border border-neutral-200 md:block dark:border-neutral-700">
         <table class="w-full table-fixed divide-y divide-neutral-200 dark:divide-neutral-700">
             <colgroup>
-                <col class="w-[5%]" />
-                <col class="w-[27%]" />
-                <col class="w-[20%]" />
-                <col class="w-[15%]" />
-                <col class="w-[11%]" />
-                <col class="w-[11%]" />
-                <col class="w-[11%]" />
+                <col class="w-[4%]" />
+                <col class="w-[22%]" />
+                <col class="w-[17%]" />
+                <col class="w-[12%]" />
+                <col class="w-[9%]" />
+                <col class="w-[9%]" />
+                <col class="w-[9%]" />
+                <col class="w-[9%]" />
+                <col class="w-[9%]" />
             </colgroup>
             <thead class="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
@@ -193,6 +344,26 @@
                             @endif
                         </div>
                     </th>
+                    <th wire:click="sort('difficulty')" class="cursor-pointer px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                        <div class="flex items-center justify-center gap-1">
+                            {{ __('Difficulty') }}
+                            @if ($sortBy === 'difficulty')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
+                    </th>
+                    <th wire:click="sort('tags')" class="cursor-pointer px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                        <div class="flex items-center justify-center gap-1">
+                            {{ __('Tags') }}
+                            @if ($sortBy === 'tags')
+                                <flux:icon name="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="size-4" />
+                            @else
+                                <flux:icon name="arrows-up-down" class="size-4 opacity-30" />
+                            @endif
+                        </div>
+                    </th>
                     <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                         {{ __('Media') }}
                     </th>
@@ -208,7 +379,14 @@
                             {{ $loop->iteration }}
                         </td>
                         <td class="truncate px-4 py-2 text-sm text-neutral-900 dark:text-neutral-100">
-                            {{ $songTitle->song_title }}
+                            <div class="flex items-center gap-1">
+                                <span class="truncate">{{ $songTitle->song_title }}</span>
+                                @if ($description = $songTitle->preferredDescription())
+                                    <flux:tooltip content="{{ $description->description }}">
+                                        <flux:icon name="information-circle" class="size-4 shrink-0 text-sky-500" />
+                                    </flux:tooltip>
+                                @endif
+                            </div>
                         </td>
                         <td class="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                             @if ($songTitle->composer)
@@ -227,6 +405,29 @@
                         </td>
                         <td class="whitespace-nowrap px-4 py-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
                             {{ $songTitle->performed_count }}
+                        </td>
+                        <td class="px-2 py-2">
+                            <div class="flex items-center justify-center">
+                                @if ($difficultyMap->has($songTitle->id))
+                                    @php $difficultyEntry = $difficultyMap->get($songTitle->id); @endphp
+                                    <flux:tooltip content="{{ $difficultyEntry['summary'] }}">
+                                        <flux:badge size="sm" rounded :color="$difficultyEntry['overall']->badgeColor()">
+                                            {{ $difficultyEntry['overall']->label() }}
+                                        </flux:badge>
+                                    </flux:tooltip>
+                                @endif
+                            </div>
+                        </td>
+                        <td class="px-2 py-2">
+                            <div class="flex items-center justify-center">
+                                @if ($songTitle->tags->isNotEmpty())
+                                    <flux:tooltip content="{{ $songTitle->tags->pluck('tag')->unique()->sort()->values()->implode(', ') }}">
+                                        <flux:badge size="sm" rounded color="teal">{{ __('Yes') }}</flux:badge>
+                                    </flux:tooltip>
+                                @else
+                                    <flux:badge size="sm" rounded>{{ __('No') }}</flux:badge>
+                                @endif
+                            </div>
                         </td>
                         <td class="px-2 py-2">
                             <div class="flex items-center justify-center">
@@ -252,7 +453,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center">
+                        <td colspan="9" class="px-6 py-12 text-center">
                             <div class="mx-auto max-w-sm">
                                 <flux:icon name="queue-list" class="mx-auto size-10 text-neutral-300 dark:text-neutral-600 mb-3" />
                                 <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{{ __('No song titles found') }}</p>

@@ -133,6 +133,33 @@ class ProgramComplianceService
     }
 
     /**
+     * Whether the user has uploaded a program within the last $months months (by upload
+     * timestamp, not the concert's event_date). Used to gate unlimited AI repertoire search
+     * access on the Dashboard widget — independent of the canViewAll() data-visibility gate.
+     *
+     * @return array{isRecent: bool, lastUploadDate: Carbon|null}
+     */
+    public function checkRecentUpload(User $user, int $months = 6): array
+    {
+        if ($user->isFounder()) {
+            return ['isRecent' => true, 'lastUploadDate' => null];
+        }
+
+        $lastUploadDate = $user->programs()->latest('created_at')->value('created_at');
+
+        if ($lastUploadDate === null) {
+            return ['isRecent' => false, 'lastUploadDate' => null];
+        }
+
+        $lastUploadDate = Carbon::parse($lastUploadDate);
+
+        return [
+            'isRecent' => $lastUploadDate->gte(Carbon::now()->subMonths($months)),
+            'lastUploadDate' => $lastUploadDate,
+        ];
+    }
+
+    /**
      * Current year advisory: amber if < 2 programs, green if >= 2. Not enforced.
      *
      * @return array{status: string, message: string, count: int}|null

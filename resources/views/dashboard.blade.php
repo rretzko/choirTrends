@@ -6,5 +6,7 @@
         <livewire:onboarding.setup-checklist />
 
         <livewire:dashboard />
+
+        <livewire:dashboard.repertoire-finder />
     </div>
 </x-layouts.app>

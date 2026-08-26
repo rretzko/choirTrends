@@ -8,12 +8,14 @@ enum RepertoireQuerySource: string
 {
     case Welcome = 'welcome';
     case SongTitles = 'song_titles';
+    case Dashboard = 'dashboard';
 
     public function label(): string
     {
         return match ($this) {
             self::Welcome => 'Welcome Page (Guest)',
             self::SongTitles => 'Song Titles Page',
+            self::Dashboard => 'Dashboard',
         };
     }
 }

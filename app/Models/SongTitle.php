@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\AuthorshipType;
 use App\Enums\SongTitleOrigin;
 use Database\Factories\SongTitleFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +20,9 @@ use Illuminate\Support\Facades\DB;
  * @property-read Artist|null $composer
  * @property-read Artist|null $arranger
  * @property-read int $performed_count
+ * @property-read Collection<int, SongTitleDescription> $descriptions
+ * @property-read Collection<int, SongTitleTag> $tags
+ * @property-read Collection<int, SongTitleDifficultyObservation> $difficultyObservations
  * @property SongTitleOrigin $origin
  */
 class SongTitle extends Model
@@ -80,6 +85,23 @@ class SongTitle extends Model
     public function descriptions(): HasMany
     {
         return $this->hasMany(SongTitleDescription::class);
+    }
+
+    /**
+     * The one description to surface in the UI when multiple authorship types exist,
+     * preferring publisher-cited copy over user-written over the AI fallback.
+     */
+    public function preferredDescription(): ?SongTitleDescription
+    {
+        foreach ([AuthorshipType::Publisher, AuthorshipType::User, AuthorshipType::Ai] as $type) {
+            $description = $this->descriptions->firstWhere('authorship_type', $type);
+
+            if ($description) {
+                return $description;
+            }
+        }
+
+        return null;
     }
 
     /**

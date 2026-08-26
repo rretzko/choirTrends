@@ -52,6 +52,7 @@ return [
 
     'repertoire_search' => [
         'guest_query_limit' => env('REPERTOIRE_GUEST_QUERY_LIMIT', 5),
+        'dashboard_stale_query_limit' => env('REPERTOIRE_DASHBOARD_STALE_QUERY_LIMIT', 5),
     ],
 
 ];

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Livewire\SongTitles;
 
+use App\Enums\DifficultyLevel;
 use App\Enums\EnsembleType;
 use App\Enums\RepertoireQuerySource;
 use App\Enums\VideoVisibility;
+use App\Enums\VoicePart;
 use App\Jobs\ProcessRepertoireSearch;
 use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\RepertoireQuery;
@@ -40,12 +42,20 @@ class Index extends Component
 
     public string $filter = 'all';
 
+    public string $programStatus = 'programmed';
+
     public string $search = '';
 
     public bool $searchLyrics = false;
 
     /** @var list<string> */
     public array $ensembleTypeFilter = [];
+
+    /** @var list<string> */
+    public array $difficultyFilter = [];
+
+    /** @var list<string> */
+    public array $tagFilter = [];
 
     public string $sortBy = 'song_title';
 
@@ -86,6 +96,37 @@ class Index extends Component
         }
     }
 
+    public function toggleDifficultyFilter(string $level): void
+    {
+        $this->resetPage();
+
+        if (in_array($level, $this->difficultyFilter, true)) {
+            $this->difficultyFilter = array_values(array_diff($this->difficultyFilter, [$level]));
+        } else {
+            $this->difficultyFilter[] = $level;
+        }
+    }
+
+    public function toggleTagFilter(string $tag): void
+    {
+        $this->resetPage();
+
+        if (in_array($tag, $this->tagFilter, true)) {
+            $this->tagFilter = array_values(array_diff($this->tagFilter, [$tag]));
+        } else {
+            $this->tagFilter[] = $tag;
+        }
+    }
+
+    public function clearAllFilters(): void
+    {
+        $this->resetPage();
+        $this->programStatus = 'programmed';
+        $this->ensembleTypeFilter = [];
+        $this->difficultyFilter = [];
+        $this->tagFilter = [];
+    }
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -97,6 +138,11 @@ class Index extends Component
     }
 
     public function updatedFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedProgramStatus(): void
     {
         $this->resetPage();
     }
@@ -227,10 +273,53 @@ class Index extends Component
         });
     }
 
+    /**
+     * Build a map of song_title_id => difficulty summary. Pass $songTitleIds to scope to only
+     * those songs (the current page) so this stays bounded as the catalog grows; omit it to
+     * compute across every observed song, e.g. to resolve the difficulty filter's matching IDs.
+     *
+     * @param  Collection<int, int>|null  $songTitleIds
+     * @return Collection<int|string, array{overall: DifficultyLevel, summary: string}>
+     */
+    private function getDifficultyMap(?Collection $songTitleIds = null): Collection
+    {
+        $rows = DB::table('song_title_difficulty_observations')
+            ->when($songTitleIds !== null, fn ($q) => $q->whereIn('song_title_id', $songTitleIds))
+            ->selectRaw('song_title_id, voice_part, AVG(difficulty_value) as part_average')
+            ->groupBy('song_title_id', 'voice_part')
+            ->get();
+
+        return $rows->groupBy('song_title_id')->map(function (Collection $parts) {
+            $byPart = collect(VoicePart::cases())
+                ->mapWithKeys(function (VoicePart $part) use ($parts) {
+                    $row = $parts->firstWhere('voice_part', $part->value);
+
+                    return [$part->value => $row ? (float) $row->part_average : null];
+                })
+                ->filter(fn (?float $average) => $average !== null);
+
+            $overall = DifficultyLevel::fromNumericValue((int) round($byPart->average()));
+
+            $summary = $byPart
+                ->map(fn (float $average, string $partValue) => VoicePart::from($partValue)->label().': '
+                    .DifficultyLevel::fromNumericValue((int) round($average))->label())
+                ->implode(' · ');
+
+            return [
+                'overall' => $overall,
+                'summary' => $summary,
+            ];
+        });
+    }
+
     public function render(): View
     {
         if (! $this->canViewAll() && $this->filter === 'all') {
             $this->filter = 'my';
+        }
+
+        if (! $this->canViewAll() && $this->programStatus !== 'programmed') {
+            $this->programStatus = 'programmed';
         }
 
         // Calculate counts for filters (exclude orphaned song titles with no programs)
@@ -246,23 +335,33 @@ class Index extends Component
 
         if ($this->mode === 'browse') {
             $query = SongTitle::query()
-                ->with(['composer', 'arranger'])
+                ->with(['composer', 'arranger', 'descriptions', 'tags'])
                 ->select('song_titles.*')
                 ->leftJoin('artists as composers', 'song_titles.composer_id', '=', 'composers.id')
                 ->leftJoin('artists as arrangers', 'song_titles.arranger_id', '=', 'arrangers.id');
 
             // Add performed count based on filter
+            $scopeToMine = function ($q) {
+                $q->where('user_id', Auth::id());
+            };
+
             if ($this->filter === 'my') {
-                $query->withCount(['programs as performed_count' => function ($q) {
-                    $q->where('user_id', Auth::id());
-                }]);
-                $query->whereHas('programs', function ($q) {
-                    $q->where('user_id', Auth::id());
-                });
+                $query->withCount(['programs as performed_count' => $scopeToMine]);
             } else {
                 $query->withCount('programs as performed_count');
-                $query->whereHas('programs');
             }
+
+            match ($this->programStatus) {
+                'not_programmed' => $query->whereDoesntHave(
+                    'programs',
+                    $this->filter === 'my' ? $scopeToMine : null
+                ),
+                'all' => null,
+                default => $query->whereHas(
+                    'programs',
+                    $this->filter === 'my' ? $scopeToMine : null
+                ),
+            };
 
             if ($this->search !== '') {
                 $searchTerm = '%'.$this->search.'%';
@@ -299,6 +398,45 @@ class Index extends Component
                 $query->whereIn('song_titles.id', $matchingSongTitleIds);
             }
 
+            if (! empty($this->difficultyFilter)) {
+                $matchingDifficultyIds = $this->getDifficultyMap()
+                    ->filter(fn (array $entry) => in_array($entry['overall']->value, $this->difficultyFilter, true))
+                    ->keys();
+
+                $query->whereIn('song_titles.id', $matchingDifficultyIds);
+            }
+
+            if (! empty($this->tagFilter)) {
+                $matchingTagIds = DB::table('song_title_tags')
+                    ->whereIn('tag', $this->tagFilter)
+                    ->pluck('song_title_id');
+
+                $query->whereIn('song_titles.id', $matchingTagIds);
+            }
+
+            if ($this->sortBy === 'difficulty') {
+                $partAverages = DB::table('song_title_difficulty_observations')
+                    ->select('song_title_id', 'voice_part')
+                    ->selectRaw('AVG(difficulty_value) as part_average')
+                    ->groupBy('song_title_id', 'voice_part');
+
+                $overallAverages = DB::query()->fromSub($partAverages, 'part_averages')
+                    ->select('song_title_id')
+                    ->selectRaw('AVG(part_average) as overall_average')
+                    ->groupBy('song_title_id');
+
+                $query->leftJoinSub($overallAverages, 'difficulty_overall', 'difficulty_overall.song_title_id', '=', 'song_titles.id');
+            }
+
+            if ($this->sortBy === 'tags') {
+                $tagCounts = DB::table('song_title_tags')
+                    ->select('song_title_id')
+                    ->selectRaw('COUNT(*) as tag_count')
+                    ->groupBy('song_title_id');
+
+                $query->leftJoinSub($tagCounts, 'tag_counts', 'tag_counts.song_title_id', '=', 'song_titles.id');
+            }
+
             if (in_array($this->sortBy, ['composer', 'arranger'])) {
                 $prefix = $this->sortBy === 'composer' ? 'composers' : 'arrangers';
                 $query->orderBy("{$prefix}.artist_last_name", $this->sortDirection)
@@ -306,6 +444,8 @@ class Index extends Component
             } else {
                 $sortColumn = match ($this->sortBy) {
                     'performed' => 'performed_count',
+                    'difficulty' => 'difficulty_overall.overall_average',
+                    'tags' => DB::raw('COALESCE(tag_counts.tag_count, 0)'),
                     default => 'song_titles.song_title',
                 };
                 $query->orderBy($sortColumn, $this->sortDirection);
@@ -316,15 +456,31 @@ class Index extends Component
             $songTitleIds = $songTitles->pluck('id');
             $viewableVideoMap = $this->getViewableVideoMap($songTitleIds);
             $ensembleTypeMap = $this->getEnsembleTypeMap($songTitleIds);
+            $difficultyMap = $this->getDifficultyMap($songTitleIds);
         }
 
         $aiResult = $this->aiResultQueryId ? RepertoireQuery::find($this->aiResultQueryId) : null;
+
+        $availableTags = DB::table('song_title_tags')
+            ->select('tag')
+            ->distinct()
+            ->orderBy('tag')
+            ->pluck('tag');
+
+        $activeFilterCount = ($this->programStatus !== 'programmed' ? 1 : 0)
+            + (! empty($this->ensembleTypeFilter) ? 1 : 0)
+            + (! empty($this->difficultyFilter) ? 1 : 0)
+            + (! empty($this->tagFilter) ? 1 : 0);
 
         return view('livewire.song-titles.index', [
             'songTitles' => $songTitles,
             'viewableVideoMap' => $viewableVideoMap,
             'ensembleTypeMap' => $ensembleTypeMap ?? collect(),
+            'difficultyMap' => $difficultyMap ?? collect(),
             'ensembleTypes' => EnsembleType::cases(),
+            'difficultyLevels' => DifficultyLevel::cases(),
+            'availableTags' => $availableTags,
+            'activeFilterCount' => $activeFilterCount,
             'aiResult' => $aiResult,
         ])->layout('components.layouts.app', ['title' => __('Song Titles')]);
     }

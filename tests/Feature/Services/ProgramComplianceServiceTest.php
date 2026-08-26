@@ -203,3 +203,68 @@ test('canViewAll is true when all gates are green', function () {
 
     Carbon::setTestNow();
 });
+
+test('checkRecentUpload is recent when the most recent program was uploaded within 6 months', function () {
+    Carbon::setTestNow(Carbon::parse('2026-08-26'));
+
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    Program::factory()->for($user)->for($school)->create(['created_at' => Carbon::parse('2026-06-01')]);
+
+    $result = $this->service->checkRecentUpload($user);
+
+    expect($result['isRecent'])->toBeTrue()
+        ->and($result['lastUploadDate']->toDateString())->toBe('2026-06-01');
+
+    Carbon::setTestNow();
+});
+
+test('checkRecentUpload is not recent when the most recent program was uploaded more than 6 months ago', function () {
+    Carbon::setTestNow(Carbon::parse('2026-08-26'));
+
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    Program::factory()->for($user)->for($school)->create(['created_at' => Carbon::parse('2026-01-01')]);
+
+    $result = $this->service->checkRecentUpload($user);
+
+    expect($result['isRecent'])->toBeFalse()
+        ->and($result['lastUploadDate']->toDateString())->toBe('2026-01-01');
+
+    Carbon::setTestNow();
+});
+
+test('checkRecentUpload uses the most recently uploaded of multiple programs', function () {
+    Carbon::setTestNow(Carbon::parse('2026-08-26'));
+
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    Program::factory()->for($user)->for($school)->create(['created_at' => Carbon::parse('2025-01-01')]);
+    Program::factory()->for($user)->for($school)->create(['created_at' => Carbon::parse('2026-07-01')]);
+
+    $result = $this->service->checkRecentUpload($user);
+
+    expect($result['isRecent'])->toBeTrue()
+        ->and($result['lastUploadDate']->toDateString())->toBe('2026-07-01');
+
+    Carbon::setTestNow();
+});
+
+test('checkRecentUpload is not recent when the user has never uploaded a program', function () {
+    $user = User::factory()->create();
+
+    $result = $this->service->checkRecentUpload($user);
+
+    expect($result['isRecent'])->toBeFalse()
+        ->and($result['lastUploadDate'])->toBeNull();
+});
+
+test('checkRecentUpload exempts founders regardless of upload history', function () {
+    config(['app.founder' => 'founder@example.com']);
+    $user = User::factory()->founder()->create();
+
+    $result = $this->service->checkRecentUpload($user);
+
+    expect($result['isRecent'])->toBeTrue()
+        ->and($result['lastUploadDate'])->toBeNull();
+});
