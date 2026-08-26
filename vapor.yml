@@ -31,7 +31,7 @@ environments:
     database: mfr-staging
     storage: choirtrends
     queues:
-      - default
+      - choirTrends-staging
     queue-memory: 1024
     queue-timeout: 900
     deploy-timeout: 300
