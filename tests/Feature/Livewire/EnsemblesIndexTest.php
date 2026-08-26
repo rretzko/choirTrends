@@ -3,6 +3,7 @@
 use App\Enums\EnsembleType;
 use App\Livewire\Ensembles\Index;
 use App\Models\Ensemble;
+use App\Models\Program;
 use App\Models\School;
 use App\Models\User;
 use App\Models\UserPrivacy;
@@ -280,4 +281,20 @@ test('new ensemble defaults to unknown type and not a_cappella', function () {
 
     expect($ensemble->type)->toBe(EnsembleType::Unknown)
         ->and($ensemble->a_cappella)->toBeFalse();
+});
+
+test('ensembles index paginates at 20 per page and a second page shows the remaining rows', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    Program::factory()->for($user)->for($school)->create();
+
+    Ensemble::factory()->count(25)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('filter', 'all')
+        ->assertViewHas('ensembles', fn ($ensembles) => $ensembles->count() === 20)
+        ->call('gotoPage', 2)
+        ->assertViewHas('ensembles', fn ($ensembles) => $ensembles->count() === 5);
 });

@@ -67,6 +67,12 @@
         </div>
     </div>
 
+    @if ($programs instanceof \Illuminate\Contracts\Pagination\Paginator)
+        <div class="mb-4">
+            <flux:pagination :paginator="$programs" />
+        </div>
+    @endif
+
     {{-- Mobile card layout --}}
     <div class="space-y-2 md:hidden">
         @forelse ($programs as $program)
@@ -213,6 +219,12 @@
             </tbody>
         </table>
     </div>
+
+    @if ($programs instanceof \Illuminate\Contracts\Pagination\Paginator)
+        <div class="mt-4">
+            <flux:pagination :paginator="$programs" />
+        </div>
+    @endif
 
     <flux:modal name="program-details" class="max-w-2xl">
         @if ($selectedProgram)

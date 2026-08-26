@@ -195,3 +195,33 @@ test('guests cannot access artists index', function () {
     $this->get(route('artists.index'))
         ->assertRedirect(route('login'));
 });
+
+test('artists index paginates at 20 per page and a second page shows the remaining rows', function () {
+    $user = User::factory()->create();
+
+    collect(range(1, 25))->each(fn (int $i) => Artist::create([
+        'artist_name' => 'Artist '.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+    ]));
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->assertViewHas('artists', fn ($artists) => $artists->count() === 20)
+        ->call('gotoPage', 2)
+        ->assertViewHas('artists', fn ($artists) => $artists->count() === 5);
+});
+
+test('searching artists resets to page 1', function () {
+    $user = User::factory()->create();
+
+    collect(range(1, 25))->each(fn (int $i) => Artist::create([
+        'artist_name' => 'Artist '.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+    ]));
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('gotoPage', 2)
+        ->set('search', 'Artist 0')
+        ->assertViewHas('artists', fn ($artists) => $artists->currentPage() === 1);
+});

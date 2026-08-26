@@ -37,6 +37,12 @@
         </div>
     </div>
 
+    @if ($ensembles instanceof \Illuminate\Contracts\Pagination\Paginator)
+        <div class="mb-4">
+            <flux:pagination :paginator="$ensembles" />
+        </div>
+    @endif
+
     {{-- Mobile card layout --}}
     <div class="space-y-2 md:hidden">
         @php $prevSchool = null; @endphp
@@ -192,4 +198,10 @@
             </tbody>
         </table>
     </div>
+
+    @if ($ensembles instanceof \Illuminate\Contracts\Pagination\Paginator)
+        <div class="mt-4">
+            <flux:pagination :paginator="$ensembles" />
+        </div>
+    @endif
 </div>

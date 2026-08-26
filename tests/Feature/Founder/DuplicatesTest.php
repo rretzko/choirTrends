@@ -986,3 +986,64 @@ test('non-founder cannot merge users', function () {
         ->call('mergeUsers', $userA->id, (string) $userB->id)
         ->assertForbidden();
 });
+
+// --- Pagination ---
+
+test('artists tab reference table paginates at 20 per page and a second page shows the remaining rows', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    collect(range(1, 25))->each(fn (int $i) => Artist::create([
+        'artist_name' => 'Artist '.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+    ]));
+
+    $component = Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'artists');
+
+    expect($component->viewData('artistPages')->count())->toBe(20);
+
+    $component->call('gotoPage', 2);
+
+    expect($component->viewData('artistPages')->count())->toBe(5);
+});
+
+test('users tab reference table paginates at 20 per page and a second page shows the remaining rows', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    User::factory()->withoutTwoFactor()->count(24)->create();
+
+    $component = Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'users');
+
+    expect($component->viewData('userPages')->count())->toBe(20);
+
+    $component->call('gotoPage', 2);
+
+    expect($component->viewData('userPages')->count())->toBe(5);
+});
+
+test('keeper dropdown still lists an artist that is only on page 2 of the reference table', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    collect(range(1, 20))->each(fn (int $i) => Artist::create([
+        'artist_name' => 'AAA Artist '.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+        'artist_last_name' => 'AAA Artist '.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+    ]));
+    Artist::create([
+        'artist_name' => 'ZZZ Page Two Artist',
+        'artist_last_name' => 'ZZZ Page Two Artist',
+    ]);
+
+    $component = Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'artists');
+
+    // Still on page 1 of the reference table — confirm the 21st artist really isn't in it yet.
+    $artistPages = $component->viewData('artistPages');
+    expect($artistPages->pluck('artist_name')->all())->not->toContain('ZZZ Page Two Artist');
+
+    // But the keeper/duplicate <select> dropdowns (built from the unbounded $records) must still
+    // reach it — otherwise an admin could never select it as a merge candidate.
+    $component->assertSee('ZZZ Page Two Artist');
+});

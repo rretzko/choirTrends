@@ -9,15 +9,18 @@ use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\Program;
 use App\Models\School;
 use App\Models\User;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class Index extends Component
 {
     use ChecksProgramCompliance;
+    use WithPagination;
 
     public string $filter = 'all';
 
@@ -29,12 +32,24 @@ class Index extends Component
 
     public function sort(string $column): void
     {
+        $this->resetPage();
+
         if ($this->sortBy === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
             $this->sortBy = $column;
             $this->sortDirection = 'asc';
         }
+    }
+
+    public function updatedFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedTypeFilter(): void
+    {
+        $this->resetPage();
     }
 
     public function render(): View
@@ -57,11 +72,45 @@ class Index extends Component
             $query->where('school_type', $this->typeFilter);
         }
 
-        if (in_array($this->sortBy, ['school_name', 'school_type', 'programs_count', 'ensembles_count'])) {
-            $query->orderBy($this->sortBy, $this->sortDirection);
-        }
+        if (in_array($this->sortBy, ['songs_count', 'artists_count'])) {
+            // songs_count/artists_count aren't real columns or withCount() subqueries — they come
+            // from separate join-based helper queries below, so they can't be pushed into an SQL
+            // ORDER BY. Sort the full result set in PHP first, then slice to the current page, so
+            // the global order stays correct across pages (only the current page's rows are ever
+            // rendered into HTML, which is what keeps the response payload small).
+            $allSchools = $query->get();
+            $allSchoolIds = $allSchools->pluck('id');
+            $songsCounts = $this->getSongsCounts($allSchoolIds);
+            $artistsCounts = $this->getArtistsCounts($allSchoolIds);
 
-        $schools = $query->get();
+            $counts = $this->sortBy === 'songs_count' ? $songsCounts : $artistsCounts;
+            $sorted = $allSchools->sortBy(
+                fn (School $school) => $counts[$school->id] ?? 0,
+                SORT_NUMERIC,
+                $this->sortDirection === 'desc',
+            )->values();
+
+            $page = $this->getPage();
+            $perPage = 20;
+
+            $schools = new LengthAwarePaginator(
+                $sorted->forPage($page, $perPage)->values(),
+                $sorted->count(),
+                $perPage,
+                $page,
+                ['path' => request()->url()]
+            );
+        } else {
+            if (in_array($this->sortBy, ['school_name', 'school_type', 'programs_count', 'ensembles_count'])) {
+                $query->orderBy($this->sortBy, $this->sortDirection);
+            }
+
+            $schools = $query->paginate(20);
+
+            $schoolIds = $schools->pluck('id');
+            $songsCounts = $this->getSongsCounts($schoolIds);
+            $artistsCounts = $this->getArtistsCounts($schoolIds);
+        }
 
         // Apply privacy masking
         /** @var int $currentUserId */
@@ -71,19 +120,6 @@ class Index extends Component
         $displayNames = [];
         foreach ($schools as $school) {
             $displayNames[$school->id] = $this->getDisplayName($school, $currentUserId);
-        }
-
-        $schoolIds = $schools->pluck('id');
-        $songsCounts = $this->getSongsCounts($schoolIds);
-        $artistsCounts = $this->getArtistsCounts($schoolIds);
-
-        if (in_array($this->sortBy, ['songs_count', 'artists_count'])) {
-            $counts = $this->sortBy === 'songs_count' ? $songsCounts : $artistsCounts;
-            $schools = $schools->sortBy(
-                fn (School $school) => $counts[$school->id] ?? 0,
-                SORT_NUMERIC,
-                $this->sortDirection === 'desc',
-            )->values();
         }
 
         $myCount = School::whereHas('users', function ($q) {

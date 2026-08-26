@@ -218,3 +218,53 @@ test('schools index can filter by school type', function () {
         ->assertSee('First Baptist Choir')
         ->assertDontSee('Lincoln High');
 });
+
+test('schools index paginates at 20 per page and a second page shows the remaining rows', function () {
+    $user = User::factory()->create();
+    $schools = School::factory()->count(25)->create();
+    Program::factory()->for($user)->for($schools->first())->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->set('filter', 'all')
+        ->assertViewHas('schools', fn ($schools) => $schools->count() === 20)
+        ->call('gotoPage', 2)
+        ->assertViewHas('schools', fn ($schools) => $schools->count() === 5);
+});
+
+test('sorting schools by songs count sorts globally across pages, not just within a page', function () {
+    $user = User::factory()->create();
+
+    // 19 filler schools tied at 1 song each, plus a 20th filler with 2 songs (uniquely the
+    // highest count of all 21 schools) — all created FIRST, in DB order.
+    collect(range(1, 20))->each(function (int $i) use ($user) {
+        $school = School::factory()->create(['school_name' => "Filler School {$i}"]);
+        $program = Program::factory()->for($i === 1 ? $user : User::factory()->create())->for($school)->create();
+        $songCount = $i === 20 ? 2 : 1;
+        collect(range(1, $songCount))->each(function (int $j) use ($program, $i) {
+            $song = SongTitle::create(['song_title' => "Filler Song {$i}-{$j}"]);
+            $program->songTitles()->attach($song->id);
+        });
+    });
+
+    // Marker school created LAST (21st), with zero songs — uniquely the lowest count, so it must
+    // rank first ascending. Correct behavior (sort the full set, then slice to a page) puts the
+    // Marker on page 1 and pushes "Filler School 20" (the uniquely-highest count) to page 2.
+    // Buggy behavior (paginate in raw creation order first, then sort only within that page) would
+    // do the opposite: Marker stays stranded alone on page 2 (it's the 21st row), while Filler
+    // School 20 stays on page 1 (it's among the first 20 rows by creation order either way).
+    School::factory()->create(['school_name' => 'Marker School']);
+
+    $this->actingAs($user);
+
+    $schools = Livewire::test(Index::class)
+        ->set('filter', 'all')
+        ->call('sort', 'songs_count')
+        ->viewData('schools');
+
+    $schoolNames = $schools->pluck('school_name')->all();
+
+    expect($schoolNames)->toContain('Marker School')
+        ->and($schoolNames)->not->toContain('Filler School 20');
+});

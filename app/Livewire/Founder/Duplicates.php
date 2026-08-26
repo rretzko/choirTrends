@@ -429,6 +429,8 @@ class Duplicates extends Component
 
         $songTitlePages = null;
         $artists = collect();
+        $artistPages = null;
+        $userPages = null;
 
         if ($this->activeTab === 'song-titles') {
             $songTitlePages = SongTitle::query()
@@ -442,10 +444,29 @@ class Duplicates extends Component
                 ->get();
         }
 
+        // $records stays unbounded (see above) so the keeper/duplicate <select> dropdowns can
+        // always reach every candidate regardless of page — only the reference *tables* below are
+        // paginated, via separate variables, mirroring the song-titles tab's existing pattern.
+        if ($this->activeTab === 'artists') {
+            $artistPages = Artist::query()
+                ->orderBy('artist_last_name')
+                ->orderBy('artist_first_name')
+                ->paginate(20);
+        }
+
+        if ($this->activeTab === 'users') {
+            $userPages = User::query()
+                ->withCount(['programs', 'schools'])
+                ->orderBy('alpha_name')
+                ->paginate(20);
+        }
+
         return view('livewire.founder.duplicates', [
             'records' => $records,
             'songTitlePages' => $songTitlePages,
             'artists' => $artists,
+            'artistPages' => $artistPages,
+            'userPages' => $userPages,
         ])->layout('components.layouts.app', ['title' => __('Duplicates')]);
     }
 }

@@ -71,6 +71,12 @@
             @endif
         </div>
 
+    @if ($songTitles instanceof \Illuminate\Contracts\Pagination\Paginator)
+        <div class="mb-4">
+            <flux:pagination :paginator="$songTitles" />
+        </div>
+    @endif
+
     {{-- Mobile card layout --}}
     <div class="space-y-2 md:hidden">
         @forelse ($songTitles as $songTitle)

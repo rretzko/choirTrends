@@ -12,10 +12,12 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class Index extends Component
 {
     use ChecksProgramCompliance;
+    use WithPagination;
 
     public string $filter = 'all';
 
@@ -58,12 +60,24 @@ class Index extends Component
 
     public function sort(string $column): void
     {
+        $this->resetPage();
+
         if ($this->sortColumn === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
             $this->sortColumn = $column;
             $this->sortDirection = 'asc';
         }
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilter(): void
+    {
+        $this->resetPage();
     }
 
     /**
@@ -120,7 +134,7 @@ class Index extends Component
             $query->where('artist_name', 'like', $searchTerm);
         }
 
-        $artists = $query->get();
+        $artists = $query->paginate(20);
 
         return view('livewire.artists.index', [
             'artists' => $artists,

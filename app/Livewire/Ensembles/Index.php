@@ -12,12 +12,19 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class Index extends Component
 {
     use ChecksProgramCompliance;
+    use WithPagination;
 
     public string $filter = 'all';
+
+    public function updatedFilter(): void
+    {
+        $this->resetPage();
+    }
 
     public function updateType(int $ensembleId, string $type): void
     {
@@ -59,7 +66,7 @@ class Index extends Component
             ->select('ensembles.*')
             ->orderBy('schools.school_name')
             ->orderBy('ensembles.ensemble_name')
-            ->get();
+            ->paginate(20);
 
         // Apply privacy masking and ownership check
         /** @var int $currentUserId */

@@ -474,3 +474,44 @@ test('school dropdown shows all user schools in my filter', function () {
     expect($schoolNames)->toContain('First School');
     expect($schoolNames)->toContain('Second School');
 });
+
+test('programs index paginates at 20 per page and a second page shows the remaining rows', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+
+    Program::factory()->for($user)->for($school)->count(25)->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->assertViewHas('programs', fn ($programs) => $programs->count() === 20)
+        ->call('gotoPage', 2)
+        ->assertViewHas('programs', fn ($programs) => $programs->count() === 5);
+});
+
+test('sorting programs by director sorts globally across pages, not just within a page', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+
+    // Director last-name suffixes are assigned in REVERSE creation order (program 1 gets the
+    // alphabetically-last suffix, program 25 gets the alphabetically-first) — this is what makes
+    // the test fail if sorting only happens within an already-paginated page (in raw creation
+    // order) instead of across the full result set before paginating.
+    collect(range(1, 25))->each(fn (int $i) => Program::factory()->for($user)->for($school)->create([
+        'event_name' => "Concert {$i}",
+        'director_name' => 'Director '.str_pad((string) (26 - $i), 3, '0', STR_PAD_LEFT),
+    ]));
+
+    $this->actingAs($user);
+
+    $programs = Livewire::test(Index::class)
+        ->call('sort', 'director')
+        ->viewData('programs');
+
+    $eventNames = $programs->pluck('event_name')->all();
+
+    // Concert 25 has the alphabetically-first director ("Director 001") and must be on page 1;
+    // Concert 1 has the alphabetically-last director ("Director 025") and must not be.
+    expect($eventNames)->toContain('Concert 25')
+        ->and($eventNames)->not->toContain('Concert 1');
+});

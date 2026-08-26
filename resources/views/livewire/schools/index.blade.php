@@ -44,6 +44,12 @@
         </div>
     </div>
 
+    @if ($schools instanceof \Illuminate\Contracts\Pagination\Paginator)
+        <div class="mb-4">
+            <flux:pagination :paginator="$schools" />
+        </div>
+    @endif
+
     {{-- Mobile card layout --}}
     <div class="space-y-2 md:hidden">
         @forelse ($schools as $school)
@@ -187,4 +193,10 @@
             </tbody>
         </table>
     </div>
+
+    @if ($schools instanceof \Illuminate\Contracts\Pagination\Paginator)
+        <div class="mt-4">
+            <flux:pagination :paginator="$schools" />
+        </div>
+    @endif
 </div>

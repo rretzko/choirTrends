@@ -10,14 +10,17 @@ use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class Index extends Component
 {
     use ChecksProgramCompliance;
+    use WithPagination;
 
     public string $filter = 'all';
 
@@ -37,6 +40,8 @@ class Index extends Component
 
     public function sort(string $column): void
     {
+        $this->resetPage();
+
         if ($this->sortBy === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
@@ -47,11 +52,25 @@ class Index extends Component
 
     public function updatedFilter(): void
     {
+        $this->resetPage();
+
         $this->schoolFilter = $this->getUserSchoolIds();
+    }
+
+    public function updatedSchoolFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedTypeFilter(): void
+    {
+        $this->resetPage();
     }
 
     public function clearSchoolFilter(): void
     {
+        $this->resetPage();
+
         $this->schoolFilter = [];
     }
 
@@ -151,7 +170,29 @@ class Index extends Component
         $query->join('schools', 'programs.school_id', '=', 'schools.id')
             ->select('programs.*');
 
-        if ($this->sortBy !== 'director') {
+        if ($this->sortBy === 'director') {
+            // director_name is free text (not a real column split into last/first), so it can't be
+            // pushed into an SQL ORDER BY — sort the full result set in PHP first, then slice to the
+            // current page, so the global order stays correct across pages (only the current page's
+            // rows are ever rendered into HTML, which is what keeps the response payload small).
+            $sorted = $query->get()->sortBy([
+                fn (Program $a, Program $b) => $this->sortDirection === 'desc'
+                    ? $this->compareDirectorNames($b, $a)
+                    : $this->compareDirectorNames($a, $b),
+                fn (Program $a, Program $b) => $b->event_date <=> $a->event_date,
+            ])->values();
+
+            $page = $this->getPage();
+            $perPage = 20;
+
+            $programs = new LengthAwarePaginator(
+                $sorted->forPage($page, $perPage)->values(),
+                $sorted->count(),
+                $perPage,
+                $page,
+                ['path' => request()->url()]
+            );
+        } else {
             $sortColumn = match ($this->sortBy) {
                 'event_name' => 'programs.event_name',
                 'event_date' => 'programs.event_date',
@@ -162,18 +203,8 @@ class Index extends Component
             if ($this->sortBy !== 'event_date') {
                 $query->orderBy('programs.event_date', 'desc');
             }
-        }
 
-        $programs = $query->get();
-
-        if ($this->sortBy === 'director') {
-            $sorted = $programs->sortBy([
-                fn (Program $a, Program $b) => $this->sortDirection === 'desc'
-                    ? $this->compareDirectorNames($b, $a)
-                    : $this->compareDirectorNames($a, $b),
-                fn (Program $a, Program $b) => $b->event_date <=> $a->event_date,
-            ]);
-            $programs = $sorted->values();
+            $programs = $query->paginate(20);
         }
 
         // Apply privacy masking

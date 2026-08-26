@@ -118,7 +118,11 @@
     </div>
 
         {{-- Artists reference table --}}
-        @if ($activeTab === 'artists')
+        @if ($activeTab === 'artists' && $artistPages)
+            <div class="mb-4">
+                <flux:pagination :paginator="$artistPages" />
+            </div>
+
             <div class="rounded-lg border border-zinc-200 dark:border-zinc-700">
                 <table class="w-full text-left text-sm">
                     <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
@@ -131,7 +135,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                        @foreach ($records as $record)
+                        @foreach ($artistPages as $record)
                             <tr wire:key="artist-row-{{ $record->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                                 <td class="px-4 py-2 text-zinc-500 dark:text-zinc-400">{{ $record->id }}</td>
                                 <td class="px-4 py-2 text-zinc-900 dark:text-zinc-100">{{ $record->artist_name }}</td>
@@ -146,6 +150,10 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            <div class="mt-4">
+                <flux:pagination :paginator="$artistPages" />
             </div>
 
             <flux:modal name="edit-artist" class="md:w-96">
@@ -172,6 +180,10 @@
 
         {{-- Song titles reference table --}}
         @if ($activeTab === 'song-titles' && $songTitlePages)
+            <div class="mb-4">
+                <flux:pagination :paginator="$songTitlePages" />
+            </div>
+
             <div class="rounded-lg border border-zinc-200 dark:border-zinc-700">
                 <table class="w-full text-left text-sm">
                     <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
@@ -213,7 +225,7 @@
             </div>
 
             <div class="mt-4">
-                {{ $songTitlePages->links() }}
+                <flux:pagination :paginator="$songTitlePages" />
             </div>
 
             <flux:modal name="edit-song" class="md:w-96">
@@ -265,7 +277,11 @@
         @endif
 
         {{-- Users reference table --}}
-        @if ($activeTab === 'users')
+        @if ($activeTab === 'users' && $userPages)
+            <div class="mb-4">
+                <flux:pagination :paginator="$userPages" />
+            </div>
+
             <div class="rounded-lg border border-zinc-200 dark:border-zinc-700">
                 <table class="w-full text-left text-sm">
                     <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
@@ -278,7 +294,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                        @foreach ($records as $record)
+                        @foreach ($userPages as $record)
                             <tr wire:key="user-row-{{ $record->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                                 <td class="px-4 py-2 text-zinc-500 dark:text-zinc-400">{{ $record->id }}</td>
                                 <td class="px-4 py-2 text-zinc-900 dark:text-zinc-100">{{ $record->alpha_name }}</td>
@@ -289,6 +305,10 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            <div class="mt-4">
+                <flux:pagination :paginator="$userPages" />
             </div>
         @endif
     </div>

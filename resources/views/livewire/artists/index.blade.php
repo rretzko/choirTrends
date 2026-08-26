@@ -39,6 +39,12 @@
         <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Search artists...') }}" icon="magnifying-glass" class="lg:w-1/3" />
     </div>
 
+    @if ($artists instanceof \Illuminate\Contracts\Pagination\Paginator)
+        <div class="mb-4">
+            <flux:pagination :paginator="$artists" />
+        </div>
+    @endif
+
     {{-- Mobile card layout --}}
     <div class="space-y-2 md:hidden">
         @forelse ($artists as $artist)
@@ -142,6 +148,12 @@
             </tbody>
         </table>
     </div>
+
+    @if ($artists instanceof \Illuminate\Contracts\Pagination\Paginator)
+        <div class="mt-4">
+            <flux:pagination :paginator="$artists" />
+        </div>
+    @endif
 
     <flux:modal name="artist-repertoire" class="max-w-2xl">
         @if ($selectedArtist)
