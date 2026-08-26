@@ -29,7 +29,11 @@ class ProcessRepertoireSearch implements ShouldQueue
     {
         $repertoireQuery = RepertoireQuery::findOrFail($this->repertoireQueryId);
 
-        $service->process($repertoireQuery, $this->restrictToOwnCatalog);
+        $repertoireQuery = $service->process($repertoireQuery, $this->restrictToOwnCatalog);
+
+        if ($repertoireQuery->error === null) {
+            EnrichCatalogFromRepertoireSearch::dispatch($repertoireQuery->id);
+        }
 
         Cache::put(
             "repertoire_search_{$this->requestId}",

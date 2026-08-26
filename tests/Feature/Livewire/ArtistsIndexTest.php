@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SongTitleOrigin;
 use App\Livewire\Artists\Index;
 use App\Models\Artist;
 use App\Models\Program;
@@ -103,6 +104,30 @@ test('showRepertoire loads song titles for the artist', function () {
         ->assertSee('Ave Verum Corpus')
         ->assertSee('Composer')
         ->assertDontSee('Unrelated Piece');
+});
+
+test('showRepertoire excludes ai_discovered song titles', function () {
+    $user = User::factory()->create();
+    $composer = Artist::factory()->create(['artist_name' => 'Mozart']);
+
+    SongTitle::factory()->create([
+        'song_title' => 'Ave Verum Corpus',
+        'composer_id' => $composer->id,
+        'origin' => SongTitleOrigin::Performed,
+    ]);
+    SongTitle::factory()->create([
+        'song_title' => 'An AI Suggestion',
+        'composer_id' => $composer->id,
+        'origin' => SongTitleOrigin::AiDiscovered,
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('showRepertoire', $composer->id)
+        ->assertCount('repertoire', 1)
+        ->assertSee('Ave Verum Corpus')
+        ->assertDontSee('An AI Suggestion');
 });
 
 test('showRepertoire shows both roles when artist is composer and arranger', function () {

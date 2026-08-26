@@ -9,6 +9,7 @@ use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
 test('ensemble type badges render for a song performed by a known ensemble type', function () {
@@ -102,4 +103,23 @@ test('ensemble type filter respects the My filter scope', function () {
         ->set('filter', 'my')
         ->call('toggleEnsembleTypeFilter', EnsembleType::Satb->value)
         ->assertDontSee('Other SATB Song');
+});
+
+test('song titles page does not crash when an ensemble has a legacy or invalid type value', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+    $ensemble = Ensemble::factory()->for($school)->create(['type' => EnsembleType::Satb]);
+    $song = SongTitle::factory()->create(['song_title' => 'Legacy Type Song']);
+
+    $program->songTitles()->attach($song->id, ['sort_order' => 1, 'ensemble_id' => $ensemble->id]);
+
+    // Simulate legacy/imported data predating the EnsembleType enum, bypassing Eloquent's cast.
+    DB::table('ensembles')->where('id', $ensemble->id)->update(['type' => 'SSA']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->assertSuccessful()
+        ->assertSee('Legacy Type Song');
 });

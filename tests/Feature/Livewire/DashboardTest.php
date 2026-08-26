@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SongTitleOrigin;
 use App\Livewire\Dashboard;
 use App\Models\Artist;
 use App\Models\DigitalProgram;
@@ -59,6 +60,18 @@ test('dashboard users count excludes assistant accounts', function () {
 
     Livewire::test(Dashboard::class)
         ->assertSet('usersCount', 1);
+});
+
+test('songTitlesCount excludes ai_discovered song titles', function () {
+    $user = User::factory()->create();
+
+    SongTitle::factory()->count(2)->create(['origin' => SongTitleOrigin::Performed]);
+    SongTitle::factory()->create(['origin' => SongTitleOrigin::AiDiscovered]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Dashboard::class)
+        ->assertSet('songTitlesCount', 2);
 });
 
 test('dashboard page contains livewire component', function () {

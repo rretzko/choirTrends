@@ -80,6 +80,9 @@ test('persists a repertoire query with the validated results when a matched cand
                     'tenor' => 'easy',
                     'bass' => 'easy',
                 ],
+                'difficulty_source' => 'ai',
+                'song_description' => 'A serene Latin motet setting the Ave Maria text.',
+                'description_source' => 'ai',
                 'fit_rationale' => 'Easy tenor/bass lines with a more demanding soprano/alto divisi.',
                 'youtube_url' => 'https://www.youtube.com/watch?v=abc123',
                 'youtube_confidence' => 'found_via_search',
@@ -117,6 +120,9 @@ test('nulls out a hallucinated matched_song_title_id and demotes the result to w
                 'difficulty_by_part' => [
                     'soprano' => 'moderate', 'alto' => 'moderate', 'tenor' => 'moderate', 'bass' => 'moderate',
                 ],
+                'difficulty_source' => 'ai',
+                'song_description' => null,
+                'description_source' => null,
                 'fit_rationale' => 'Fits the request.',
                 'youtube_url' => null,
                 'youtube_confidence' => null,
@@ -145,6 +151,9 @@ test('strips a non-youtube url and its confidence', function () {
                 'difficulty_by_part' => [
                     'soprano' => 'unknown', 'alto' => 'unknown', 'tenor' => 'unknown', 'bass' => 'unknown',
                 ],
+                'difficulty_source' => null,
+                'song_description' => null,
+                'description_source' => null,
                 'fit_rationale' => 'Fits the request.',
                 'youtube_url' => 'https://not-youtube.example.com/watch?v=abc123',
                 'youtube_confidence' => 'found_via_search',
@@ -177,6 +186,9 @@ test('caches an assessment for a matched song title for reuse on future queries'
                 'difficulty_by_part' => [
                     'soprano' => 'challenging', 'alto' => 'challenging', 'tenor' => 'easy', 'bass' => 'easy',
                 ],
+                'difficulty_source' => 'ai',
+                'song_description' => null,
+                'description_source' => null,
                 'fit_rationale' => 'Fits the request.',
                 'youtube_url' => 'https://youtu.be/abc123',
                 'youtube_confidence' => 'found_via_search',
@@ -244,4 +256,65 @@ test('guestQueriesFrom scope counts only unauthenticated queries from a given ip
     RepertoireQuery::factory()->forUser()->create(['ip_address' => null]);
 
     expect(RepertoireQuery::guestQueriesFrom('203.0.113.10')->count())->toBe(3);
+});
+
+test('defaults description_source to ai when song_description is present but description_source is omitted', function () {
+    Http::fake([
+        'api.anthropic.com/*' => Http::response(fakeSubmitResultsResponse([
+            [
+                'song_title' => 'Some Piece', 'composer' => null, 'arranger' => null, 'voicing' => 'SATB',
+                'source' => 'web_knowledge', 'matched_song_title_id' => null,
+                'difficulty_by_part' => ['soprano' => 'unknown', 'alto' => 'unknown', 'tenor' => 'unknown', 'bass' => 'unknown'],
+                'difficulty_source' => null,
+                'song_description' => 'A lyrical, accessible piece for mixed choir.',
+                'fit_rationale' => 'Fits the request.', 'youtube_url' => null, 'youtube_confidence' => null,
+                'citation_urls' => [], 'tags' => [],
+            ],
+        ]), 200),
+    ]);
+
+    $result = runSearch('Something festive', RepertoireQuerySource::SongTitles);
+
+    expect($result->response['results'][0]['description_source'])->toBe('ai');
+});
+
+test('forces description_source to null when song_description is null', function () {
+    Http::fake([
+        'api.anthropic.com/*' => Http::response(fakeSubmitResultsResponse([
+            [
+                'song_title' => 'Some Piece', 'composer' => null, 'arranger' => null, 'voicing' => 'SATB',
+                'source' => 'web_knowledge', 'matched_song_title_id' => null,
+                'difficulty_by_part' => ['soprano' => 'unknown', 'alto' => 'unknown', 'tenor' => 'unknown', 'bass' => 'unknown'],
+                'difficulty_source' => null,
+                'song_description' => null,
+                'description_source' => 'publisher',
+                'fit_rationale' => 'Fits the request.', 'youtube_url' => null, 'youtube_confidence' => null,
+                'citation_urls' => [], 'tags' => [],
+            ],
+        ]), 200),
+    ]);
+
+    $result = runSearch('Something festive', RepertoireQuerySource::SongTitles);
+
+    expect($result->response['results'][0]['description_source'])->toBeNull();
+});
+
+test('forces difficulty_source to null when all four parts are unknown or n/a', function () {
+    Http::fake([
+        'api.anthropic.com/*' => Http::response(fakeSubmitResultsResponse([
+            [
+                'song_title' => 'Some Piece', 'composer' => null, 'arranger' => null, 'voicing' => 'SATB',
+                'source' => 'web_knowledge', 'matched_song_title_id' => null,
+                'difficulty_by_part' => ['soprano' => 'unknown', 'alto' => 'n/a', 'tenor' => 'unknown', 'bass' => 'n/a'],
+                'difficulty_source' => 'ai',
+                'song_description' => null, 'description_source' => null,
+                'fit_rationale' => 'Fits the request.', 'youtube_url' => null, 'youtube_confidence' => null,
+                'citation_urls' => [], 'tags' => [],
+            ],
+        ]), 200),
+    ]);
+
+    $result = runSearch('Something festive', RepertoireQuerySource::SongTitles);
+
+    expect($result->response['results'][0]['difficulty_source'])->toBeNull();
 });

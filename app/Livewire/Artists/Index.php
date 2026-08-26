@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Artists;
 
+use App\Enums\SongTitleOrigin;
 use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\Artist;
 use App\Models\SongTitle;
@@ -43,8 +44,11 @@ class Index extends Component
         }
 
         $this->repertoire = SongTitle::query()
-            ->where('composer_id', $artistId)
-            ->orWhere('arranger_id', $artistId)
+            ->where('origin', SongTitleOrigin::Performed)
+            ->where(function ($query) use ($artistId) {
+                $query->where('composer_id', $artistId)
+                    ->orWhere('arranger_id', $artistId);
+            })
             ->with(['composer', 'arranger'])
             ->orderBy('song_title')
             ->get();

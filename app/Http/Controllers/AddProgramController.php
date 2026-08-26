@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\SongTitleOrigin;
 use App\Http\Requests\ConfirmProgramRequest;
 use App\Http\Requests\StoreProgramRequest;
 use App\Jobs\ProcessProgram;
@@ -297,6 +298,10 @@ class AddProgramController extends Controller
                                 'composer_id' => $composerId,
                                 'arranger_id' => $arrangerId,
                             ]);
+
+                            if ($songTitle->origin === SongTitleOrigin::AiDiscovered) {
+                                $songTitle->update(['origin' => SongTitleOrigin::Performed]);
+                            }
 
                             // Store song title with its ensemble and sort order for attachment
                             $ensembleSongOrder[$ensembleKey]++;

@@ -235,7 +235,7 @@ HTML;
 </div>
 <div class="guide-step">
     <span class="guide-step-number">4</span>
-    <div><p>After the upload finishes, ChoirTrends will process your program. This usually takes about 15 to 30 seconds. You will see a spinning indicator while it works.</p></div>
+    <div><p>After the upload finishes, ChoirTrends will process your program. This usually takes about 30 seconds to one minute. You will see a spinning indicator while it works.</p></div>
 </div>
 
 <div class="guide-screenshot">Screenshot: Upload area with file types shown</div>

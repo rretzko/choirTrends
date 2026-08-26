@@ -193,7 +193,8 @@ class Index extends Component
 
         return $rows->groupBy('song_title_id')->map(function ($items) {
             return $items->pluck('type')
-                ->map(fn (string $type) => EnsembleType::from($type))
+                ->map(fn (string $type) => EnsembleType::tryFrom($type))
+                ->filter()
                 ->unique()
                 ->values();
         });

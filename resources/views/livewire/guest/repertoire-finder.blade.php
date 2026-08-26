@@ -65,7 +65,7 @@
         @if ($aiSearching)
             <div wire:poll.2s="checkAiSearchStatus" class="flex items-center gap-3 rounded-xl border border-zinc-200 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
                 <flux:icon name="arrow-path" class="size-4 animate-spin" />
-                {{ __('Searching the catalog and the web — this can take up to 30 seconds…') }}
+                {{ __('Searching the catalog and the web — this can take up to one minute…') }}
             </div>
         @endif
 

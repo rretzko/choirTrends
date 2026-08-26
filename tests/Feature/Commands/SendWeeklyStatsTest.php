@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\SongTitleOrigin;
 use App\Mail\WeeklyStatsEmail;
 use App\Models\Program;
 use App\Models\School;
@@ -32,6 +33,15 @@ test('stores a snapshot with current counts', function () {
     $this->artisan('stats:send-weekly')->assertSuccessful();
 
     $this->assertDatabaseHas('stat_snapshots', $expected);
+});
+
+test('song_titles_count excludes ai_discovered song titles', function () {
+    SongTitle::factory()->count(2)->create(['origin' => SongTitleOrigin::Performed]);
+    SongTitle::factory()->create(['origin' => SongTitleOrigin::AiDiscovered]);
+
+    $this->artisan('stats:send-weekly')->assertSuccessful();
+
+    $this->assertDatabaseHas('stat_snapshots', ['song_titles_count' => 2]);
 });
 
 test('sends stats email to the founder', function () {

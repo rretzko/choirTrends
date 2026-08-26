@@ -194,7 +194,8 @@ class RepertoireSearchService
                                 'additionalProperties' => false,
                                 'required' => [
                                     'song_title', 'composer', 'voicing', 'source', 'matched_song_title_id',
-                                    'difficulty_by_part', 'fit_rationale', 'youtube_url', 'youtube_confidence',
+                                    'difficulty_by_part', 'difficulty_source', 'song_description', 'description_source',
+                                    'fit_rationale', 'youtube_url', 'youtube_confidence',
                                 ],
                                 'properties' => [
                                     'song_title' => ['type' => 'string'],
@@ -219,6 +220,21 @@ class RepertoireSearchService
                                             'tenor' => ['type' => 'string', 'enum' => ['easy', 'moderate', 'challenging', 'n/a', 'unknown']],
                                             'bass' => ['type' => 'string', 'enum' => ['easy', 'moderate', 'challenging', 'n/a', 'unknown']],
                                         ],
+                                    ],
+                                    'difficulty_source' => [
+                                        'type' => ['string', 'null'],
+                                        'enum' => ['ai', 'publisher', null],
+                                        'description' => "publisher if difficulty_by_part relies on a specific grade/level found published by the piece's publisher or seller (cite it in citation_urls); ai for your own assessment; null only if all four parts are unknown/n-a.",
+                                    ],
+                                    'song_description' => [
+                                        'type' => ['string', 'null'],
+                                        'maxLength' => 500,
+                                        'description' => "A neutral, general catalog description (theme/text, mood, notable musical features) — NOT tailored to this director's ask; that's fit_rationale's job. Null if you don't know enough to write one confidently.",
+                                    ],
+                                    'description_source' => [
+                                        'type' => ['string', 'null'],
+                                        'enum' => ['ai', 'publisher', null],
+                                        'description' => "publisher if song_description draws substantially on a publisher's own catalog copy; ai otherwise; null if song_description is null.",
                                     ],
                                     'fit_rationale' => ['type' => 'string', 'maxLength' => 240],
                                     'youtube_url' => ['type' => ['string', 'null']],
@@ -281,6 +297,14 @@ Guidelines:
 - Populate tags with whatever short descriptors are actually relevant to this query (mood,
   occasion/season, sacred/secular, language, accompaniment). Leave it empty if nothing
   meaningful applies — don't force generic tags.
+- song_description is a general, query-independent description of the piece (theme/text, mood,
+  notable musical features) — unlike fit_rationale, it should read the same regardless of what
+  the director asked. Leave it null if you don't know the piece well enough to describe it
+  confidently.
+- Set difficulty_source/description_source to "publisher" only when you found and cited (in
+  citation_urls) a specific grade/level or descriptive blurb from the piece's actual publisher or
+  seller. Otherwise use "ai". Leave difficulty_source null only if all four parts are
+  unknown/n-a, and description_source null only if song_description is null.
 PROMPT;
     }
 
@@ -341,12 +365,34 @@ MESSAGE;
                 $result['citation_urls'] ??= [];
                 $result['tags'] ??= [];
 
+                $result['song_description'] ??= null;
+                $result['description_source'] = $result['song_description']
+                    ? ($result['description_source'] ?? 'ai')
+                    : null;
+                $result['difficulty_source'] = $this->hasRatedPart($result['difficulty_by_part'])
+                    ? ($result['difficulty_source'] ?? 'ai')
+                    : null;
+
                 return $result;
             })
             ->values()
             ->all();
 
         return $payload;
+    }
+
+    /**
+     * @param  array{soprano: string, alto: string, tenor: string, bass: string}  $difficultyByPart
+     */
+    private function hasRatedPart(array $difficultyByPart): bool
+    {
+        foreach ($difficultyByPart as $rating) {
+            if (! in_array($rating, ['n/a', 'unknown'], true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

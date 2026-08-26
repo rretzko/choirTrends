@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Enums\SongTitleOrigin;
 use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\Artist;
 use App\Models\DigitalProgram;
@@ -51,7 +52,7 @@ class Dashboard extends Component
         $this->ensemblesCount = Ensemble::query()->count();
         $this->programsCount = Program::query()->count();
         $this->schoolsCount = School::query()->count();
-        $this->songTitlesCount = SongTitle::query()->count();
+        $this->songTitlesCount = SongTitle::query()->where('origin', SongTitleOrigin::Performed)->count();
         $this->digitalProgramsCount = DigitalProgram::query()->count();
         $this->usersCount = User::query()->whereNotNull('email_verified_at')->whereNull('parent_user_id')->count();
     }

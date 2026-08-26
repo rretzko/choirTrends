@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Enums\SongTitleOrigin;
 use App\Mail\WeeklyStatsEmail;
 use App\Models\Program;
 use App\Models\School;
@@ -26,7 +27,7 @@ class SendWeeklyStats extends Command
             'verified_users_count' => User::query()->whereNotNull('email_verified_at')->count(),
             'schools_count' => School::query()->count(),
             'programs_count' => Program::query()->count(),
-            'song_titles_count' => SongTitle::query()->count(),
+            'song_titles_count' => SongTitle::query()->where('origin', SongTitleOrigin::Performed)->count(),
             'captured_at' => now(),
         ]);
 
