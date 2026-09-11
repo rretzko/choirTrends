@@ -354,6 +354,14 @@
                                                     placeholder="{{ __('Director for this ensemble') }}"
                                                 />
                                             </flux:field>
+                                            <flux:field>
+                                                <flux:label>{{ __('Voice Type') }}</flux:label>
+                                                <select name="ensembles[{{ $ensembleIndex }}][type]" class="block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-0 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                                                    @foreach (\App\Enums\EnsembleType::cases() as $ensembleType)
+                                                        <option value="{{ $ensembleType->value }}" @selected(($ensemble['type'] ?? '') === $ensembleType->value)>{{ $ensembleType->label() }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </flux:field>
                                         </div>
                                         <flux:button
                                             variant="ghost"
@@ -417,6 +425,25 @@
                                                             value="{{ $song['notes'] ?? '' }}"
                                                             placeholder="{{ __('Notes (optional)') }}"
                                                         />
+                                                    </flux:field>
+                                                    <flux:field>
+                                                        <flux:label class="text-xs">{{ __('My Difficulty Rating') }}</flux:label>
+                                                        <select name="ensembles[{{ $ensembleIndex }}][songs][{{ $songIndex }}][difficulty]" class="block w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                            <option value="" @selected(empty($song['difficulty']))>{{ __('Not rated') }}</option>
+                                                            @foreach (\App\Enums\DifficultyLevel::cases() as $level)
+                                                                <option value="{{ $level->value }}" @selected(($song['difficulty'] ?? '') === $level->value)>{{ $level->label() }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </flux:field>
+                                                    <flux:field>
+                                                        <flux:label class="text-xs">{{ __('Tags') }}</flux:label>
+                                                        <flux:input
+                                                            type="text"
+                                                            name="ensembles[{{ $ensembleIndex }}][songs][{{ $songIndex }}][tags]"
+                                                            value="{{ $song['tags'] ?? '' }}"
+                                                            placeholder="{{ __('e.g. sacred, holiday, a cappella') }}"
+                                                        />
+                                                        <flux:text class="text-xs">{{ __('Comma-separated') }}</flux:text>
                                                     </flux:field>
                                                     <flux:button
                                                         variant="danger"
@@ -520,6 +547,9 @@
     </flux:modal>
 
     <script>
+        const ensembleTypeOptions = @json(collect(\App\Enums\EnsembleType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => $t->label()]));
+        const difficultyLevelOptions = @json(collect(\App\Enums\DifficultyLevel::cases())->map(fn ($l) => ['value' => $l->value, 'label' => $l->label()]));
+
         function addEnsemble() {
             const container = document.getElementById('ensembles-container');
 
@@ -554,6 +584,15 @@
                                 placeholder="{{ __('Director for this ensemble') }}"
                                 class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">{{ __('Voice Type') }}</label>
+                            <select
+                                name="ensembles[${ensembleIndex}][type]"
+                                class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                ${ensembleTypeOptions.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
+                            </select>
                         </div>
                     </div>
                     <button
@@ -632,6 +671,25 @@
                         type="text"
                         name="ensembles[${ensembleIndex}][songs][${songIndex}][notes]"
                         placeholder="{{ __('Notes (optional)') }}"
+                        class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-zinc-900 dark:text-zinc-100 mb-1">{{ __('My Difficulty Rating') }}</label>
+                    <select
+                        name="ensembles[${ensembleIndex}][songs][${songIndex}][difficulty]"
+                        class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">{{ __('Not rated') }}</option>
+                        ${difficultyLevelOptions.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-zinc-900 dark:text-zinc-100 mb-1">{{ __('Tags') }}</label>
+                    <input
+                        type="text"
+                        name="ensembles[${ensembleIndex}][songs][${songIndex}][tags]"
+                        placeholder="{{ __('e.g. sacred, holiday, a cappella') }}"
                         class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
