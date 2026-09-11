@@ -2,11 +2,17 @@
 
 declare(strict_types=1);
 
+use App\Enums\AuthorshipType;
+use App\Enums\DifficultyLevel;
+use App\Enums\EnsembleType;
+use App\Enums\VoicePart;
 use App\Models\Artist;
 use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
+use App\Models\SongTitleDifficultyObservation;
+use App\Models\SongTitleTag;
 use App\Models\User;
 
 test('user can confirm and save a program with all required fields', function () {
@@ -861,4 +867,133 @@ test('ensemble_director is null when not provided', function () {
 
     $program = Program::where('user_id', $user->id)->first();
     expect($program->songTitles->first()->pivot->ensemble_director)->toBeNull();
+});
+
+test('ensemble type is saved when a new ensemble is created', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Voice Type Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Voice Type School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            ['name' => 'Tenor Bass Ensemble', 'type' => EnsembleType::TenorBass->value, 'songs' => []],
+        ],
+    ]);
+
+    $ensemble = Ensemble::where('ensemble_name', 'Tenor Bass Ensemble')->first();
+    expect($ensemble->type)->toBe(EnsembleType::TenorBass);
+});
+
+test('ensemble type does not overwrite an existing ensembles type', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $school = School::factory()->create(['school_name' => 'Existing Voice Type School']);
+
+    Ensemble::factory()->create([
+        'school_id' => $school->id,
+        'ensemble_name' => 'Chorus',
+        'type' => EnsembleType::Satb,
+    ]);
+
+    $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Voice Type Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Existing Voice Type School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            ['name' => 'Chorus', 'type' => EnsembleType::TenorBass->value, 'songs' => []],
+        ],
+    ]);
+
+    $ensemble = Ensemble::where('school_id', $school->id)->where('ensemble_name', 'Chorus')->first();
+    expect($ensemble->type)->toBe(EnsembleType::Satb);
+});
+
+test('difficulty rating is saved for the submitting user', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Difficulty Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Difficulty School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null, 'difficulty' => DifficultyLevel::Challenging->value],
+                ],
+            ],
+        ],
+    ]);
+
+    $songTitle = SongTitle::where('song_title', 'Ave Maria')->first();
+
+    $observations = SongTitleDifficultyObservation::where('song_title_id', $songTitle->id)
+        ->where('authorship_type', AuthorshipType::User)
+        ->where('authorship_id', $user->id)
+        ->get();
+
+    expect($observations)->toHaveCount(count(VoicePart::cases()));
+    expect($observations->every(fn ($o) => $o->difficulty_label === DifficultyLevel::Challenging))->toBeTrue();
+});
+
+test('tags are split on commas and saved for the submitting user', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Tags Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Tags School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null, 'tags' => 'sacred, holiday'],
+                ],
+            ],
+        ],
+    ]);
+
+    $songTitle = SongTitle::where('song_title', 'Ave Maria')->first();
+    $tags = SongTitleTag::where('song_title_id', $songTitle->id)->pluck('tag')->all();
+
+    expect($tags)->toEqualCanonicalizing(['sacred', 'holiday']);
+
+    $tag = SongTitleTag::where('song_title_id', $songTitle->id)->where('tag', 'sacred')->first();
+    expect($tag->authorship_type)->toBe(AuthorshipType::User);
+    expect($tag->authorship_id)->toBe($user->id);
+});
+
+test('duplicate tag text is not saved twice when a matching tag already exists', function () {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $composer = Artist::factory()->create(['artist_name' => 'Franz Biebl']);
+    $songTitle = SongTitle::factory()->create(['song_title' => 'Ave Maria', 'composer_id' => $composer->id]);
+
+    SongTitleTag::factory()->create([
+        'song_title_id' => $songTitle->id,
+        'tag' => 'Sacred',
+        'authorship_type' => AuthorshipType::Ai,
+        'authorship_id' => null,
+    ]);
+
+    $this->actingAs($user)->post(route('addProgram.confirm'), [
+        'event_name' => 'Duplicate Tags Concert',
+        'event_date' => '2025-12-15',
+        'school_name' => 'Duplicate Tags School',
+        'director_name' => 'John Doe',
+        'ensembles' => [
+            [
+                'name' => 'Concert Choir',
+                'songs' => [
+                    ['title' => 'Ave Maria', 'composer' => 'Franz Biebl', 'arranger' => null, 'notes' => null, 'tags' => 'sacred'],
+                ],
+            ],
+        ],
+    ]);
+
+    expect(SongTitleTag::where('song_title_id', $songTitle->id)->count())->toBe(1);
 });

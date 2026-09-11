@@ -85,7 +85,7 @@
         @foreach ($ensembles as $eIndex => $ensemble)
             <div wire:key="ensemble-{{ $eIndex }}" class="rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
                 <div class="mb-4 flex items-start justify-between gap-4">
-                    <div class="grow grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="grow grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <flux:field>
                             <flux:label class="!flex w-full justify-between">
                                 <span>{{ __('Ensemble Name') }}</span>
@@ -99,6 +99,20 @@
                         <flux:field>
                             <flux:label>{{ __('Ensemble Director') }}</flux:label>
                             <flux:input wire:model="ensembles.{{ $eIndex }}.director" placeholder="{{ __('Director for this ensemble') }}" />
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label class="!flex w-full justify-between">
+                                <span>{{ __('Voice Type') }}</span>
+                                @unless ($ensemble['editable'])
+                                    <span class="mr-2 inline-flex items-center gap-1 text-amber-600 dark:text-amber-400"><flux:icon name="lock-closed" class="size-3" /> {{ __('Shared') }}</span>
+                                @endunless
+                            </flux:label>
+                            <select wire:model="ensembles.{{ $eIndex }}.type" :disabled="! $ensemble['editable']" class="block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                                @foreach (\App\Enums\EnsembleType::cases() as $ensembleType)
+                                    <option value="{{ $ensembleType->value }}">{{ $ensembleType->label() }}</option>
+                                @endforeach
+                            </select>
                         </flux:field>
                     </div>
 
@@ -192,6 +206,44 @@
                             <flux:button wire:click="removeSong({{ $eIndex }}, {{ $sIndex }})" type="button" variant="ghost" size="sm" icon="trash" title="{{ __('Remove Song') }}" />
                         </div>
                         </div>
+
+                        @if ($song['songTitleId'])
+                            <div class="mt-3 flex flex-wrap items-start gap-6">
+                                <flux:field class="w-48 shrink-0">
+                                    <flux:label>{{ __('My Difficulty Rating') }}</flux:label>
+                                    <select
+                                        wire:change="setDifficulty({{ $eIndex }}, {{ $sIndex }}, $event.target.value)"
+                                        class="block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-0 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+                                    >
+                                        <option value="" @selected($song['difficulty'] === '')>{{ __('Not rated') }}</option>
+                                        @foreach (\App\Enums\DifficultyLevel::cases() as $level)
+                                            <option value="{{ $level->value }}" @selected($song['difficulty'] === $level->value)>{{ $level->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                </flux:field>
+
+                                <div class="min-w-0 grow">
+                                    <flux:label>{{ __('Tags') }}</flux:label>
+                                    <div class="mt-1 flex flex-wrap items-center gap-2">
+                                        @foreach ($song['tags'] as $tag)
+                                            @if ($tag['mine'])
+                                                <flux:badge as="button" wire:click="removeTag({{ $eIndex }}, {{ $sIndex }}, {{ $tag['id'] }})" size="sm" rounded color="sky" icon:trailing="x-mark">
+                                                    {{ $tag['tag'] }}
+                                                </flux:badge>
+                                            @else
+                                                <flux:badge size="sm" rounded icon="lock-closed" title="{{ __('Added by another user or AI') }}">
+                                                    {{ $tag['tag'] }}
+                                                </flux:badge>
+                                            @endif
+                                        @endforeach
+                                        <div class="flex items-center gap-1">
+                                            <flux:input wire:model="ensembles.{{ $eIndex }}.songs.{{ $sIndex }}.newTag" wire:keydown.enter.prevent="addTag({{ $eIndex }}, {{ $sIndex }})" placeholder="{{ __('Add tag...') }}" size="sm" class="w-32" />
+                                            <flux:button wire:click="addTag({{ $eIndex }}, {{ $sIndex }})" type="button" variant="ghost" size="sm" icon="plus" title="{{ __('Add Tag') }}" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="mt-3">
                             <flux:field>

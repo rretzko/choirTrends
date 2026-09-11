@@ -1,5 +1,9 @@
 <?php
 
+use App\Enums\AuthorshipType;
+use App\Enums\DifficultyLevel;
+use App\Enums\EnsembleType;
+use App\Enums\VoicePart;
 use App\Livewire\Programs\Edit;
 use App\Livewire\Programs\Index;
 use App\Models\Artist;
@@ -7,6 +11,8 @@ use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
+use App\Models\SongTitleDifficultyObservation;
+use App\Models\SongTitleTag;
 use App\Models\User;
 use Livewire\Livewire;
 
@@ -702,4 +708,230 @@ test('ensemble order is persisted after save', function () {
     $component = Livewire::test(Edit::class, ['program' => $program]);
     expect($component->get('ensembles.0.name'))->toBe('Beta Choir');
     expect($component->get('ensembles.1.name'))->toBe('Alpha Choir');
+});
+
+test('ensemble type loads from the ensemble record', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $ensemble = Ensemble::factory()->create(['school_id' => $school->id, 'type' => EnsembleType::Satb]);
+    $song = SongTitle::factory()->create();
+    $program->songTitles()->attach($song->id, ['ensemble_id' => $ensemble->id]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Edit::class, ['program' => $program]);
+
+    expect($component->get('ensembles.0.type'))->toBe(EnsembleType::Satb->value);
+});
+
+test('can update ensemble type when editable', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $ensemble = Ensemble::factory()->create(['school_id' => $school->id, 'type' => EnsembleType::Unknown]);
+    $song = SongTitle::factory()->create();
+    $program->songTitles()->attach($song->id, ['ensemble_id' => $ensemble->id, 'sort_order' => 1]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Edit::class, ['program' => $program])
+        ->set('ensembles.0.type', EnsembleType::TenorBass->value)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $ensemble->refresh();
+    expect($ensemble->type)->toBe(EnsembleType::TenorBass);
+});
+
+test('ensemble type change is ignored when ensemble is locked by another user', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $school = School::factory()->create();
+
+    $program = Program::factory()->for($user)->for($school)->create();
+    $otherProgram = Program::factory()->for($otherUser)->for($school)->create();
+
+    $ensemble = Ensemble::factory()->create(['school_id' => $school->id, 'type' => EnsembleType::Satb]);
+    $song1 = SongTitle::factory()->create();
+    $song2 = SongTitle::factory()->create();
+
+    $program->songTitles()->attach($song1->id, ['ensemble_id' => $ensemble->id, 'sort_order' => 1]);
+    $otherProgram->songTitles()->attach($song2->id, ['ensemble_id' => $ensemble->id, 'sort_order' => 1]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Edit::class, ['program' => $program])
+        ->set('ensembles.0.type', EnsembleType::TenorBass->value)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $ensemble->refresh();
+    expect($ensemble->type)->toBe(EnsembleType::Satb);
+});
+
+test('setDifficulty writes an observation for every voice part attributed to the current user', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $song = SongTitle::factory()->create();
+    $program->songTitles()->attach($song->id);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Edit::class, ['program' => $program]);
+    $component->call('setDifficulty', 0, 0, DifficultyLevel::Challenging->value);
+
+    expect($component->get('ensembles.0.songs.0.difficulty'))->toBe(DifficultyLevel::Challenging->value);
+
+    $observations = SongTitleDifficultyObservation::where('song_title_id', $song->id)
+        ->where('authorship_type', AuthorshipType::User)
+        ->where('authorship_id', $user->id)
+        ->get();
+
+    expect($observations)->toHaveCount(count(VoicePart::cases()));
+    expect($observations->every(fn ($o) => $o->difficulty_label === DifficultyLevel::Challenging))->toBeTrue();
+});
+
+test('setDifficulty does not overwrite another authors observations', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $song = SongTitle::factory()->create();
+    $program->songTitles()->attach($song->id);
+
+    foreach (VoicePart::cases() as $voicePart) {
+        SongTitleDifficultyObservation::factory()->create([
+            'song_title_id' => $song->id,
+            'voice_part' => $voicePart,
+            'difficulty_label' => DifficultyLevel::Easy,
+            'difficulty_value' => DifficultyLevel::Easy->numericValue(),
+            'authorship_type' => AuthorshipType::Ai,
+            'authorship_id' => null,
+        ]);
+    }
+
+    $this->actingAs($user);
+
+    // The AI rating should not appear as "my" rating on load.
+    $loaded = Livewire::test(Edit::class, ['program' => $program]);
+    expect($loaded->get('ensembles.0.songs.0.difficulty'))->toBe('');
+
+    $loaded->call('setDifficulty', 0, 0, DifficultyLevel::Moderate->value);
+
+    $aiObservations = SongTitleDifficultyObservation::where('song_title_id', $song->id)
+        ->where('authorship_type', AuthorshipType::Ai)
+        ->get();
+
+    expect($aiObservations->every(fn ($o) => $o->difficulty_label === DifficultyLevel::Easy))->toBeTrue();
+});
+
+test('clearing difficulty removes only the current users observations', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $song = SongTitle::factory()->create();
+    $program->songTitles()->attach($song->id);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Edit::class, ['program' => $program]);
+    $component->call('setDifficulty', 0, 0, DifficultyLevel::Easy->value);
+    $component->call('setDifficulty', 0, 0, '');
+
+    expect($component->get('ensembles.0.songs.0.difficulty'))->toBe('');
+    expect(SongTitleDifficultyObservation::where('song_title_id', $song->id)->where('authorship_id', $user->id)->count())->toBe(0);
+});
+
+test('addTag creates a user-authored tag', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $song = SongTitle::factory()->create();
+    $program->songTitles()->attach($song->id);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Edit::class, ['program' => $program])
+        ->set('ensembles.0.songs.0.newTag', 'Holiday')
+        ->call('addTag', 0, 0);
+
+    $tags = $component->get('ensembles.0.songs.0.tags');
+    expect($tags)->toHaveCount(1);
+    expect($tags[0]['tag'])->toBe('Holiday');
+    expect($tags[0]['mine'])->toBeTrue();
+
+    $tag = SongTitleTag::where('song_title_id', $song->id)->first();
+    expect($tag->authorship_type)->toBe(AuthorshipType::User);
+    expect($tag->authorship_id)->toBe($user->id);
+});
+
+test('addTag skips creating a duplicate of an existing tag from another author', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $song = SongTitle::factory()->create();
+    $program->songTitles()->attach($song->id);
+
+    SongTitleTag::factory()->create([
+        'song_title_id' => $song->id,
+        'tag' => 'Christmas',
+        'authorship_type' => AuthorshipType::Ai,
+        'authorship_id' => null,
+    ]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Edit::class, ['program' => $program])
+        ->set('ensembles.0.songs.0.newTag', 'christmas')
+        ->call('addTag', 0, 0);
+
+    $tags = $component->get('ensembles.0.songs.0.tags');
+    expect($tags)->toHaveCount(1);
+    expect($tags[0]['mine'])->toBeFalse();
+    expect(SongTitleTag::where('song_title_id', $song->id)->count())->toBe(1);
+});
+
+test('removeTag only removes tags owned by the current user', function () {
+    $user = User::factory()->create();
+    $school = School::factory()->create();
+    $program = Program::factory()->for($user)->for($school)->create();
+
+    $song = SongTitle::factory()->create();
+    $program->songTitles()->attach($song->id);
+
+    $aiTag = SongTitleTag::factory()->create([
+        'song_title_id' => $song->id,
+        'tag' => 'Sacred',
+        'authorship_type' => AuthorshipType::Ai,
+        'authorship_id' => null,
+    ]);
+
+    $myTag = SongTitleTag::create([
+        'song_title_id' => $song->id,
+        'tag' => 'Favorite',
+        'authorship_type' => AuthorshipType::User,
+        'authorship_id' => $user->id,
+    ]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(Edit::class, ['program' => $program]);
+
+    // Attempting to remove the AI-authored tag has no effect.
+    $component->call('removeTag', 0, 0, $aiTag->id);
+    expect(SongTitleTag::find($aiTag->id))->not->toBeNull();
+    expect($component->get('ensembles.0.songs.0.tags'))->toHaveCount(2);
+
+    // Removing the user's own tag works.
+    $component->call('removeTag', 0, 0, $myTag->id);
+    expect(SongTitleTag::find($myTag->id))->toBeNull();
+    expect($component->get('ensembles.0.songs.0.tags'))->toHaveCount(1);
 });

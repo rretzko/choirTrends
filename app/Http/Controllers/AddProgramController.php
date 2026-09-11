@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\DifficultyLevel;
+use App\Enums\EnsembleType;
 use App\Enums\SongTitleOrigin;
 use App\Http\Requests\ConfirmProgramRequest;
 use App\Http\Requests\StoreProgramRequest;
@@ -14,6 +16,7 @@ use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
 use App\Services\ArtistNameParser;
+use App\Services\SongTitleUserDataService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -243,14 +246,20 @@ class AddProgramController extends Controller
                 $songTitleAttachments = [];
                 $ensembleSongOrder = [];
                 $artistNameParser = new ArtistNameParser;
+                $songTitleUserDataService = new SongTitleUserDataService;
 
                 foreach ($ensembles as $ensembleData) {
                     $ensemble = null;
                     if (! empty($ensembleData['name'])) {
-                        $ensemble = Ensemble::firstOrCreate([
-                            'school_id' => $school->id,
-                            'ensemble_name' => $ensembleData['name'],
-                        ]);
+                        $ensemble = Ensemble::firstOrCreate(
+                            [
+                                'school_id' => $school->id,
+                                'ensemble_name' => $ensembleData['name'],
+                            ],
+                            [
+                                'type' => EnsembleType::tryFrom($ensembleData['type'] ?? '') ?? EnsembleType::Unknown,
+                            ]
+                        );
                     }
 
                     $ensembleKey = $ensemble->id ?? 0;
@@ -301,6 +310,20 @@ class AddProgramController extends Controller
 
                             if ($songTitle->origin === SongTitleOrigin::AiDiscovered) {
                                 $songTitle->update(['origin' => SongTitleOrigin::Performed]);
+                            }
+
+                            if (! empty($song['difficulty'])) {
+                                $songTitleUserDataService->setDifficulty(
+                                    $songTitle,
+                                    DifficultyLevel::from($song['difficulty']),
+                                    $request->user()->id
+                                );
+                            }
+
+                            if (! empty($song['tags'])) {
+                                foreach (explode(',', $song['tags']) as $tag) {
+                                    $songTitleUserDataService->addTag($songTitle, $tag, $request->user()->id);
+                                }
                             }
 
                             // Store song title with its ensemble and sort order for attachment

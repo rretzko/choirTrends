@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\DifficultyLevel;
+use App\Enums\EnsembleType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -45,11 +47,14 @@ class ConfirmProgramRequest extends FormRequest
             'ensembles' => 'nullable|array',
             'ensembles.*.name' => 'nullable|string|max:255',
             'ensembles.*.director' => 'nullable|string|max:255',
+            'ensembles.*.type' => 'nullable|string|in:'.implode(',', array_column(EnsembleType::cases(), 'value')),
             'ensembles.*.songs' => 'nullable|array',
             'ensembles.*.songs.*.title' => 'nullable|string|max:255',
             'ensembles.*.songs.*.composer' => 'nullable|string|max:255',
             'ensembles.*.songs.*.arranger' => 'nullable|string|max:255',
             'ensembles.*.songs.*.notes' => 'nullable|string|max:10000',
+            'ensembles.*.songs.*.difficulty' => 'nullable|string|in:'.implode(',', array_column(DifficultyLevel::cases(), 'value')),
+            'ensembles.*.songs.*.tags' => 'nullable|string|max:500',
         ];
     }
 

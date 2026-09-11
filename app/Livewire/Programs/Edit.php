@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Livewire\Programs;
 
+use App\Enums\AuthorshipType;
+use App\Enums\DifficultyLevel;
+use App\Enums\EnsembleType;
 use App\Enums\VideoVisibility;
 use App\Models\Artist;
 use App\Models\DigitalProgram;
@@ -11,9 +14,12 @@ use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
+use App\Models\SongTitleDifficultyObservation;
+use App\Models\SongTitleTag;
 use App\Models\UserSongFile;
 use App\Models\UserSongLyrics;
 use App\Services\ArtistNameParser;
+use App\Services\SongTitleUserDataService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -47,7 +53,7 @@ class Edit extends Component
 
     public bool $hasProgramVideo = false;
 
-    /** @var array<int, array{id: int|null, name: string, director: string, editable: bool, songs: list<array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int, notes: string, videoPath: string|null, videoVisibility: string, hasLyrics: bool, hasSheetMusic: bool}>}> */
+    /** @var array<int, array{id: int|null, name: string, director: string, type: string, editable: bool, songs: list<array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int, notes: string, videoPath: string|null, videoVisibility: string, hasLyrics: bool, hasSheetMusic: bool, difficulty: string, tags: list<array{id: int, tag: string, mine: bool}>, newTag: string}>}> */
     public array $ensembles = [];
 
     public function mount(Program $program): void
@@ -75,26 +81,38 @@ class Edit extends Component
             'id' => null,
             'name' => '',
             'director' => $this->directorName,
+            'type' => EnsembleType::Unknown->value,
             'editable' => true,
             'songs' => [
-                [
-                    'songTitleId' => null,
-                    'title' => '',
-                    'titleEditable' => true,
-                    'composer' => '',
-                    'composerEditable' => true,
-                    'arranger' => '',
-                    'arrangerEditable' => true,
-                    'composerId' => null,
-                    'arrangerId' => null,
-                    'sortOrder' => 1,
-                    'notes' => '',
-                    'videoPath' => null,
-                    'videoVisibility' => 'Private',
-                    'hasLyrics' => false,
-                    'hasSheetMusic' => false,
-                ],
+                $this->newSongRow(1),
             ],
+        ];
+    }
+
+    /**
+     * @return array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int, notes: string, videoPath: string|null, videoVisibility: string, hasLyrics: bool, hasSheetMusic: bool, difficulty: string, tags: list<array{id: int, tag: string, mine: bool}>, newTag: string}
+     */
+    private function newSongRow(int $sortOrder): array
+    {
+        return [
+            'songTitleId' => null,
+            'title' => '',
+            'titleEditable' => true,
+            'composer' => '',
+            'composerEditable' => true,
+            'arranger' => '',
+            'arrangerEditable' => true,
+            'composerId' => null,
+            'arrangerId' => null,
+            'sortOrder' => $sortOrder,
+            'notes' => '',
+            'videoPath' => null,
+            'videoVisibility' => 'Private',
+            'hasLyrics' => false,
+            'hasSheetMusic' => false,
+            'difficulty' => '',
+            'tags' => [],
+            'newTag' => '',
         ];
     }
 
@@ -128,29 +146,82 @@ class Edit extends Component
     {
         $maxSortOrder = max(array_column($this->ensembles[$ensembleIndex]['songs'], 'sortOrder') ?: [0]);
 
-        $this->ensembles[$ensembleIndex]['songs'][] = [
-            'songTitleId' => null,
-            'title' => '',
-            'titleEditable' => true,
-            'composer' => '',
-            'composerEditable' => true,
-            'arranger' => '',
-            'arrangerEditable' => true,
-            'composerId' => null,
-            'arrangerId' => null,
-            'sortOrder' => $maxSortOrder + 1,
-            'notes' => '',
-            'videoPath' => null,
-            'videoVisibility' => 'Private',
-            'hasLyrics' => false,
-            'hasSheetMusic' => false,
-        ];
+        $this->ensembles[$ensembleIndex]['songs'][] = $this->newSongRow($maxSortOrder + 1);
     }
 
     public function removeSong(int $ensembleIndex, int $songIndex): void
     {
         unset($this->ensembles[$ensembleIndex]['songs'][$songIndex]);
         $this->ensembles[$ensembleIndex]['songs'] = array_values($this->ensembles[$ensembleIndex]['songs']);
+    }
+
+    public function setDifficulty(int $ensembleIndex, int $songIndex, string $value): void
+    {
+        $songTitleId = $this->ensembles[$ensembleIndex]['songs'][$songIndex]['songTitleId'] ?? null;
+        $songTitle = $songTitleId ? SongTitle::find($songTitleId) : null;
+
+        if (! $songTitle) {
+            return;
+        }
+
+        $level = $value !== '' ? DifficultyLevel::from($value) : null;
+
+        (new SongTitleUserDataService)->setDifficulty($songTitle, $level, auth()->id());
+
+        $this->ensembles[$ensembleIndex]['songs'][$songIndex]['difficulty'] = $level->value ?? '';
+    }
+
+    public function addTag(int $ensembleIndex, int $songIndex): void
+    {
+        $songTitleId = $this->ensembles[$ensembleIndex]['songs'][$songIndex]['songTitleId'] ?? null;
+        $raw = trim((string) ($this->ensembles[$ensembleIndex]['songs'][$songIndex]['newTag'] ?? ''));
+
+        $this->ensembles[$ensembleIndex]['songs'][$songIndex]['newTag'] = '';
+
+        $songTitle = $songTitleId ? SongTitle::find($songTitleId) : null;
+
+        if (! $songTitle || $raw === '') {
+            return;
+        }
+
+        (new SongTitleUserDataService)->addTag($songTitle, $raw, auth()->id());
+
+        $this->refreshTags($ensembleIndex, $songIndex, $songTitle->id);
+    }
+
+    public function removeTag(int $ensembleIndex, int $songIndex, int $tagId): void
+    {
+        $songTitleId = $this->ensembles[$ensembleIndex]['songs'][$songIndex]['songTitleId'] ?? null;
+
+        if (! $songTitleId) {
+            return;
+        }
+
+        SongTitleTag::query()
+            ->where('id', $tagId)
+            ->where('song_title_id', $songTitleId)
+            ->where('authorship_type', AuthorshipType::User)
+            ->where('authorship_id', auth()->id())
+            ->delete();
+
+        $this->refreshTags($ensembleIndex, $songIndex, $songTitleId);
+    }
+
+    private function refreshTags(int $ensembleIndex, int $songIndex, int $songTitleId): void
+    {
+        $userId = auth()->id();
+
+        $this->ensembles[$ensembleIndex]['songs'][$songIndex]['tags'] = SongTitleTag::query()
+            ->where('song_title_id', $songTitleId)
+            ->orderBy('tag')
+            ->get()
+            ->map(fn (SongTitleTag $tag) => [
+                'id' => $tag->id,
+                'tag' => $tag->tag,
+                'mine' => $tag->authorship_type === AuthorshipType::User && $tag->authorship_id === $userId,
+            ])
+            ->values()
+            ->all();
     }
 
     public function updatedProgramVideo(): void
@@ -241,6 +312,7 @@ class Edit extends Component
             'schoolName' => ['required', 'string', 'max:255'],
             'ensembles.*.name' => ['nullable', 'string', 'max:255'],
             'ensembles.*.director' => ['nullable', 'string', 'max:255'],
+            'ensembles.*.type' => ['required', 'string', 'in:'.implode(',', array_column(EnsembleType::cases(), 'value'))],
             'ensembles.*.songs.*.title' => ['required', 'string', 'max:255'],
             'ensembles.*.songs.*.composer' => ['nullable', 'string', 'max:255'],
             'ensembles.*.songs.*.arranger' => ['nullable', 'string', 'max:255'],
@@ -301,6 +373,13 @@ class Edit extends Component
                             'school_id' => $this->program->school_id,
                             'ensemble_name' => $ensembleData['name'],
                         ]);
+                    }
+                }
+
+                if ($ensemble && $ensembleData['editable']) {
+                    $newType = EnsembleType::tryFrom($ensembleData['type'] ?? '') ?? EnsembleType::Unknown;
+                    if ($ensemble->type !== $newType) {
+                        $ensemble->update(['type' => $newType]);
                     }
                 }
 
@@ -409,6 +488,25 @@ class Edit extends Component
 
         $sheetMusicSongIds = array_flip($sheetMusicSongIds);
 
+        $myDifficultyBySongTitle = SongTitleDifficultyObservation::query()
+            ->where('authorship_type', AuthorshipType::User)
+            ->where('authorship_id', $userId)
+            ->whereIn('song_title_id', $songTitleIds)
+            ->get()
+            ->groupBy('song_title_id')
+            ->map(fn ($observations) => $observations->first()->difficulty_label->value);
+
+        $tagsBySongTitle = SongTitleTag::query()
+            ->whereIn('song_title_id', $songTitleIds)
+            ->orderBy('tag')
+            ->get()
+            ->groupBy('song_title_id')
+            ->map(fn ($tags) => $tags->map(fn (SongTitleTag $tag) => [
+                'id' => $tag->id,
+                'tag' => $tag->tag,
+                'mine' => $tag->authorship_type === AuthorshipType::User && $tag->authorship_id === $userId,
+            ])->values()->all());
+
         $this->ensembles = [];
 
         foreach ($songsByEnsemble as $ensembleId => $songs) {
@@ -472,6 +570,9 @@ class Edit extends Component
                     'videoVisibility' => $pivot->video_visibility ?? 'Private',
                     'hasLyrics' => isset($lyricsSongIds[$songTitle->id]),
                     'hasSheetMusic' => isset($sheetMusicSongIds[$songTitle->id]),
+                    'difficulty' => $myDifficultyBySongTitle[$songTitle->id] ?? '',
+                    'tags' => $tagsBySongTitle[$songTitle->id] ?? [],
+                    'newTag' => '',
                 ];
             }
 
@@ -485,6 +586,7 @@ class Edit extends Component
                 'id' => $ensemble?->id,
                 'name' => $ensemble->ensemble_name ?? '',
                 'director' => $ensembleDirector,
+                'type' => $ensemble->type->value ?? EnsembleType::Unknown->value,
                 'editable' => $ensembleEditable,
                 'songs' => $songsArray,
             ];
