@@ -2,7 +2,13 @@
 
 use App\Enums\ReferralSource;
 use App\Models\User;
+use App\Services\TurnstileVerificationService;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
+
+beforeEach(function () {
+    Http::fake(['challenges.cloudflare.com/*' => Http::response(['success' => true])]);
+});
 
 test('registration screen can be rendered', function () {
     $response = $this->get(route('register'));
@@ -17,6 +23,7 @@ test('new users can register', function () {
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -31,6 +38,7 @@ test('new users must verify email before accessing dashboard', function () {
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $this->assertAuthenticated();
@@ -58,6 +66,7 @@ test('new users can register with a referral source', function () {
         'password_confirmation' => 'password',
         'referral_source' => ReferralSource::Facebook->value,
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -78,6 +87,7 @@ test('new users can register with a referral source and detail', function () {
         'referral_source' => ReferralSource::Referral->value,
         'referral_detail' => 'John Smith',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -97,6 +107,7 @@ test('new users can register without a referral source', function () {
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -116,6 +127,7 @@ test('registration rejects invalid referral source', function () {
         'password_confirmation' => 'password',
         'referral_source' => 'InvalidSource',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasErrors('referral_source');
@@ -166,6 +178,7 @@ test('registration is blocked for a single-word name', function () {
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasErrors('name');
@@ -180,6 +193,7 @@ test('registration is blocked for a name with invalid characters', function () {
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasErrors('name');
@@ -194,6 +208,7 @@ test('registration accepts names with hyphens and apostrophes', function () {
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -207,6 +222,7 @@ test('registration is blocked for a suspicious gmail dot pattern', function () {
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasErrors('email');
@@ -226,6 +242,7 @@ test('registration is blocked when normalized gmail matches an existing verified
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasErrors('email');
@@ -244,6 +261,7 @@ test('registration is allowed when normalized gmail matches only an unverified a
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -257,6 +275,7 @@ test('registration accepts a normal gmail address with two dot segments', functi
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -270,6 +289,7 @@ test('registration is blocked for an email with 6 or more consecutive digits', f
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasErrors('email');
@@ -284,6 +304,7 @@ test('registration is blocked for a non-gmail email with 6 or more consecutive d
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasErrors('email');
@@ -298,6 +319,7 @@ test('registration accepts an email with fewer than 6 consecutive digits', funct
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -318,10 +340,92 @@ test('registration is blocked after rate limit is exceeded', function () {
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasErrors('email');
     $this->assertDatabaseMissing('users', ['email' => 'user@example.com']);
 
     RateLimiter::clear($key);
+});
+
+/**
+ * @return array<string, string>
+ */
+function registrationPayload(string $name, string $email = 'person@example.com'): array
+{
+    return [
+        'name' => $name,
+        'email' => $email,
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
+    ];
+}
+
+test('keyboard-mash bot names are rejected', function (string $name) {
+    $this->post(route('register.store'), registrationPayload($name))
+        ->assertSessionHasErrors(['name' => 'Please enter your real first and last name.']);
+
+    $this->assertGuest();
+})->with([
+    'Bnbvqzqn Mgldnj',
+    'Yvrxce Jbhfwszuc',
+    'Pxggz Rnzparhcl',
+    'Mxlt Ousbzgu',
+    'Mrnc Abxjusibk',
+    'Lnpug Koybavpxf',
+    'Rvjdw Bitoisr',
+    'Vruawd Jvhvyv',
+]);
+
+test('real names with unusual consonant clusters are accepted', function (string $name) {
+    $this->post(route('register.store'), registrationPayload($name))
+        ->assertSessionHasNoErrors();
+
+    $this->assertAuthenticated();
+})->with([
+    'John Brzozowski',
+    'Michael Prachthauser',
+    'Maura Schwartz',
+    'Gina Strohbusch',
+    'Thomas McNichols',
+    'Bobby Yapchanyk',
+    'Dwight Weaver',
+    'Miguel Ángel Santaella',
+    'Rich Campbell',
+    'Mrinal Mkhitaryan',
+]);
+
+test('registration page renders the turnstile widget', function () {
+    $this->get(route('register'))
+        ->assertOk()
+        ->assertSee('register-turnstile')
+        ->assertSee('challenges.cloudflare.com/turnstile/v0/api.js', false);
+});
+
+test('registration is rejected without a turnstile token', function () {
+    $payload = registrationPayload('Jane Doe');
+    unset($payload['cf-turnstile-response']);
+
+    $this->post(route('register.store'), $payload)
+        ->assertSessionHasErrors(['cf-turnstile-response' => 'Please complete the verification check and try again.']);
+
+    $this->assertGuest();
+    $this->assertDatabaseMissing('users', ['email' => 'person@example.com']);
+});
+
+test('registration is rejected when turnstile verification fails', function () {
+    $this->mock(TurnstileVerificationService::class)
+        ->shouldReceive('verify')
+        ->once()
+        ->with('test-token', '127.0.0.1')
+        ->andReturnFalse();
+
+    $this->post(route('register.store'), registrationPayload('Jane Doe'))
+        ->assertSessionHasErrors('cf-turnstile-response');
+
+    $this->assertGuest();
+    $this->assertDatabaseMissing('users', ['email' => 'person@example.com']);
 });

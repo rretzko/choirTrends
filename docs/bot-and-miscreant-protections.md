@@ -85,6 +85,22 @@ A `viewport` field populated by JavaScript (`{width}x{height}`) is required and 
 
 ---
 
+### 8. Gibberish Name Detection
+**File:** `app/Actions/Fortify/CreateNewUser.php` (`looksLikeGibberish()`)
+
+Counts consonant pairs that are not in `COMMON_CONSONANT_PAIRS` (pairs found naturally in names). Names with **3 or more** uncommon pairs are rejected with "Please enter your real first and last name." Tuned against all production names on 2026-10-26: every real user scored 0–1, while keyboard-mash bots scored 3–8 (e.g. "Bnbvqzqn Mgldnj" = 8).
+
+**Known gap:** semi-pronounceable gibberish ("Syxytemd Uovehn", "Dsgloz Hhudy") scores ≤1 and passes — Turnstile (#9) is the backstop.
+
+---
+
+### 9. Cloudflare Turnstile on Registration
+**Files:** `app/Actions/Fortify/CreateNewUser.php`, `resources/views/livewire/auth/register.blade.php`
+
+The registration form renders a Turnstile widget (explicit render, so it survives `wire:navigate`). The `cf-turnstile-response` token is required and verified server-side via `TurnstileVerificationService` (shared with the guest Repertoire Finder). Keys: `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY`.
+
+---
+
 ## Next Steps
 
 These improvements are recommended if bot activity continues or escalates.
@@ -92,7 +108,7 @@ These improvements are recommended if bot activity continues or escalates.
 ### A. Name Blocklist
 Add a validation check rejecting known fake/rejection names ("No Thanks", "Test User", "Asdf Asdf", etc.). Low effort. Addresses the gap in protection #2.
 
-### B. Cloudflare Turnstile (or hCaptcha)
+### B. ~~Cloudflare Turnstile (or hCaptcha)~~ — done 2026-10-26 (#9)
 An invisible bot challenge on the registration form. The single highest-impact addition available — nearly impossible for bots to pass, zero friction for real users, free tier available. Recommended if bot registrations persist after the current protections.
 
 ---
@@ -103,3 +119,8 @@ An invisible bot challenge on the registration form. The single highest-impact a
 Two accounts registered with the same name ("No Thanks") from the same IP (`209.242.187.198`) at a 73-second interval, using different emails (`no@gmail.com`, `nothanks849278194@gmail.com`). No harm was done — email verification gated all further access. The 73-second gap was deliberate: the bot waited for the then-60-second rate limit window to expire before the second attempt.
 
 **Protections added in response:** rate limit window extended to 1 hour (#1); numeric-run email detection added (#4).
+
+### 2026-10-02 → 2026-10-26 — Keyboard-Mash Name Wave
+Ten unverified accounts registered with random-letter names ("Vruawd Jvhvyv", "Bnbvqzqn Mgldnj", …), nine of them between Oct 24–26. These bots executed JavaScript (viewport field populated), passed the honeypot timer, and used plausible emails — several appear to be real third-party business addresses (e.g. `office@saintgeorge.ca`), so verification emails were sent to uninvolved people. Affected user ids: 155, 161–169.
+
+**Protections added in response:** gibberish name detection (#8); Turnstile on registration (#9).

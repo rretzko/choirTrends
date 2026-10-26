@@ -1,7 +1,12 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Spatie\Honeypot\EncryptedTime;
+
+beforeEach(function () {
+    Http::fake(['challenges.cloudflare.com/*' => Http::response(['success' => true])]);
+});
 
 test('login form contains honeypot fields', function () {
     $this->get(route('login'))
@@ -75,6 +80,7 @@ test('register succeeds with valid honeypot fields', function () {
         'my_name' => '',
         'valid_from' => $validFrom,
         'viewport' => '1920x1080',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $response->assertSessionHasNoErrors()

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Livewire\Founder\ImpersonateUser;
 use App\Models\User;
 use App\Models\UserLogin;
+use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 
 test('login creates a user_logins record', function () {
@@ -89,12 +90,15 @@ test('different environments create separate login records', function () {
 });
 
 test('registration also creates a user_logins record', function () {
+    Http::fake(['challenges.cloudflare.com/*' => Http::response(['success' => true])]);
+
     $this->post(route('register.store'), [
         'name' => 'John Doe',
         'email' => 'newuser@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
         'viewport' => '390x844',
+        'cf-turnstile-response' => 'test-token',
     ]);
 
     $this->assertAuthenticated();

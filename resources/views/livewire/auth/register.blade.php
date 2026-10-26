@@ -93,6 +93,14 @@
 
             <input type="hidden" name="viewport" id="register-viewport-field">
 
+            {{-- Cloudflare Turnstile widget (explicit render so it works after wire:navigate) --}}
+            <div class="flex flex-col items-center gap-2">
+                <div id="register-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}"></div>
+                @error('cf-turnstile-response')
+                    <flux:text class="text-sm text-red-600 dark:text-red-400">{{ $message }}</flux:text>
+                @enderror
+            </div>
+
             <flux:text class="text-xs text-zinc-500 dark:text-zinc-400">
                 {{ __('A verification email will be sent to the address above. If it has not appeared within five minutes, please check your junk or spam folder.') }}
             </flux:text>
@@ -108,6 +116,20 @@
             <span>{{ __('Already have an account?') }}</span>
             <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
         </div>
+
+        <script>
+            window.renderRegisterTurnstile = function () {
+                const el = document.getElementById('register-turnstile');
+
+                if (el && window.turnstile && ! el.dataset.rendered) {
+                    el.dataset.rendered = '1';
+                    window.turnstile.render(el, { sitekey: el.dataset.sitekey });
+                }
+            };
+
+            window.renderRegisterTurnstile();
+        </script>
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=renderRegisterTurnstile" async defer data-navigate-once></script>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
