@@ -15,7 +15,7 @@ class ComposerController extends Controller
     public function index(PublicTrendsService $trends): View
     {
         return view('composers.index', [
-            'artists' => $trends->allPublicArtists()->sortBy(fn ($artist) => mb_strtolower($artist->name))->values(),
+            'artists' => $trends->allPublicArtists()->sortBy('sortKey')->values(),
             'minimumSchools' => $trends->minimumSchools(),
         ]);
     }

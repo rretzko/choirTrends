@@ -3,7 +3,7 @@
         .' or more schools, with how often their pieces appear in school concert programs.';
 
     $groupedArtists = $artists->groupBy(function (\App\Services\TrendingArtist $artist): string {
-        $initial = mb_strtoupper(mb_substr(\Illuminate\Support\Str::ascii($artist->name), 0, 1));
+        $initial = mb_strtoupper(mb_substr($artist->sortKey, 0, 1));
 
         return ctype_alpha($initial) ? $initial : '#';
     })->sortKeys();

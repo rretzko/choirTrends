@@ -190,23 +190,38 @@ test('composer page never reveals schools, directors or event names', function (
 
 // ── Composer index ───────────────────────────────────────────────────────────
 
-test('composer index lists public artists alphabetically with links', function () {
-    $zed = Artist::factory()->create(['artist_name' => 'Zed Zebra']);
-    $amy = Artist::factory()->create(['artist_name' => 'Amy Apple']);
+test('composer index lists public artists by last name with links', function () {
+    $abbott = Artist::factory()->create(['artist_name' => 'Zed Abbott', 'artist_first_name' => 'Zed', 'artist_last_name' => 'Abbott']);
+    $podd = Artist::factory()->create(['artist_name' => 'Adam and Matt Podd', 'artist_first_name' => null, 'artist_last_name' => 'Adam and Matt Podd']);
+    $laufey = Artist::factory()->create(['artist_name' => 'Laufey', 'artist_first_name' => null, 'artist_last_name' => 'Laufey']);
+    $zimmer = Artist::factory()->create(['artist_name' => 'Amy Zimmer', 'artist_first_name' => 'Amy', 'artist_last_name' => 'Zimmer']);
     $hidden = Artist::factory()->create(['artist_name' => 'Hidden Harmonies']);
-    performAtSchools([
-        SongTitle::factory()->create(['composer_id' => $zed->id]),
-        SongTitle::factory()->create(['composer_id' => $amy->id]),
-    ], 3);
+
+    performAtSchools(collect([$zimmer, $laufey, $podd, $abbott])
+        ->map(fn (Artist $artist) => SongTitle::factory()->create(['composer_id' => $artist->id]))
+        ->all(), 3);
     performAtNewSchool([SongTitle::factory()->create(['composer_id' => $hidden->id])]);
 
     $this->get(route('composers.index'))
         ->assertSuccessful()
         ->assertSee('<title>Choral Composers &amp; Arrangers | '.config('app.name').'</title>', false)
-        ->assertSeeInOrder(['Amy Apple', 'Zed Zebra'])
-        ->assertSee('href="'.composerUrl($amy).'"', false)
+        ->assertSeeInOrder(['Zed Abbott', 'Laufey', 'Adam and Matt Podd', 'Amy Zimmer'])
+        ->assertSeeInOrder(['>A<', 'Zed Abbott', '>L<', 'Laufey', '>P<', 'Adam and Matt Podd', '>Z<', 'Amy Zimmer'], false)
+        ->assertSee('href="'.composerUrl($zimmer).'"', false)
         ->assertDontSee('Hidden Harmonies');
 });
+
+test('artist sort keys file people by surname', function (string $name, ?string $first, ?string $last, string $expectedPrefix) {
+    expect(Artist::sortKeyFor($name, $first, $last))->toStartWith($expectedPrefix);
+})->with([
+    'individual' => ['Elaine Hagenberg', 'Elaine', 'Hagenberg', 'hagenberg elaine'],
+    'accented surname' => ['Pärt Uusberg', 'Pärt', 'Uusberg', 'uusberg part'],
+    'shared family name' => ['Adam and Matt Podd', null, 'Adam and Matt Podd', 'podd '],
+    'ampersand family name' => ['Arthur & Angelie Arsenault', null, 'Arthur & Angelie Arsenault', 'arsenault '],
+    'two full names' => ['Alice Parker and Robert Shaw', null, 'Alice Parker and Robert Shaw', 'parker '],
+    'slash separated' => ['Ellington/Strayhorn', null, 'Ellington/Strayhorn', 'ellington '],
+    'mononym' => ['Laufey', null, 'Laufey', 'laufey'],
+]);
 
 // ── Song pages ───────────────────────────────────────────────────────────────
 

@@ -12,6 +12,7 @@ final readonly class TrendingArtist
     public function __construct(
         public int $id,
         public string $name,
+        public string $sortKey,
         public string $url,
         public int $schoolCount,
         public int $pieceCount,

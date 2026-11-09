@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Cache;
  */
 class PublicTrendsService
 {
-    private const CACHE_VERSION = 'v2';
+    private const CACHE_VERSION = 'v3';
 
     public function minimumSchools(): int
     {
@@ -197,7 +197,7 @@ class PublicTrendsService
     private function topArtists(?string $roleColumn, ?int $limit): Collection
     {
         return $this->artistAggregateQuery($roleColumn)
-            ->select(['artists.id', 'artists.artist_name'])
+            ->select(['artists.id', 'artists.artist_name', 'artists.artist_first_name', 'artists.artist_last_name'])
             ->selectRaw('COUNT(DISTINCT programs.school_id) as school_count')
             ->selectRaw('COUNT(DISTINCT song_titles.id) as piece_count')
             ->selectRaw('COUNT(*) as performance_count')
@@ -210,6 +210,7 @@ class PublicTrendsService
             ->map(fn (Artist $row): TrendingArtist => new TrendingArtist(
                 id: $row->id,
                 name: $row->artist_name,
+                sortKey: $row->sortKey(),
                 url: $this->artistUrl($row->id, $row->artist_name),
                 schoolCount: (int) $row->getAttribute('school_count'),
                 pieceCount: (int) $row->getAttribute('piece_count'),
@@ -239,7 +240,7 @@ class PublicTrendsService
             ->join('program_song_title', 'program_song_title.song_title_id', '=', 'song_titles.id')
             ->join('programs', 'programs.id', '=', 'program_song_title.program_id')
             ->tap(fn (Builder $query) => $this->excludePlaceholderArtists($query))
-            ->groupBy('artists.id', 'artists.artist_name')
+            ->groupBy('artists.id', 'artists.artist_name', 'artists.artist_first_name', 'artists.artist_last_name')
             ->havingRaw('COUNT(DISTINCT programs.school_id) >= ?', [$this->minimumSchools()]);
     }
 
