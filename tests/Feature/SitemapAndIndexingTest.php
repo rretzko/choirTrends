@@ -6,7 +6,9 @@ use App\Models\DigitalProgram;
 use App\Models\Program;
 use App\Models\School;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use Laravel\Vapor\Runtime\Http\Middleware\RedirectStaticAssets;
 
 test('sitemap returns valid xml listing the public pages', function () {
     $response = $this->get('/sitemap.xml');
@@ -128,4 +130,22 @@ test('public digital program without a linked program falls back to a generic ti
         ->assertSuccessful()
         ->assertSee('<title>Concert Program | '.config('app.name').'</title>', false)
         ->assertSee('<meta name="description" content="Digital concert program for Concert Program.">', false);
+});
+
+test('vapor does not redirect robots.txt to the asset cdn', function () {
+    expect(config('vapor.redirect_robots_txt'))->toBeFalse();
+
+    $request = Request::create('/robots.txt');
+    $passedThrough = false;
+
+    (new RedirectStaticAssets)->handle(
+        $request,
+        function () use (&$passedThrough) {
+            $passedThrough = true;
+
+            return response('ok');
+        },
+    );
+
+    expect($passedThrough)->toBeTrue();
 });

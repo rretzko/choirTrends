@@ -39,7 +39,7 @@ return [
     |
     */
 
-    'redirect_robots_txt' => true,
+    'redirect_robots_txt' => false,
 
     /*
     |--------------------------------------------------------------------------
