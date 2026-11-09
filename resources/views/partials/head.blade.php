@@ -52,7 +52,7 @@
             "@type": "Organization",
             "name": "{{ $appName }}",
             "url": "{{ config('app.url') }}",
-            "logo": "{{ asset('favicon.svg') }}",
+            "logo": "{{ asset('apple-touch-icon.png') }}",
             "description": "A community-driven platform for choral directors to share concert programs and discover trending repertoire."
         },
         {

@@ -3,12 +3,35 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        {{ $dp->program?->event_name ?? 'Concert Program' }}
-        @if($dp->program?->event_date) — {{ $dp->program->event_date->format('F j, Y') }} @endif
-        | {{ config('app.name') }}
-    </title>
-    <meta name="description" content="Digital concert program for {{ $dp->program?->event_name }}.">
+    @php
+        $eventName = $dp->program?->event_name ?? 'Concert Program';
+        $eventDate = $dp->program?->event_date?->format('F j, Y');
+        $schoolName = $dp->program?->school?->school_name;
+
+        $pageTitle = $eventName.($eventDate ? ' — '.$eventDate : '').' | '.config('app.name');
+        $metaDescription = 'Digital concert program for '.$eventName
+            .($schoolName ? ' at '.$schoolName : '')
+            .($eventDate ? ' on '.$eventDate : '')
+            .'.';
+        $canonicalUrl = route('program.public', ['slug' => $dp->slug]);
+    @endphp
+    <title>{{ $pageTitle }}</title>
+    <meta name="description" content="{{ $metaDescription }}">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
+
+    {{-- Social share previews (parents sharing the program link) --}}
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:description" content="{{ $metaDescription }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
+    <meta property="og:site_name" content="{{ config('app.name') }}">
+    <meta property="og:image" content="{{ asset('og-image.png') }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:description" content="{{ $metaDescription }}">
+    <meta name="twitter:image" content="{{ asset('og-image.png') }}">
+
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet">

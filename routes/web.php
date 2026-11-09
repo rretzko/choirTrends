@@ -6,11 +6,13 @@ use App\Http\Controllers\DigitalProgramQrController;
 use App\Http\Controllers\FounderAddProgramController;
 use App\Http\Controllers\QuickTipUnsubscribeController;
 use App\Http\Controllers\SheetMusicController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StopImpersonationController;
 use App\Http\Controllers\UserGuidePdfController;
 use App\Http\Controllers\VideoController;
 use App\Http\Middleware\EnsureUserIsFounder;
 use App\Http\Middleware\EnsureUserIsFounderOrImpersonating;
+use App\Http\Middleware\PreventSearchIndexing;
 use App\Http\Middleware\RestrictAssistantToDigitalPrograms;
 use App\Livewire\Catalog\Index;
 use App\Livewire\DigitalPrograms\Configure;
@@ -41,27 +43,32 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::get('catalog/{token}', Index::class)->name('catalog.show');
-Route::get('catalog/{token}/video/program/{program}', [VideoController::class, 'catalogProgramVideo'])->name('catalog.videos.program');
-Route::get('catalog/{token}/video/song/{program}/{songTitle}', [VideoController::class, 'catalogSongVideo'])->name('catalog.videos.song');
+Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 
-Route::get('quick-tips/unsubscribe', QuickTipUnsubscribeController::class)->name('quick-tips.unsubscribe');
+// Unlisted public pages (share links, programs, surveys) — keep them out of search results
+Route::middleware(PreventSearchIndexing::class)->group(function () {
+    Route::get('catalog/{token}', Index::class)->name('catalog.show');
+    Route::get('catalog/{token}/video/program/{program}', [VideoController::class, 'catalogProgramVideo'])->name('catalog.videos.program');
+    Route::get('catalog/{token}/video/song/{program}/{songTitle}', [VideoController::class, 'catalogSongVideo'])->name('catalog.videos.song');
 
-Route::get('survey/{user}', Show::class)
-    ->name('survey.show')
-    ->middleware('signed');
+    Route::get('quick-tips/unsubscribe', QuickTipUnsubscribeController::class)->name('quick-tips.unsubscribe');
 
-// Public digital program view (no auth — slug-based)
-Route::get('p/{slug}', DigitalProgramPublicController::class)
-    ->name('program.public');
+    Route::get('survey/{user}', Show::class)
+        ->name('survey.show')
+        ->middleware('signed');
 
-// Standalone QR code SVG for large-format display (projectors, print materials)
-Route::get('p/{slug}/qr.svg', DigitalProgramQrController::class)
-    ->name('program.qr');
+    // Public digital program view (no auth — slug-based)
+    Route::get('p/{slug}', DigitalProgramPublicController::class)
+        ->name('program.public');
 
-// Booklet imposition view (duplex landscape → fold in half)
-Route::get('p/{slug}/booklet', [DigitalProgramPublicController::class, 'booklet'])
-    ->name('program.booklet');
+    // Standalone QR code SVG for large-format display (projectors, print materials)
+    Route::get('p/{slug}/qr.svg', DigitalProgramQrController::class)
+        ->name('program.qr');
+
+    // Booklet imposition view (duplex landscape → fold in half)
+    Route::get('p/{slug}/booklet', [DigitalProgramPublicController::class, 'booklet'])
+        ->name('program.booklet');
+});
 
 Route::middleware(['auth', 'verified', RestrictAssistantToDigitalPrograms::class])->group(function () {
 

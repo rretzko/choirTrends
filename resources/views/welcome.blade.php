@@ -202,8 +202,8 @@
                             </div>
                         </div>
                         <div class="px-6 py-5">
-                            <h3 class="text-lg font-semibold mb-1">Spring Choral Festival 2025</h3>
-                            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-5">Northview High School &mdash; May 10, 2025</p>
+                            <h3 class="text-lg font-semibold mb-1">Spring Choral Festival 2026</h3>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-5">Northview High School &mdash; May 9, 2026</p>
 
                             <div class="space-y-4">
                                 {{-- Ensemble 1 --}}
