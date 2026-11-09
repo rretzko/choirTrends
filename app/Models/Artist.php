@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 /**
  * @property string $artist_name
@@ -39,6 +40,19 @@ class Artist extends Model
                 return trim($cleaned);
             },
         );
+    }
+
+    /**
+     * URL slug for public pages; the id in the URL is authoritative, so collisions are harmless.
+     */
+    public static function slugFor(string $artistName): string
+    {
+        return Str::slug($artistName) ?: 'artist';
+    }
+
+    public function publicSlug(): string
+    {
+        return self::slugFor($this->artist_name);
     }
 
     public function representations(): HasMany

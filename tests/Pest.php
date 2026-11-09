@@ -1,5 +1,9 @@
 <?php
 
+use App\Models\Program;
+use App\Models\School;
+use App\Models\SongTitle;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +51,24 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Creates one program at its own school containing the given songs (public trends tests).
+ *
+ * @param  array<int, SongTitle>  $songs
+ * @param  array<string, mixed>  $schoolAttributes
+ * @param  array<string, mixed>  $programAttributes
+ * @param  array<string, mixed>  $pivotAttributes
+ */
+function performAtNewSchool(array $songs, array $schoolAttributes = [], array $programAttributes = [], array $pivotAttributes = []): Program
+{
+    $school = School::factory()->create($schoolAttributes);
+    $program = Program::factory()->for(User::factory())->for($school)->create($programAttributes);
+
+    foreach (array_values($songs) as $index => $song) {
+        $program->songTitles()->attach($song->id, ['sort_order' => $index + 1, 'ensemble_sort_order' => 1, ...$pivotAttributes]);
+    }
+
+    return $program;
 }

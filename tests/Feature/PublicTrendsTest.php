@@ -9,23 +9,6 @@ use App\Models\SongTitle;
 use App\Models\User;
 use App\Services\PublicTrendsService;
 
-/**
- * Creates one program at its own school containing the given songs.
- *
- * @param  array<int, SongTitle>  $songs
- */
-function performAtNewSchool(array $songs, array $schoolAttributes = [], array $programAttributes = []): Program
-{
-    $school = School::factory()->create($schoolAttributes);
-    $program = Program::factory()->for(User::factory())->for($school)->create($programAttributes);
-
-    foreach (array_values($songs) as $index => $song) {
-        $program->songTitles()->attach($song->id, ['sort_order' => $index + 1, 'ensemble_sort_order' => 1]);
-    }
-
-    return $program;
-}
-
 test('trends page is public, indexable and in the sitemap', function () {
     $response = $this->get(route('trends'));
 

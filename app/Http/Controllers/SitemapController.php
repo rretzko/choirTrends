@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Services\PublicTrendsService;
 use Illuminate\Http\Response;
 use XMLWriter;
 
@@ -13,14 +14,23 @@ use XMLWriter;
  */
 class SitemapController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(PublicTrendsService $trends): Response
     {
-        /** @var array<int, array{loc: string, changefreq: string, priority: string}> $urls */
+        /** @var list<array{loc: string, changefreq: string, priority: string}> $urls */
         $urls = [
             ['loc' => route('home'), 'changefreq' => 'weekly', 'priority' => '1.0'],
             ['loc' => route('trends'), 'changefreq' => 'weekly', 'priority' => '0.9'],
+            ['loc' => route('composers.index'), 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['loc' => route('register'), 'changefreq' => 'monthly', 'priority' => '0.5'],
         ];
+
+        foreach ($trends->allPublicArtists() as $artist) {
+            $urls[] = ['loc' => $artist->url, 'changefreq' => 'weekly', 'priority' => '0.7'];
+        }
+
+        foreach ($trends->publicPieces() as $piece) {
+            $urls[] = ['loc' => $piece->url, 'changefreq' => 'weekly', 'priority' => '0.7'];
+        }
 
         $xml = new XMLWriter;
         $xml->openMemory();

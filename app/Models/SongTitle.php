@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * @property-read ProgramSongTitlePivot|null $pivot
@@ -24,6 +25,9 @@ use Illuminate\Support\Facades\DB;
  * @property-read Collection<int, SongTitleTag> $tags
  * @property-read Collection<int, SongTitleDifficultyObservation> $difficultyObservations
  * @property SongTitleOrigin $origin
+ * @property string $song_title
+ * @property int|null $composer_id
+ * @property int|null $arranger_id
  */
 class SongTitle extends Model
 {
@@ -45,6 +49,19 @@ class SongTitle extends Model
         return [
             'origin' => SongTitleOrigin::class,
         ];
+    }
+
+    /**
+     * URL slug for public pages; the id in the URL is authoritative, so collisions are harmless.
+     */
+    public static function slugFor(string $title): string
+    {
+        return Str::slug($title) ?: 'piece';
+    }
+
+    public function publicSlug(): string
+    {
+        return self::slugFor($this->song_title);
     }
 
     public function composer(): BelongsTo
