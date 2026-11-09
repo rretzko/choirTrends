@@ -244,6 +244,12 @@
                         <flux:text class="font-medium text-neutral-500 dark:text-neutral-400">{{ __('Director') }}</flux:text>
                         <flux:text>{{ $displayData[$selectedProgram->id]['director'] ?? '' }}</flux:text>
                     </div>
+                    @if (auth()->user()?->isFounder())
+                        <div>
+                            <flux:text class="font-medium text-neutral-500 dark:text-neutral-400">{{ __('Program ID') }}</flux:text>
+                            <flux:text>{{ $selectedProgram->id }}</flux:text>
+                        </div>
+                    @endif
                 </div>
 
                 @if ($songsByEnsemble->isNotEmpty())

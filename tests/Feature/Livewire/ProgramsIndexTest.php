@@ -155,6 +155,32 @@ test('clicking program name loads program details', function () {
         ->assertSet('selectedProgram.id', $program->id);
 });
 
+test('program details modal shows program id to the founder', function () {
+    config(['app.founder' => 'founder@example.com']);
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+    $program = Program::factory()->for($founder)->for(School::factory())->create();
+
+    $this->actingAs($founder);
+
+    Livewire::test(Index::class)
+        ->assertDontSee('Program ID')
+        ->call('showProgramDetails', $program->id)
+        ->assertSee('Program ID');
+});
+
+test('program details modal hides program id from non-founders', function () {
+    config(['app.founder' => 'founder@example.com']);
+    $user = User::factory()->withoutTwoFactor()->create();
+    $program = Program::factory()->for($user)->for(School::factory())->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Index::class)
+        ->call('showProgramDetails', $program->id)
+        ->assertSet('selectedProgram.id', $program->id)
+        ->assertDontSee('Program ID');
+});
+
 test('program details modal shows song titles with composer and arranger', function () {
     $user = User::factory()->create();
     $school = School::factory()->create();
