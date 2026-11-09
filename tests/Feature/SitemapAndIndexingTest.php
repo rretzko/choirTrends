@@ -33,9 +33,37 @@ test('sitemap does not list unlisted or authenticated pages', function () {
         ->assertDontSee('/dashboard', false);
 });
 
-test('robots.txt references the sitemap', function () {
-    expect(file_get_contents(public_path('robots.txt')))
-        ->toContain('Sitemap: https://choirtrends.com/sitemap.xml');
+test('robots.txt allows crawling and references the sitemap in production', function () {
+    app()->detectEnvironment(fn () => 'production');
+
+    $response = $this->get('/robots.txt');
+
+    $response->assertSuccessful()
+        ->assertHeader('Content-Type', 'text/plain; charset=utf-8');
+    expect($response->getContent())
+        ->toContain("User-agent: *\nDisallow:\n")
+        ->toContain('Sitemap: '.route('sitemap'))
+        ->not->toContain('Disallow: /');
+});
+
+test('robots.txt blocks all crawling outside production', function () {
+    app()->detectEnvironment(fn () => 'staging');
+
+    $response = $this->get('/robots.txt');
+
+    $response->assertSuccessful();
+    expect($response->getContent())
+        ->toContain('Disallow: /')
+        ->not->toContain('Sitemap:');
+});
+
+test('no static robots.txt shadows the route', function () {
+    expect(file_exists(public_path('robots.txt')))->toBeFalse();
+});
+
+test('sitemap starts with an xml declaration', function () {
+    expect($this->get('/sitemap.xml')->getContent())
+        ->toStartWith('<?xml version="1.0" encoding="UTF-8"?>');
 });
 
 test('homepage is indexable', function () {

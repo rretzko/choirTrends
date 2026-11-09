@@ -5,6 +5,7 @@ use App\Http\Controllers\DigitalProgramPublicController;
 use App\Http\Controllers\DigitalProgramQrController;
 use App\Http\Controllers\FounderAddProgramController;
 use App\Http\Controllers\QuickTipUnsubscribeController;
+use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SheetMusicController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StopImpersonationController;
@@ -44,6 +45,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+Route::get('robots.txt', RobotsController::class)->name('robots');
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('trends', TrendsController::class)->name('trends');
 
