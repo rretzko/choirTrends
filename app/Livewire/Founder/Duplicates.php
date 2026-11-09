@@ -9,6 +9,8 @@ use App\Models\Ensemble;
 use App\Models\School;
 use App\Models\SongTitle;
 use App\Models\User;
+use App\Services\CatalogMergeService;
+use App\Services\PublicTrendsService;
 use Flux;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -137,47 +139,15 @@ class Duplicates extends Component
         $ids = array_map('intval', explode(',', $duplicateIds));
 
         $keeper = Artist::findOrFail($keeperId);
+        $merger = app(CatalogMergeService::class);
 
-        DB::transaction(function () use ($keeper, $ids): void {
+        DB::transaction(function () use ($keeper, $ids, $merger): void {
             foreach ($ids as $duplicateId) {
-                $duplicate = Artist::findOrFail($duplicateId);
-
-                // Reassign composer references
-                $composerSongs = SongTitle::where('composer_id', $duplicate->id)->get();
-                foreach ($composerSongs as $song) {
-                    $existing = SongTitle::where('song_title', $song->song_title)
-                        ->where('composer_id', $keeper->id)
-                        ->where('arranger_id', $song->arranger_id)
-                        ->first();
-
-                    if ($existing) {
-                        // Merge song title pivot entries
-                        $this->mergeSongTitlePivot($existing->id, $song->id);
-                        $song->delete();
-                    } else {
-                        $song->update(['composer_id' => $keeper->id]);
-                    }
-                }
-
-                // Reassign arranger references
-                $arrangerSongs = SongTitle::where('arranger_id', $duplicate->id)->get();
-                foreach ($arrangerSongs as $song) {
-                    $existing = SongTitle::where('song_title', $song->song_title)
-                        ->where('composer_id', $song->composer_id)
-                        ->where('arranger_id', $keeper->id)
-                        ->first();
-
-                    if ($existing) {
-                        $this->mergeSongTitlePivot($existing->id, $song->id);
-                        $song->delete();
-                    } else {
-                        $song->update(['arranger_id' => $keeper->id]);
-                    }
-                }
-
-                $duplicate->delete();
+                $merger->mergeArtist($keeper, Artist::findOrFail($duplicateId));
             }
         });
+
+        app(PublicTrendsService::class)->flush();
 
         $this->successMessage = __('Artists merged successfully.');
     }
@@ -190,49 +160,17 @@ class Duplicates extends Component
         $ids = array_map('intval', explode(',', $duplicateIds));
 
         $keeper = SongTitle::findOrFail($keeperId);
+        $merger = app(CatalogMergeService::class);
 
-        DB::transaction(function () use ($keeper, $ids): void {
+        DB::transaction(function () use ($keeper, $ids, $merger): void {
             foreach ($ids as $duplicateId) {
-                $duplicate = SongTitle::findOrFail($duplicateId);
-
-                $this->mergeSongTitlePivot($keeper->id, $duplicate->id);
-
-                $duplicate->delete();
+                $merger->mergeSongTitle($keeper, SongTitle::findOrFail($duplicateId));
             }
         });
 
+        app(PublicTrendsService::class)->flush();
+
         $this->successMessage = __('Song titles merged successfully.');
-    }
-
-    /**
-     * Reassign program_song_title pivot entries from one song_title to another,
-     * handling primary key conflicts.
-     */
-    private function mergeSongTitlePivot(int $keeperId, int $duplicateId): void
-    {
-        $existingProgramIds = DB::table('program_song_title')
-            ->where('song_title_id', $keeperId)
-            ->pluck('program_id');
-
-        $duplicatePivots = DB::table('program_song_title')
-            ->where('song_title_id', $duplicateId)
-            ->get();
-
-        foreach ($duplicatePivots as $pivot) {
-            if ($existingProgramIds->contains($pivot->program_id)) {
-                // Conflict: delete the duplicate pivot row
-                DB::table('program_song_title')
-                    ->where('program_id', $pivot->program_id)
-                    ->where('song_title_id', $duplicateId)
-                    ->delete();
-            } else {
-                // Safe to reassign
-                DB::table('program_song_title')
-                    ->where('program_id', $pivot->program_id)
-                    ->where('song_title_id', $duplicateId)
-                    ->update(['song_title_id' => $keeperId]);
-            }
-        }
     }
 
     public function mergeUsers(int $keeperId, string $duplicateIds): void

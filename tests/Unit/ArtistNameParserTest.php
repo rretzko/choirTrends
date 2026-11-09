@@ -147,3 +147,53 @@ it('treats initials with ampersand as a collaborative artist', function () {
         'artist_last_name' => 'F. Slay, Jr & B. Crewe',
     ]);
 });
+
+it('keeps a capitalized surname prefix with the surname', function (string $name, string $first, string $last) {
+    expect((new ArtistNameParser)->parse($name))->toBe([
+        'artist_name' => $name,
+        'artist_first_name' => $first,
+        'artist_last_name' => $last,
+    ]);
+})->with([
+    ['David Von Kampen', 'David', 'Von Kampen'],
+    ['A. De Vita', 'A.', 'De Vita'],
+    ['Anthony Van Der Berg', 'Anthony', 'Van Der Berg'],
+]);
+
+it('keeps a lowercase european particle with the given name', function (string $name, string $first, string $last) {
+    expect((new ArtistNameParser)->parse($name))->toBe([
+        'artist_name' => $name,
+        'artist_first_name' => $first,
+        'artist_last_name' => $last,
+    ]);
+})->with([
+    ['Orlando di Lasso', 'Orlando di', 'Lasso'],
+    ['Ludwig van Beethoven', 'Ludwig van', 'Beethoven'],
+]);
+
+it('treats a prefix word used as a first name as the first name', function () {
+    expect((new ArtistNameParser)->parse('Van Morrison'))->toBe([
+        'artist_name' => 'Van Morrison',
+        'artist_first_name' => 'Van',
+        'artist_last_name' => 'Morrison',
+    ]);
+});
+
+it('recognizes known compound surnames', function (string $name, string $first, string $last) {
+    expect((new ArtistNameParser)->parse($name))->toBe([
+        'artist_name' => $name,
+        'artist_first_name' => $first,
+        'artist_last_name' => $last,
+    ]);
+})->with([
+    ['Ralph Vaughan Williams', 'Ralph', 'Vaughan Williams'],
+    ['Andrew Lloyd Webber', 'Andrew', 'Lloyd Webber'],
+]);
+
+it('collapses repeated spaces when splitting a name', function () {
+    expect((new ArtistNameParser)->parse('John  Rutter'))->toBe([
+        'artist_name' => 'John  Rutter',
+        'artist_first_name' => 'John',
+        'artist_last_name' => 'Rutter',
+    ]);
+});

@@ -23,6 +23,8 @@ class PublicTrendsService
 {
     private const CACHE_VERSION = 'v3';
 
+    private const GENERATION_KEY = 'public_trends:generation';
+
     public function minimumSchools(): int
     {
         return (int) config('trends.minimum_schools');
@@ -288,9 +290,23 @@ class PublicTrendsService
     public function remember(string $key, callable $callback): mixed
     {
         return Cache::remember(
-            'public_trends:'.self::CACHE_VERSION.":{$key}:min{$this->minimumSchools()}",
+            'public_trends:'.self::CACHE_VERSION.":g{$this->cacheGeneration()}:{$key}:min{$this->minimumSchools()}",
             now()->addMinutes((int) config('trends.cache_minutes')),
             $callback,
         );
+    }
+
+    /**
+     * Invalidates every cached public trends value at once (after catalog edits such as
+     * artist merges). Works on stores without tag support by bumping a key generation.
+     */
+    public function flush(): void
+    {
+        Cache::forever(self::GENERATION_KEY, $this->cacheGeneration() + 1);
+    }
+
+    private function cacheGeneration(): int
+    {
+        return (int) Cache::get(self::GENERATION_KEY, 1);
     }
 }

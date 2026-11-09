@@ -96,6 +96,16 @@ class Artist extends Model
         return mb_strtolower(Str::ascii($value));
     }
 
+    public function composedSongs(): HasMany
+    {
+        return $this->hasMany(SongTitle::class, 'composer_id');
+    }
+
+    public function arrangedSongs(): HasMany
+    {
+        return $this->hasMany(SongTitle::class, 'arranger_id');
+    }
+
     public function representations(): HasMany
     {
         return $this->hasMany(ArtistRepresentation::class);

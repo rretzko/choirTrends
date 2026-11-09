@@ -8,6 +8,8 @@ use App\Models\Ensemble;
 use App\Models\Program;
 use App\Models\School;
 use App\Models\SongTitle;
+use App\Models\SongTitleDescription;
+use App\Models\SongTitleTag;
 use App\Models\User;
 use App\Models\UserLogin;
 use App\Models\UserPrivacy;
@@ -414,6 +416,25 @@ test('merging artists handles song title unique constraint conflicts', function 
     // Program now linked to keeper song
     expect($program->fresh()->songTitles->pluck('id'))->toContain($keeperSong->id);
     expect(Artist::find($duplicate->id))->toBeNull();
+});
+
+test('merging artists keeps tags and descriptions of folded songs', function () {
+    $founder = User::factory()->withoutTwoFactor()->founder()->create();
+
+    $keeper = Artist::factory()->create(['artist_name' => 'Johann Bach']);
+    $duplicate = Artist::factory()->create(['artist_name' => 'J. Bach']);
+    $keeperSong = SongTitle::factory()->create(['song_title' => 'Mass in B Minor', 'composer_id' => $keeper->id, 'arranger_id' => null]);
+    $duplicateSong = SongTitle::factory()->create(['song_title' => 'Mass in B Minor', 'composer_id' => $duplicate->id, 'arranger_id' => null]);
+    $tag = SongTitleTag::factory()->create(['song_title_id' => $duplicateSong->id, 'tag' => 'baroque']);
+    $description = SongTitleDescription::factory()->create(['song_title_id' => $duplicateSong->id]);
+
+    Livewire::actingAs($founder)
+        ->test(Duplicates::class)
+        ->call('switchTab', 'artists')
+        ->call('mergeArtists', $keeper->id, (string) $duplicate->id);
+
+    expect($tag->fresh()->song_title_id)->toBe($keeperSong->id)
+        ->and($description->fresh()->song_title_id)->toBe($keeperSong->id);
 });
 
 // --- SongTitle Merge ---

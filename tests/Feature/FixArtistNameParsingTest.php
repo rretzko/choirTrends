@@ -11,7 +11,7 @@ it('fixes artists with middle initials in the last name', function () {
         'artist_last_name' => 'E. Franklin',
     ]);
 
-    $this->artisan('app:fix-artist-name-parsing')
+    $this->artisan('app:fix-artist-name-parsing', ['--force' => true])
         ->assertSuccessful();
 
     $artist->refresh();
@@ -26,7 +26,7 @@ it('fixes artists with middle names in the last name', function () {
         'artist_last_name' => 'Sebastian Bach',
     ]);
 
-    $this->artisan('app:fix-artist-name-parsing')
+    $this->artisan('app:fix-artist-name-parsing', ['--force' => true])
         ->assertSuccessful();
 
     $artist->refresh();
@@ -41,7 +41,7 @@ it('does not modify correctly parsed two-part names', function () {
         'artist_last_name' => 'Phillips',
     ]);
 
-    $this->artisan('app:fix-artist-name-parsing')
+    $this->artisan('app:fix-artist-name-parsing', ['--force' => true])
         ->assertSuccessful();
 
     $artist->refresh();
@@ -56,7 +56,7 @@ it('skips collaborative artists with null first name', function () {
         'artist_last_name' => 'Alice Parker & Robert Shaw',
     ]);
 
-    $this->artisan('app:fix-artist-name-parsing')
+    $this->artisan('app:fix-artist-name-parsing', ['--force' => true])
         ->expectsOutputToContain('No artists need fixing')
         ->assertSuccessful();
 });
