@@ -8,6 +8,7 @@ use App\Http\Controllers\QuickTipUnsubscribeController;
 use App\Http\Controllers\SheetMusicController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StopImpersonationController;
+use App\Http\Controllers\TrendsController;
 use App\Http\Controllers\UserGuidePdfController;
 use App\Http\Controllers\VideoController;
 use App\Http\Middleware\EnsureUserIsFounder;
@@ -44,6 +45,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('trends', TrendsController::class)->name('trends');
 
 // Unlisted public pages (share links, programs, surveys) — keep them out of search results
 Route::middleware(PreventSearchIndexing::class)->group(function () {
