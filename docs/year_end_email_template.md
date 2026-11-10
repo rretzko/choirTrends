@@ -74,6 +74,8 @@ We're looking forward to what [NEXT YEAR–YEAR] brings.
 
 ## 2025–26 Final Version (Reference)
 
+*As sent in Newsletter #2 on 2026-07-10, with the July 9 data. Kept unchanged as the as-sent record. Live figures as of 2026-11-10 (81 programs / 51 schools / 48 directors / 861 titles / 933 performances) are in `docs/marketing_content_2025-26.md` and at choirtrends.com/reports/2025-26.*
+
 **Subject:** What Your Colleagues Programmed in 2025–26
 
 As the 2025–26 school year wraps up, we took a look at the concert programs logged in ChoirTrends and found some genuinely interesting patterns in what choral directors across the country — and beyond — chose to put in front of their singers this year.
