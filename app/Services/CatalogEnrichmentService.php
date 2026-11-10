@@ -42,9 +42,11 @@ class CatalogEnrichmentService
                     continue;
                 }
 
-                $this->recordDifficultyObservations($songTitle, $result, $repertoireQuery);
-                $this->recordTags($songTitle, $result, $repertoireQuery);
-                $this->recordDescription($songTitle, $result, $repertoireQuery);
+                $modelVersion = config('services.anthropic.repertoire_search_model');
+
+                $this->recordDifficultyObservations($songTitle, $result, $repertoireQuery->id, $modelVersion);
+                $this->recordTags($songTitle, $result, $repertoireQuery->id);
+                $this->recordDescription($songTitle, $result, $repertoireQuery->id, $modelVersion);
             }
         });
     }
@@ -92,9 +94,11 @@ class CatalogEnrichmentService
     }
 
     /**
-     * @param  array<string, mixed>  $result
+     * Appends one observation per rated voice part (n/a and unknown are skipped).
+     *
+     * @param  array<string, mixed>  $result  keys: difficulty_by_part, difficulty_source, citation_urls
      */
-    private function recordDifficultyObservations(SongTitle $songTitle, array $result, RepertoireQuery $repertoireQuery): void
+    public function recordDifficultyObservations(SongTitle $songTitle, array $result, ?int $repertoireQueryId, ?string $modelVersion): void
     {
         $authorshipType = $result['difficulty_source'] ?? AuthorshipType::Ai->value;
         $citationUrl = $result['citation_urls'][0] ?? null;
@@ -113,17 +117,19 @@ class CatalogEnrichmentService
                 'difficulty_value' => $difficultyLevel->numericValue(),
                 'authorship_type' => $authorshipType,
                 'authorship_id' => null,
-                'repertoire_query_id' => $repertoireQuery->id,
+                'repertoire_query_id' => $repertoireQueryId,
                 'citation_url' => $citationUrl,
-                'model_version' => config('services.anthropic.repertoire_search_model'),
+                'model_version' => $modelVersion,
             ]);
         }
     }
 
     /**
-     * @param  array<string, mixed>  $result
+     * Adds lower-cased AI tags, skipping any the song already has.
+     *
+     * @param  array<string, mixed>  $result  keys: tags
      */
-    private function recordTags(SongTitle $songTitle, array $result, RepertoireQuery $repertoireQuery): void
+    public function recordTags(SongTitle $songTitle, array $result, ?int $repertoireQueryId): void
     {
         foreach ($result['tags'] ?? [] as $tag) {
             $normalizedTag = Str::of($tag)->trim()->lower()->value();
@@ -148,15 +154,17 @@ class CatalogEnrichmentService
                 'tag' => $normalizedTag,
                 'authorship_type' => AuthorshipType::Ai->value,
                 'authorship_id' => null,
-                'repertoire_query_id' => $repertoireQuery->id,
+                'repertoire_query_id' => $repertoireQueryId,
             ]);
         }
     }
 
     /**
-     * @param  array<string, mixed>  $result
+     * Creates or overwrites the song's description for the given authorship type.
+     *
+     * @param  array<string, mixed>  $result  keys: song_description, description_source
      */
-    private function recordDescription(SongTitle $songTitle, array $result, RepertoireQuery $repertoireQuery): void
+    public function recordDescription(SongTitle $songTitle, array $result, ?int $repertoireQueryId, ?string $modelVersion): void
     {
         if (empty($result['song_description'])) {
             return;
@@ -171,16 +179,16 @@ class CatalogEnrichmentService
             ->first()
             ?->update([
                 'description' => $result['song_description'],
-                'repertoire_query_id' => $repertoireQuery->id,
-                'model_version' => config('services.anthropic.repertoire_search_model'),
+                'repertoire_query_id' => $repertoireQueryId,
+                'model_version' => $modelVersion,
             ])
             ?? SongTitleDescription::create([
                 'song_title_id' => $songTitle->id,
                 'description' => $result['song_description'],
                 'authorship_type' => $authorshipType,
                 'authorship_id' => null,
-                'repertoire_query_id' => $repertoireQuery->id,
-                'model_version' => config('services.anthropic.repertoire_search_model'),
+                'repertoire_query_id' => $repertoireQueryId,
+                'model_version' => $modelVersion,
             ]);
     }
 }
