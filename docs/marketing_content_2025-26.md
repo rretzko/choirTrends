@@ -78,7 +78,17 @@ Compiled 2026-07-08 from the 2025–26 year-end programming trends analysis (`do
 
 All three: bar chart of Gjeilo (8 performances/7 programs) vs. Uusberg and Ešenvalds (3/3 each), footer citing 736 performances / 63 programs / Sep 2025–Jul 2026. Widen the browser before screenshotting for full resolution. Redeployed 2026-07-09 to match final data (same URLs, no link changes needed).
 
-**⚠ Out of date and no longer reachable (checked 2026-11-10):** none of the three URLs opens from the current Claude account, so they can't be updated in place. Rebuild before posting with the live figures — Gjeilo 8 performances/7 programs, **Uusberg 4/4**, Ešenvalds 3/3, footer **933 performances / 81 programs** / Sep 2025–Jul 2026 — and point the CTA at `choirtrends.com/reports/2025-26`.
+**⚠ The three URLs above are retired** (checked 2026-11-10: none opens from the current Claude account).
+
+**Rebuilt 2026-11-10 — use these:** one design canvas holding all three graphics as separate artboards: **https://claude.ai/artifact/WzEPkjG9tEexCrcXNLWSW3**
+
+| Artboard | Size | Notes |
+|---|---|---|
+| Facebook / feed | 1080×1080 | CTA pill `choirtrends.com/reports/2025-26` |
+| LinkedIn | 1200×630 | Two columns (headline left, chart right), same CTA pill |
+| Facebook group | 1080×1080 | No CTA pill, neutral grey kicker, question headline ("Anyone else seeing a lot of Gjeilo?"), plain source line |
+
+Live figures throughout: bars count **programs** (matching the article's convention) — Gjeilo 7 programs / 8 performances, Uusberg 4/4, Ešenvalds 3/3 — plus "Nordic and Baltic composers appeared on 13 of 81 programs — about one in six", footer 933 performances / 81 programs / Sep 2025–Jul 2026. To post: open an artboard and use the canvas's export to save it as an image. The canvas is private until shared from its Share menu.
 
 ---
 
@@ -183,7 +193,7 @@ Also reuses the same article body and methodology sidebar as Section 4.
 - [x] Newsletter #2: sent 2026-07-10 (with the July numbers)
 - [ ] Confirm Facebook group posting/self-promo rules before posting the group version
 - [x] `[link]` URL for the LinkedIn/FB Page posts: https://choirtrends.com/reports/2025-26 (decided 2026-11-10; filled in above)
-- [ ] Rebuild the three chart graphics (Section 3) — the old Artifact URLs no longer open — using the live figures
+- [x] Rebuild the three chart graphics (Section 3) with the live figures — done 2026-11-10 (one canvas, three artboards)
 - [ ] Regenerate `docs/choral_journal_article_draft.docx` / `.pdf` (dated 2026-07-14, still July numbers) from the updated article text in Section 4 — check the Word file first for any edits made there after July 14
 - [ ] Optional data fixes that would sharpen next year's numbers: "Completed by F.X. Süssmayr" is stored as an *arranger* on the Requiem movements (it ranks #2 among arrangers on one program); "Tomas Luis di Victoria" duplicates "Tomás Luis de Victoria" (`artists:find-duplicates` lists it)
 - [ ] Confirm submission process/lead time with ACDA (Choral Journal), Chorus America, and NJMEA (Tempo) — all three pitch notes are drafted and ready to send
