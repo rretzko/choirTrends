@@ -17,8 +17,12 @@
                 @if (Route::has('login'))
                     <nav class="flex items-center gap-3">
                             <a href="{{ route('trends') }}"
-                               class="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                               class="max-sm:hidden px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
                                 Trends
+                            </a>
+                            <a href="{{ route('reports.index') }}"
+                               class="max-sm:hidden px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                                Reports
                             </a>
                         @auth
                             <a href="{{ url('/dashboard') }}"

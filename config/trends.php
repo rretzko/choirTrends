@@ -39,6 +39,20 @@ return [
 
     'list_limit' => 25,
 
+    /*
+    |--------------------------------------------------------------------------
+    | School-Year Reports
+    |--------------------------------------------------------------------------
+    |
+    | A /reports/{school-year} page is published only once that school year has
+    | at least this many uploaded programs from this many different schools.
+    |
+    */
+
+    'report_minimum_programs' => 30,
+
+    'report_minimum_schools' => 15,
+
     'cache_minutes' => 360,
 
 ];

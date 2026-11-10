@@ -3,7 +3,10 @@
     <div class="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400">
         <span>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</span>
 
-        <div class="flex items-center gap-4">
+        <div class="flex flex-wrap items-center justify-center gap-4">
+            <a href="{{ route('trends') }}" class="hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Trends</a>
+            <a href="{{ route('reports.index') }}" class="hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Reports</a>
+
             <flux:modal.trigger name="about-modal">
                 <button type="button" class="hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer">
                     About

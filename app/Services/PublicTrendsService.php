@@ -193,12 +193,27 @@ class PublicTrendsService
     }
 
     /**
+     * Public artists ranked by distinct schools, optionally narrowed by a constraint on the
+     * joined programs/song_titles (e.g. a school-year date window).
+     *
      * @param  'composer_id'|'arranger_id'|null  $roleColumn  null counts both roles together
+     * @param  (Closure(Builder<Artist>): mixed)|null  $constraint
      * @return Collection<int, TrendingArtist>
      */
-    private function topArtists(?string $roleColumn, ?int $limit): Collection
+    public function publicArtists(?string $roleColumn, ?Closure $constraint = null, ?int $limit = null): Collection
+    {
+        return $this->topArtists($roleColumn, $limit, $constraint);
+    }
+
+    /**
+     * @param  'composer_id'|'arranger_id'|null  $roleColumn  null counts both roles together
+     * @param  (Closure(Builder<Artist>): mixed)|null  $constraint
+     * @return Collection<int, TrendingArtist>
+     */
+    private function topArtists(?string $roleColumn, ?int $limit, ?Closure $constraint = null): Collection
     {
         return $this->artistAggregateQuery($roleColumn)
+            ->when($constraint, fn (Builder $query) => $constraint($query))
             ->select(['artists.id', 'artists.artist_name', 'artists.artist_first_name', 'artists.artist_last_name'])
             ->selectRaw('COUNT(DISTINCT programs.school_id) as school_count')
             ->selectRaw('COUNT(DISTINCT song_titles.id) as piece_count')

@@ -92,6 +92,8 @@
 
         <flux:text>
             <flux:link :href="route('composers.index')">{{ __('Browse all composers and arrangers') }} →</flux:link>
+            <span class="mx-2">·</span>
+            <flux:link :href="route('reports.index')">{{ __('School-year reports') }} →</flux:link>
         </flux:text>
 
         <x-public.data-notice :minimum-schools="$minimumSchools" />

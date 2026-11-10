@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\PublicTrendsService;
+use App\Services\SchoolYearReportService;
 use Illuminate\Http\Response;
 use XMLWriter;
 
@@ -14,7 +15,7 @@ use XMLWriter;
  */
 class SitemapController extends Controller
 {
-    public function __invoke(PublicTrendsService $trends): Response
+    public function __invoke(PublicTrendsService $trends, SchoolYearReportService $reports): Response
     {
         /** @var list<array{loc: string, changefreq: string, priority: string}> $urls */
         $urls = [
@@ -23,6 +24,10 @@ class SitemapController extends Controller
             ['loc' => route('composers.index'), 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['loc' => route('register'), 'changefreq' => 'monthly', 'priority' => '0.5'],
         ];
+
+        foreach ($reports->availableSchoolYears() as $slug) {
+            $urls[] = ['loc' => route('reports.show', $slug), 'changefreq' => 'monthly', 'priority' => '0.8'];
+        }
 
         foreach ($trends->allPublicArtists() as $artist) {
             $urls[] = ['loc' => $artist->url, 'changefreq' => 'weekly', 'priority' => '0.7'];

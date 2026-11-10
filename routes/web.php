@@ -6,6 +6,7 @@ use App\Http\Controllers\DigitalProgramPublicController;
 use App\Http\Controllers\DigitalProgramQrController;
 use App\Http\Controllers\FounderAddProgramController;
 use App\Http\Controllers\QuickTipUnsubscribeController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SheetMusicController;
 use App\Http\Controllers\SitemapController;
@@ -51,6 +52,10 @@ Route::get('robots.txt', RobotsController::class)->name('robots');
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('trends', TrendsController::class)->name('trends');
 Route::get('composers', [ComposerController::class, 'index'])->name('composers.index');
+Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+Route::get('reports/{schoolYear}', [ReportController::class, 'show'])
+    ->where('schoolYear', '[0-9]{4}-[0-9]{2}')
+    ->name('reports.show');
 Route::get('composers/{id}-{slug}', [ComposerController::class, 'show'])
     ->whereNumber('id')
     ->where('slug', '[A-Za-z0-9-]+')
