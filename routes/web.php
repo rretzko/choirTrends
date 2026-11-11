@@ -5,6 +5,7 @@ use App\Http\Controllers\ComposerController;
 use App\Http\Controllers\DigitalProgramPublicController;
 use App\Http\Controllers\DigitalProgramQrController;
 use App\Http\Controllers\FounderAddProgramController;
+use App\Http\Controllers\PublicStatsController;
 use App\Http\Controllers\QuickTipUnsubscribeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RobotsController;
@@ -49,6 +50,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('robots.txt', RobotsController::class)->name('robots');
+Route::get('stats.json', PublicStatsController::class)->middleware('throttle:60,1')->name('stats');
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('trends', TrendsController::class)->name('trends');
 Route::get('composers', [ComposerController::class, 'index'])->name('composers.index');
