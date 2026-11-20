@@ -3,7 +3,7 @@
         <flux:modal wire:model.self="showWelcomeModal" :dismissible="false" class="md:w-96">
             <div class="space-y-6">
                 <div class="text-center">
-                    <flux:heading size="lg">{{ __('Welcome to choirTrends!') }}</flux:heading>
+                    <flux:heading size="lg">{{ __('Welcome to ChoirTrends!') }}</flux:heading>
                     <flux:text class="mt-2">
                         {{ __('Track your choral programs, discover trends, and connect with a choral director community.') }}
                     </flux:text>

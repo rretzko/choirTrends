@@ -11,7 +11,7 @@ test('new user sees the welcome modal', function () {
 
     Livewire::test(WelcomeModal::class)
         ->assertSet('showWelcomeModal', true)
-        ->assertSee('Welcome to choirTrends!')
+        ->assertSee('Welcome to ChoirTrends!')
         ->assertStatus(200);
 });
 
@@ -22,7 +22,7 @@ test('welcomed user does not see the welcome modal', function () {
 
     Livewire::test(WelcomeModal::class)
         ->assertSet('showWelcomeModal', false)
-        ->assertDontSee('Welcome to choirTrends!')
+        ->assertDontSee('Welcome to ChoirTrends!')
         ->assertStatus(200);
 });
 
@@ -56,6 +56,6 @@ test('founder also sees welcome modal on first visit', function () {
 
     Livewire::test(WelcomeModal::class)
         ->assertSet('showWelcomeModal', true)
-        ->assertSee('Welcome to choirTrends!')
+        ->assertSee('Welcome to ChoirTrends!')
         ->assertStatus(200);
 });

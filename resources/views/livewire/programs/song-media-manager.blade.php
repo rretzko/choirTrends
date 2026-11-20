@@ -60,7 +60,7 @@
                 <x-programs.youtube-link-field :youtube-url="$youtubeUrl" save-action="saveYouTubeUrl" remove-action="removeYouTubeUrl" />
 
                 <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">
-                    {{ __('Public media can be seen by other choirTrends users, and public YouTube links also appear on your published digital programs. Private media is visible only to you.') }}
+                    {{ __('Public media can be seen by other ChoirTrends users, and public YouTube links also appear on your published digital programs. Private media is visible only to you.') }}
                 </flux:text>
             </section>
 

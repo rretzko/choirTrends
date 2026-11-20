@@ -90,7 +90,7 @@
             </div>
 
             <flux:text class="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
-                {{ __('Public media can be seen by other choirTrends users, and a public YouTube link also appears on your published digital programs. Private media is visible only to you.') }}
+                {{ __('Public media can be seen by other ChoirTrends users, and a public YouTube link also appears on your published digital programs. Private media is visible only to you.') }}
             </flux:text>
         </div>
 
