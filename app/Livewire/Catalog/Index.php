@@ -6,6 +6,7 @@ namespace App\Livewire\Catalog;
 
 use App\Models\Ensemble;
 use App\Models\Program;
+use App\Models\ProgramSongTitlePivot;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -31,6 +32,8 @@ class Index extends Component
     public bool $showConcertVideo = false;
 
     public bool $isAudio = false;
+
+    public ?string $youtubeEmbedUrl = null;
 
     public function mount(string $token): void
     {
@@ -116,6 +119,7 @@ class Index extends Component
         $this->videoSongName = $songName;
         $this->showConcertVideo = false;
         $this->isAudio = $isAudio;
+        $this->youtubeEmbedUrl = null;
 
         $this->modal('catalog-video-player')->show();
     }
@@ -131,6 +135,53 @@ class Index extends Component
         $this->videoSongName = '';
         $this->showConcertVideo = true;
         $this->isAudio = false;
+        $this->youtubeEmbedUrl = null;
+
+        $this->modal('catalog-video-player')->show();
+    }
+
+    public function playSongYouTube(int $songTitleId, string $songName): void
+    {
+        if (! $this->selectedProgram) {
+            return;
+        }
+
+        /** @var ProgramSongTitlePivot|null $pivot */
+        $pivot = $this->selectedProgram->songTitles()
+            ->wherePivot('song_title_id', $songTitleId)
+            ->first()
+            ?->pivot;
+
+        $youTube = $pivot?->youTube();
+
+        if (! $youTube) {
+            return;
+        }
+
+        $this->videoProgramId = $this->selectedProgram->id;
+        $this->videoSongTitleId = $songTitleId;
+        $this->videoSongName = $songName;
+        $this->showConcertVideo = false;
+        $this->isAudio = false;
+        $this->youtubeEmbedUrl = $youTube->embedUrl();
+
+        $this->modal('catalog-video-player')->show();
+    }
+
+    public function playConcertYouTube(): void
+    {
+        $youTube = $this->selectedProgram?->youTube();
+
+        if (! $this->selectedProgram || ! $youTube) {
+            return;
+        }
+
+        $this->videoProgramId = $this->selectedProgram->id;
+        $this->videoSongTitleId = null;
+        $this->videoSongName = '';
+        $this->showConcertVideo = true;
+        $this->isAudio = false;
+        $this->youtubeEmbedUrl = $youTube->embedUrl();
 
         $this->modal('catalog-video-player')->show();
     }

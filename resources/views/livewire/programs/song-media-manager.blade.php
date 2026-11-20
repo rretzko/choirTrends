@@ -10,7 +10,16 @@
 
             {{-- Audio / Video --}}
             <section class="space-y-3">
-                <flux:heading size="sm">{{ __('Audio / Video') }}</flux:heading>
+                <div class="flex items-center justify-between gap-3">
+                    <flux:heading size="sm">{{ __('Audio / Video') }}</flux:heading>
+
+                    @if ($videoPath || $youtubeUrl)
+                        <flux:button wire:click="toggleAudioVideoVisibility" type="button" variant="ghost" size="sm" title="{{ __('Toggle who can see this media') }}">
+                            <flux:icon name="{{ $videoVisibility === 'Public' ? 'eye' : 'eye-slash' }}" class="size-4" />
+                            {{ $videoVisibility === 'Public' ? __('Public') : __('Private') }}
+                        </flux:button>
+                    @endif
+                </div>
 
                 @if ($videoPath)
                     <div class="flex items-center gap-3">
@@ -22,11 +31,6 @@
                             <flux:icon name="{{ $isAudio ? 'musical-note' : 'video-camera' }}" class="size-5" />
                             <span>{{ $isAudio ? __('Audio uploaded') : __('Video uploaded') }}</span>
                         </div>
-
-                        <flux:button wire:click="toggleAudioVideoVisibility" type="button" variant="ghost" size="sm">
-                            <flux:icon name="{{ $videoVisibility === 'Public' ? 'eye' : 'eye-slash' }}" class="size-4" />
-                            {{ $videoVisibility === 'Public' ? __('Public') : __('Private') }}
-                        </flux:button>
 
                         <flux:button wire:click="removeAudioVideo" wire:confirm="{{ __('Remove this file?') }}" type="button" variant="ghost" size="sm" class="text-red-600 hover:text-red-500">
                             <flux:icon name="trash" class="size-4" />
@@ -52,6 +56,12 @@
                         @error('audioVideoUpload') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                 @endif
+
+                <x-programs.youtube-link-field :youtube-url="$youtubeUrl" save-action="saveYouTubeUrl" remove-action="removeYouTubeUrl" />
+
+                <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">
+                    {{ __('Public media can be seen by other choirTrends users, and public YouTube links also appear on your published digital programs. Private media is visible only to you.') }}
+                </flux:text>
             </section>
 
             {{-- Lyrics / Text --}}

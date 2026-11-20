@@ -127,11 +127,18 @@
                     </div>
                 </div>
 
-                @if ($selectedProgram->video_path)
-                    <div>
-                        <flux:button wire:click="playConcertVideo" type="button" variant="filled" size="sm" icon="video-camera" class="text-teal-600">
-                            {{ __('Watch Concert Video') }}
-                        </flux:button>
+                @if ($selectedProgram->video_path || $selectedProgram->youtube_url)
+                    <div class="flex flex-wrap gap-2">
+                        @if ($selectedProgram->video_path)
+                            <flux:button wire:click="playConcertVideo" type="button" variant="filled" size="sm" icon="video-camera" class="text-teal-600">
+                                {{ __('Watch Concert Video') }}
+                            </flux:button>
+                        @endif
+                        @if ($selectedProgram->youtube_url)
+                            <flux:button wire:click="playConcertYouTube" type="button" variant="filled" size="sm" icon="play-circle" class="text-teal-600">
+                                {{ __('Watch on YouTube') }}
+                            </flux:button>
+                        @endif
                     </div>
                 @endif
 
@@ -153,6 +160,15 @@
                                                     class="mr-1 inline cursor-pointer align-middle"
                                                 >
                                                     <flux:icon name="{{ $songIsAudio ? 'musical-note' : 'video-camera' }}" class="inline size-4 text-teal-600 hover:text-teal-500" />
+                                                </button>
+                                            @endif
+                                            @if ($songTitle->pivot?->youtube_url)
+                                                <button
+                                                    wire:click="playSongYouTube({{ $songTitle->id }}, '{{ addslashes($songTitle->song_title) }}')"
+                                                    title="{{ __('Watch on YouTube') }}"
+                                                    class="mr-1 inline cursor-pointer align-middle"
+                                                >
+                                                    <flux:icon name="play-circle" class="inline size-4 text-teal-600 hover:text-teal-500" />
                                                 </button>
                                             @endif
                                             {{ $songTitle->song_title }}
@@ -199,7 +215,11 @@
                         ? route('catalog.videos.program', [$user->catalog_token, $videoProgramId])
                         : route('catalog.videos.song', [$user->catalog_token, $videoProgramId, $videoSongTitleId]);
                 @endphp
-                @if ($isAudio && ! $showConcertVideo)
+                @if ($youtubeEmbedUrl)
+                    <div class="aspect-video w-full overflow-hidden rounded-lg">
+                        <iframe class="h-full w-full" src="{{ $youtubeEmbedUrl }}" title="{{ __('YouTube video player') }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                    </div>
+                @elseif ($isAudio && ! $showConcertVideo)
                     <audio controls class="w-full" src="{{ $mediaSrc }}">
                         {{ __('Your browser does not support the audio tag.') }}
                     </audio>

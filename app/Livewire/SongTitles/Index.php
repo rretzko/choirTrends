@@ -14,6 +14,7 @@ use App\Livewire\Concerns\ChecksProgramCompliance;
 use App\Models\RepertoireQuery;
 use App\Models\SongTitle;
 use App\Services\RepertoireSearchService;
+use App\Services\YouTubeUrl;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -72,6 +73,8 @@ class Index extends Component
     public string $videoSongName = '';
 
     public bool $isAudio = false;
+
+    public ?string $youtubeEmbedUrl = null;
 
     public function sort(string $column): void
     {
@@ -203,44 +206,85 @@ class Index extends Component
         $this->videoProgramId = $programId;
         $this->videoSongName = $songName;
         $this->isAudio = $isAudio;
+        $this->youtubeEmbedUrl = null;
+
+        $this->modal('song-video-player')->show();
+    }
+
+    public function playYouTube(int $songTitleId, int $programId, string $songName): void
+    {
+        $storedUrl = DB::table('program_song_title')
+            ->join('programs', 'programs.id', '=', 'program_song_title.program_id')
+            ->where('program_song_title.song_title_id', $songTitleId)
+            ->where('program_song_title.program_id', $programId)
+            ->whereNotNull('program_song_title.youtube_url')
+            ->where(function ($q) {
+                $q->where('programs.user_id', Auth::id())
+                    ->orWhere('program_song_title.video_visibility', VideoVisibility::Public->value);
+            })
+            ->value('program_song_title.youtube_url');
+
+        $youTube = YouTubeUrl::parse(is_string($storedUrl) ? $storedUrl : null);
+
+        if (! $youTube) {
+            return;
+        }
+
+        $this->videoSongTitleId = $songTitleId;
+        $this->videoProgramId = $programId;
+        $this->videoSongName = $songName;
+        $this->isAudio = false;
+        $this->youtubeEmbedUrl = $youTube->embedUrl();
 
         $this->modal('song-video-player')->show();
     }
 
     /**
-     * Build a map of song_title_id => [{program_id, program_name, is_audio}] for songs with viewable videos,
-     * scoped to only the given song IDs (the current page) so this stays bounded as the catalog grows.
+     * Build a map of song_title_id => {program_id, program_name, is_audio, youtube_program_id} for songs with
+     * viewable uploaded media and/or YouTube links, scoped to only the given song IDs (the current page)
+     * so this stays bounded as the catalog grows. program_id is null when only a YouTube link is viewable.
      *
      * @param  Collection<int, int>  $songTitleIds
-     * @return Collection<int|string, array{program_id: int, program_name: string, is_audio: bool}>
+     * @return array<int, array{program_id: int|null, program_name: string, is_audio: bool, youtube_program_id: int|null}>
      */
-    private function getViewableVideoMap(Collection $songTitleIds): Collection
+    private function getViewableVideoMap(Collection $songTitleIds): array
     {
         $userId = Auth::id();
 
         $rows = DB::table('program_song_title')
             ->join('programs', 'programs.id', '=', 'program_song_title.program_id')
             ->whereIn('program_song_title.song_title_id', $songTitleIds)
-            ->whereNotNull('program_song_title.video_path')
+            ->where(function ($q) {
+                $q->whereNotNull('program_song_title.video_path')
+                    ->orWhereNotNull('program_song_title.youtube_url');
+            })
             ->where(function ($q) use ($userId) {
                 $q->where('programs.user_id', $userId)
                     ->orWhere('program_song_title.video_visibility', VideoVisibility::Public->value);
             })
-            ->select('program_song_title.song_title_id', 'programs.id as program_id', 'programs.event_name', 'program_song_title.video_path')
+            ->select('program_song_title.song_title_id', 'programs.id as program_id', 'programs.event_name', 'program_song_title.video_path', 'program_song_title.youtube_url')
             ->get();
 
-        return $rows->groupBy('song_title_id')->map(function ($items) {
-            /** @var object{program_id: int, event_name: string, video_path: string} $row */
-            $row = $items->first();
+        $map = [];
 
-            $ext = strtolower(pathinfo((string) $row->video_path, PATHINFO_EXTENSION));
+        foreach ($rows->groupBy('song_title_id') as $songTitleId => $items) {
+            /** @var object{program_id: int, event_name: string, video_path: string|null, youtube_url: string|null}|null $fileRow */
+            $fileRow = $items->first(fn ($item) => $item->video_path !== null);
 
-            return [
-                'program_id' => (int) $row->program_id,
-                'program_name' => (string) $row->event_name,
+            /** @var object{program_id: int, event_name: string, video_path: string|null, youtube_url: string|null}|null $youTubeRow */
+            $youTubeRow = $items->first(fn ($item) => $item->youtube_url !== null);
+
+            $ext = $fileRow !== null ? strtolower(pathinfo((string) $fileRow->video_path, PATHINFO_EXTENSION)) : '';
+
+            $map[(int) $songTitleId] = [
+                'program_id' => $fileRow !== null ? (int) $fileRow->program_id : null,
+                'program_name' => (string) ($fileRow ?? $youTubeRow)?->event_name,
                 'is_audio' => in_array($ext, ['mp3', 'wav', 'm4a', 'ogg', 'flac', 'aac', 'wma']),
+                'youtube_program_id' => $youTubeRow !== null ? (int) $youTubeRow->program_id : null,
             ];
-        });
+        }
+
+        return $map;
     }
 
     /**
@@ -454,7 +498,7 @@ class Index extends Component
             $songTitles = $query->paginate(20);
 
             $songTitleIds = $songTitles->pluck('id');
-            $viewableVideoMap = $this->getViewableVideoMap($songTitleIds);
+            $viewableVideoMap = collect($this->getViewableVideoMap($songTitleIds));
             $ensembleTypeMap = $this->getEnsembleTypeMap($songTitleIds);
             $difficultyMap = $this->getDifficultyMap($songTitleIds);
         }

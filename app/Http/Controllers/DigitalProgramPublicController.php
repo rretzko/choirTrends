@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\VideoVisibility;
 use App\Models\DigitalProgram;
 use App\Models\Ensemble;
+use App\Models\ProgramSongTitlePivot;
 use App\Models\UserSongLyrics;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -208,6 +210,22 @@ class DigitalProgramPublicController extends Controller
                 ->keyBy('song_title_id')
             : collect();
 
+        // ── Public YouTube links (song-level and concert-level) ──────────────
+        $youTubeBySongId = [];
+
+        foreach ($dp->program->songTitles ?? [] as $songTitle) {
+            /** @var ProgramSongTitlePivot $pivot */
+            $pivot = $songTitle->pivot;
+
+            if ($pivot->video_visibility === VideoVisibility::Public->value && ($youTube = $pivot->youTube())) {
+                $youTubeBySongId[$songTitle->id] = $youTube;
+            }
+        }
+
+        $concertYouTube = $dp->program?->video_visibility === VideoVisibility::Public
+            ? $dp->program->youTube()
+            : null;
+
         return compact(
             'ensembleGroups',
             'rostersByEnsemble',
@@ -215,6 +233,8 @@ class DigitalProgramPublicController extends Controller
             'notesBySongId',
             'showLyricsSongIds',
             'lyricsBySongId',
+            'youTubeBySongId',
+            'concertYouTube',
         );
     }
 

@@ -44,7 +44,16 @@
 
         {{-- Concert Video --}}
         <div class="rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
-            <flux:heading size="sm" class="mb-3">{{ __('Concert Video') }}</flux:heading>
+            <div class="mb-3 flex items-center justify-between gap-3">
+                <flux:heading size="sm">{{ __('Concert Video') }}</flux:heading>
+
+                @if ($hasProgramVideo || $programYoutubeUrl)
+                    <flux:button wire:click="toggleProgramVideoVisibility" type="button" variant="ghost" size="sm" title="{{ __('Toggle who can see this media') }}">
+                        <flux:icon name="{{ $programVideoVisibility === 'Public' ? 'eye' : 'eye-slash' }}" class="size-4" />
+                        {{ $programVideoVisibility === 'Public' ? __('Public') : __('Private') }}
+                    </flux:button>
+                @endif
+            </div>
 
             @if ($hasProgramVideo)
                 <div class="flex items-center gap-3">
@@ -52,10 +61,6 @@
                         <flux:icon name="video-camera" class="size-5" />
                         <span>{{ __('Video uploaded') }}</span>
                     </div>
-                    <flux:button wire:click="toggleProgramVideoVisibility" type="button" variant="ghost" size="sm">
-                        <flux:icon name="{{ $programVideoVisibility === 'Public' ? 'eye' : 'eye-slash' }}" class="size-4" />
-                        {{ $programVideoVisibility === 'Public' ? __('Public') : __('Private') }}
-                    </flux:button>
                     <flux:button wire:click="removeProgramVideo" wire:confirm="{{ __('Remove this video?') }}" type="button" variant="ghost" size="sm" class="text-red-600 hover:text-red-500">
                         <flux:icon name="trash" class="size-4" />
                     </flux:button>
@@ -79,6 +84,14 @@
                     @error('programVideo') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
             @endif
+
+            <div class="mt-4">
+                <x-programs.youtube-link-field :youtube-url="$programYoutubeUrl" model="programYoutubeUrlInput" save-action="saveProgramYouTubeUrl" remove-action="removeProgramYouTubeUrl" />
+            </div>
+
+            <flux:text class="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+                {{ __('Public media can be seen by other choirTrends users, and a public YouTube link also appears on your published digital programs. Private media is visible only to you.') }}
+            </flux:text>
         </div>
 
         {{-- Ensembles --}}
@@ -180,6 +193,11 @@
                                         @else
                                             <flux:icon name="video-camera" class="size-4" />
                                         @endif
+                                    </div>
+                                @endif
+                                @if ($song['youtubeUrl'] ?? null)
+                                    <div class="flex items-center gap-1 text-xs text-teal-600 dark:text-teal-400" title="{{ __('YouTube link') }} ({{ $song['videoVisibility'] === 'Public' ? __('Public') : __('Private') }})">
+                                        <flux:icon name="play-circle" class="size-4" />
                                     </div>
                                 @endif
                                 @if ($song['hasLyrics'])

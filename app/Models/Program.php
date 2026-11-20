@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\VideoVisibility;
+use App\Services\YouTubeUrl;
 use Database\Factories\ProgramFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +32,7 @@ class Program extends Model
         'video_path',
         'video_visibility',
         'video_uploaded_at',
+        'youtube_url',
     ];
 
     protected function casts(): array
@@ -57,7 +59,7 @@ class Program extends Model
     {
         return $this->belongsToMany(SongTitle::class)
             ->using(ProgramSongTitlePivot::class)
-            ->withPivot('ensemble_id', 'sort_order', 'ensemble_sort_order', 'video_path', 'video_visibility', 'video_uploaded_at', 'notes', 'ensemble_director')
+            ->withPivot('ensemble_id', 'sort_order', 'ensemble_sort_order', 'video_path', 'video_visibility', 'video_uploaded_at', 'youtube_url', 'notes', 'ensemble_director')
             ->orderByPivot('ensemble_sort_order')
             ->orderByPivot('sort_order');
     }
@@ -70,6 +72,11 @@ class Program extends Model
     public function hasVideo(): bool
     {
         return $this->video_path !== null;
+    }
+
+    public function youTube(): ?YouTubeUrl
+    {
+        return YouTubeUrl::parse($this->youtube_url);
     }
 
     /** @return BelongsToMany<Ensemble, $this, Pivot, 'pivot'> */

@@ -20,6 +20,7 @@ use App\Models\UserSongFile;
 use App\Models\UserSongLyrics;
 use App\Services\ArtistNameParser;
 use App\Services\SongTitleUserDataService;
+use App\Services\YouTubeUrl;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -53,7 +54,11 @@ class Edit extends Component
 
     public bool $hasProgramVideo = false;
 
-    /** @var array<int, array{id: int|null, name: string, director: string, type: string, editable: bool, songs: list<array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int, notes: string, videoPath: string|null, videoVisibility: string, hasLyrics: bool, hasSheetMusic: bool, difficulty: string, tags: list<array{id: int, tag: string, mine: bool}>, newTag: string}>}> */
+    public ?string $programYoutubeUrl = null;
+
+    public string $programYoutubeUrlInput = '';
+
+    /** @var array<int, array{id: int|null, name: string, director: string, type: string, editable: bool, songs: list<array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int, notes: string, videoPath: string|null, videoVisibility: string, youtubeUrl: string|null, hasLyrics: bool, hasSheetMusic: bool, difficulty: string, tags: list<array{id: int, tag: string, mine: bool}>, newTag: string}>}> */
     public array $ensembles = [];
 
     public function mount(Program $program): void
@@ -71,6 +76,8 @@ class Edit extends Component
         $this->programVideoVisibility = $program->video_visibility instanceof VideoVisibility
             ? $program->video_visibility->value
             : 'Private';
+        $this->programYoutubeUrl = $program->youtube_url;
+        $this->programYoutubeUrlInput = $program->youtube_url ?? '';
 
         $this->computeEditability();
     }
@@ -90,7 +97,7 @@ class Edit extends Component
     }
 
     /**
-     * @return array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int, notes: string, videoPath: string|null, videoVisibility: string, hasLyrics: bool, hasSheetMusic: bool, difficulty: string, tags: list<array{id: int, tag: string, mine: bool}>, newTag: string}
+     * @return array{songTitleId: int|null, title: string, titleEditable: bool, composer: string, composerEditable: bool, arranger: string, arrangerEditable: bool, composerId: int|null, arrangerId: int|null, sortOrder: int, notes: string, videoPath: string|null, videoVisibility: string, youtubeUrl: string|null, hasLyrics: bool, hasSheetMusic: bool, difficulty: string, tags: list<array{id: int, tag: string, mine: bool}>, newTag: string}
      */
     private function newSongRow(int $sortOrder): array
     {
@@ -108,6 +115,7 @@ class Edit extends Component
             'notes' => '',
             'videoPath' => null,
             'videoVisibility' => 'Private',
+            'youtubeUrl' => null,
             'hasLyrics' => false,
             'hasSheetMusic' => false,
             'difficulty' => '',
@@ -250,18 +258,57 @@ class Edit extends Component
 
         $this->program->update([
             'video_path' => null,
-            'video_visibility' => null,
+            'video_visibility' => $this->programYoutubeUrl !== null ? $this->program->video_visibility : null,
             'video_uploaded_at' => null,
         ]);
 
         $this->hasProgramVideo = false;
+
+        if ($this->programYoutubeUrl === null) {
+            $this->programVideoVisibility = VideoVisibility::Private->value;
+        }
+    }
+
+    public function saveProgramYouTubeUrl(): void
+    {
+        $this->validate(
+            ['programYoutubeUrlInput' => ['required', 'string', 'max:2048', YouTubeUrl::rule()]],
+            ['programYoutubeUrlInput.required' => __('Paste a YouTube link first.')],
+        );
+
+        $normalized = YouTubeUrl::normalize($this->programYoutubeUrlInput);
+
+        $this->program->update([
+            'youtube_url' => $normalized,
+            'video_visibility' => VideoVisibility::from($this->programVideoVisibility),
+        ]);
+
+        $this->programYoutubeUrl = $normalized;
+        $this->programYoutubeUrlInput = (string) $normalized;
+    }
+
+    public function removeProgramYouTubeUrl(): void
+    {
+        $this->program->update([
+            'youtube_url' => null,
+            'video_visibility' => $this->hasProgramVideo ? $this->program->video_visibility : null,
+        ]);
+
+        $this->programYoutubeUrl = null;
+        $this->programYoutubeUrlInput = '';
+
+        if (! $this->hasProgramVideo) {
+            $this->programVideoVisibility = VideoVisibility::Private->value;
+        }
+
+        $this->resetErrorBag('programYoutubeUrlInput');
     }
 
     public function toggleProgramVideoVisibility(): void
     {
-        $newVisibility = $this->program->video_visibility === VideoVisibility::Private
-            ? VideoVisibility::Public
-            : VideoVisibility::Private;
+        $newVisibility = $this->program->video_visibility === VideoVisibility::Public
+            ? VideoVisibility::Private
+            : VideoVisibility::Public;
 
         $this->program->update(['video_visibility' => $newVisibility]);
         $this->programVideoVisibility = $newVisibility->value;
@@ -270,7 +317,7 @@ class Edit extends Component
     #[On('song-media-updated')]
     public function refreshSongMedia(int $songTitleId): void
     {
-        /** @var object{video_path: string|null, video_visibility: string|null}|null $pivot */
+        /** @var object{video_path: string|null, video_visibility: string|null, youtube_url: string|null}|null $pivot */
         $pivot = $this->program->songTitles()
             ->wherePivot('song_title_id', $songTitleId)
             ->first()
@@ -296,6 +343,7 @@ class Edit extends Component
                 if (($song['songTitleId'] ?? null) === $songTitleId) {
                     $this->ensembles[$eIndex]['songs'][$sIndex]['videoPath'] = $pivot->video_path;
                     $this->ensembles[$eIndex]['songs'][$sIndex]['videoVisibility'] = $pivot->video_visibility ?? 'Private';
+                    $this->ensembles[$eIndex]['songs'][$sIndex]['youtubeUrl'] = $pivot->youtube_url;
                     $this->ensembles[$eIndex]['songs'][$sIndex]['hasLyrics'] = $hasLyrics;
                     $this->ensembles[$eIndex]['songs'][$sIndex]['hasSheetMusic'] = $hasSheetMusic;
                 }
@@ -431,8 +479,9 @@ class Edit extends Component
                         'notes' => $notes !== '' ? Purifier::clean($notes, 'program_notes') : null,
                         'ensemble_director' => ! empty($ensembleData['director']) ? $ensembleData['director'] : null,
                         'video_path' => $songData['videoPath'] ?? null,
-                        'video_visibility' => ($songData['videoPath'] ?? null) ? ($songData['videoVisibility'] ?? 'Private') : null,
+                        'video_visibility' => ($songData['videoPath'] ?? null) || ($songData['youtubeUrl'] ?? null) ? ($songData['videoVisibility'] ?? 'Private') : null,
                         'video_uploaded_at' => ($songData['videoPath'] ?? null) ? now() : null,
+                        'youtube_url' => YouTubeUrl::normalize($songData['youtubeUrl'] ?? null),
                     ];
                 }
             }
@@ -551,7 +600,7 @@ class Edit extends Component
                         ->exists();
                 }
 
-                /** @var object{sort_order: int, video_path: string|null, video_visibility: string|null, notes: string|null, ensemble_director: string|null} $pivot */
+                /** @var object{sort_order: int, video_path: string|null, video_visibility: string|null, youtube_url: string|null, notes: string|null, ensemble_director: string|null} $pivot */
                 $pivot = $songTitle->pivot;
 
                 $songsArray[] = [
@@ -568,6 +617,7 @@ class Edit extends Component
                     'notes' => $pivot->notes ?? '',
                     'videoPath' => $pivot->video_path,
                     'videoVisibility' => $pivot->video_visibility ?? 'Private',
+                    'youtubeUrl' => $pivot->youtube_url,
                     'hasLyrics' => isset($lyricsSongIds[$songTitle->id]),
                     'hasSheetMusic' => isset($sheetMusicSongIds[$songTitle->id]),
                     'difficulty' => $myDifficultyBySongTitle[$songTitle->id] ?? '',

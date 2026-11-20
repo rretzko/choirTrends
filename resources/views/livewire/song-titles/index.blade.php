@@ -254,13 +254,24 @@
                     <div class="flex items-center gap-2">
                         @if ($viewableVideoMap->has($songTitle->id))
                             @php $mapEntry = $viewableVideoMap->get($songTitle->id); @endphp
-                            <button
-                                wire:click="playVideo({{ $songTitle->id }}, {{ $mapEntry['program_id'] }}, '{{ addslashes($songTitle->song_title) }}', {{ $mapEntry['is_audio'] ? 'true' : 'false' }})"
-                                title="{{ $mapEntry['is_audio'] ? __('Listen') : __('Watch Video') }}"
-                                class="cursor-pointer"
-                            >
-                                <flux:icon name="{{ $mapEntry['is_audio'] ? 'musical-note' : 'video-camera' }}" class="size-5 text-teal-600 hover:text-teal-500" />
-                            </button>
+                            @if ($mapEntry['program_id'])
+                                <button
+                                    wire:click="playVideo({{ $songTitle->id }}, {{ $mapEntry['program_id'] }}, '{{ addslashes($songTitle->song_title) }}', {{ $mapEntry['is_audio'] ? 'true' : 'false' }})"
+                                    title="{{ $mapEntry['is_audio'] ? __('Listen') : __('Watch Video') }}"
+                                    class="cursor-pointer"
+                                >
+                                    <flux:icon name="{{ $mapEntry['is_audio'] ? 'musical-note' : 'video-camera' }}" class="size-5 text-teal-600 hover:text-teal-500" />
+                                </button>
+                            @endif
+                            @if ($mapEntry['youtube_program_id'])
+                                <button
+                                    wire:click="playYouTube({{ $songTitle->id }}, {{ $mapEntry['youtube_program_id'] }}, '{{ addslashes($songTitle->song_title) }}')"
+                                    title="{{ __('Watch performance on YouTube') }}"
+                                    class="cursor-pointer"
+                                >
+                                    <flux:icon name="play-circle" class="size-5 text-teal-600 hover:text-teal-500" />
+                                </button>
+                            @endif
                         @endif
                         <a href="https://www.youtube.com/results?search_query={{ urlencode($songTitle->song_title . ' ' . ($songTitle->composer?->artist_name ?? '')) }}" target="_blank" rel="noopener noreferrer" title="{{ __('Search YouTube') }}">
                             <svg class="size-5 text-red-600 hover:text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
@@ -430,16 +441,27 @@
                             </div>
                         </td>
                         <td class="px-2 py-2">
-                            <div class="flex items-center justify-center">
+                            <div class="flex items-center justify-center gap-1">
                                 @if ($viewableVideoMap->has($songTitle->id))
                                     @php $mapEntry = $viewableVideoMap->get($songTitle->id); @endphp
-                                    <button
-                                        wire:click="playVideo({{ $songTitle->id }}, {{ $mapEntry['program_id'] }}, '{{ addslashes($songTitle->song_title) }}', {{ $mapEntry['is_audio'] ? 'true' : 'false' }})"
-                                        title="{{ $mapEntry['is_audio'] ? __('Listen') : __('Watch Video') }}"
-                                        class="cursor-pointer"
-                                    >
-                                        <flux:icon name="{{ $mapEntry['is_audio'] ? 'musical-note' : 'video-camera' }}" class="size-5 text-teal-600 hover:text-teal-500" />
-                                    </button>
+                                    @if ($mapEntry['program_id'])
+                                        <button
+                                            wire:click="playVideo({{ $songTitle->id }}, {{ $mapEntry['program_id'] }}, '{{ addslashes($songTitle->song_title) }}', {{ $mapEntry['is_audio'] ? 'true' : 'false' }})"
+                                            title="{{ $mapEntry['is_audio'] ? __('Listen') : __('Watch Video') }}"
+                                            class="cursor-pointer"
+                                        >
+                                            <flux:icon name="{{ $mapEntry['is_audio'] ? 'musical-note' : 'video-camera' }}" class="size-5 text-teal-600 hover:text-teal-500" />
+                                        </button>
+                                    @endif
+                                    @if ($mapEntry['youtube_program_id'])
+                                        <button
+                                            wire:click="playYouTube({{ $songTitle->id }}, {{ $mapEntry['youtube_program_id'] }}, '{{ addslashes($songTitle->song_title) }}')"
+                                            title="{{ __('Watch performance on YouTube') }}"
+                                            class="cursor-pointer"
+                                        >
+                                            <flux:icon name="play-circle" class="size-5 text-teal-600 hover:text-teal-500" />
+                                        </button>
+                                    @endif
                                 @endif
                             </div>
                         </td>
@@ -534,7 +556,11 @@
         @if ($videoSongTitleId && $videoProgramId)
             <div class="space-y-4">
                 <flux:heading size="lg">{{ $videoSongName }}</flux:heading>
-                @if ($isAudio)
+                @if ($youtubeEmbedUrl)
+                    <div class="aspect-video w-full overflow-hidden rounded-lg">
+                        <iframe class="h-full w-full" src="{{ $youtubeEmbedUrl }}" title="{{ __('YouTube video player') }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                    </div>
+                @elseif ($isAudio)
                     <audio
                         controls
                         class="w-full"

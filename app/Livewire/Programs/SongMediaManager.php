@@ -9,6 +9,7 @@ use App\Models\Program;
 use App\Models\SongTitle;
 use App\Models\UserSongFile;
 use App\Models\UserSongLyrics;
+use App\Services\YouTubeUrl;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -34,6 +35,10 @@ class SongMediaManager extends Component
     /** @var TemporaryUploadedFile|null */
     public $audioVideoUpload;
 
+    public ?string $youtubeUrl = null;
+
+    public string $youtubeUrlInput = '';
+
     public string $lyrics = '';
 
     public bool $hasLyrics = false;
@@ -53,7 +58,7 @@ class SongMediaManager extends Component
 
         $songTitle = SongTitle::findOrFail($songTitleId);
 
-        /** @var object{video_path: string|null, video_visibility: string|null}|null $pivot */
+        /** @var object{video_path: string|null, video_visibility: string|null, youtube_url: string|null}|null $pivot */
         $pivot = $this->program->songTitles()
             ->wherePivot('song_title_id', $songTitleId)
             ->first()
@@ -66,6 +71,8 @@ class SongMediaManager extends Component
         $this->videoPath = $pivot->video_path;
         $this->videoVisibility = $pivot->video_visibility ?? 'Private';
         $this->audioVideoUpload = null;
+        $this->youtubeUrl = $pivot->youtube_url;
+        $this->youtubeUrlInput = $pivot->youtube_url ?? '';
 
         $existingLyrics = UserSongLyrics::query()
             ->where('user_id', auth()->id())
@@ -114,14 +121,16 @@ class SongMediaManager extends Component
 
         $path = $this->audioVideoUpload->store('mp4s/songs');
 
+        $visibility = $this->youtubeUrl !== null ? $this->videoVisibility : VideoVisibility::Private->value;
+
         $this->program->songTitles()->updateExistingPivot($this->songTitleId, [
             'video_path' => $path,
-            'video_visibility' => 'Private',
+            'video_visibility' => $visibility,
             'video_uploaded_at' => now(),
         ]);
 
         $this->videoPath = $path;
-        $this->videoVisibility = 'Private';
+        $this->videoVisibility = $visibility;
         $this->audioVideoUpload = null;
 
         $this->dispatch('song-media-updated', songTitleId: $this->songTitleId);
@@ -137,19 +146,73 @@ class SongMediaManager extends Component
 
         $this->program->songTitles()->updateExistingPivot($this->songTitleId, [
             'video_path' => null,
-            'video_visibility' => null,
+            'video_visibility' => $this->youtubeUrl !== null ? $this->videoVisibility : null,
             'video_uploaded_at' => null,
         ]);
 
         $this->videoPath = null;
-        $this->videoVisibility = 'Private';
+
+        if ($this->youtubeUrl === null) {
+            $this->videoVisibility = VideoVisibility::Private->value;
+        }
+
+        $this->dispatch('song-media-updated', songTitleId: $this->songTitleId);
+    }
+
+    public function saveYouTubeUrl(): void
+    {
+        if ($this->songTitleId === null) {
+            return;
+        }
+
+        $this->validate(
+            ['youtubeUrlInput' => ['required', 'string', 'max:2048', YouTubeUrl::rule()]],
+            ['youtubeUrlInput.required' => __('Paste a YouTube link first.')],
+        );
+
+        $normalized = YouTubeUrl::normalize($this->youtubeUrlInput);
+        $visibility = $this->videoPath !== null || $this->youtubeUrl !== null
+            ? $this->videoVisibility
+            : VideoVisibility::Private->value;
+
+        $this->program->songTitles()->updateExistingPivot($this->songTitleId, [
+            'youtube_url' => $normalized,
+            'video_visibility' => $visibility,
+        ]);
+
+        $this->youtubeUrl = $normalized;
+        $this->youtubeUrlInput = (string) $normalized;
+        $this->videoVisibility = $visibility;
+
+        $this->dispatch('song-media-updated', songTitleId: $this->songTitleId);
+    }
+
+    public function removeYouTubeUrl(): void
+    {
+        if ($this->songTitleId === null || $this->youtubeUrl === null) {
+            return;
+        }
+
+        $this->program->songTitles()->updateExistingPivot($this->songTitleId, [
+            'youtube_url' => null,
+            'video_visibility' => $this->videoPath !== null ? $this->videoVisibility : null,
+        ]);
+
+        $this->youtubeUrl = null;
+        $this->youtubeUrlInput = '';
+
+        if ($this->videoPath === null) {
+            $this->videoVisibility = VideoVisibility::Private->value;
+        }
+
+        $this->resetErrorBag('youtubeUrlInput');
 
         $this->dispatch('song-media-updated', songTitleId: $this->songTitleId);
     }
 
     public function toggleAudioVideoVisibility(): void
     {
-        if ($this->songTitleId === null || $this->videoPath === null) {
+        if ($this->songTitleId === null || ($this->videoPath === null && $this->youtubeUrl === null)) {
             return;
         }
 

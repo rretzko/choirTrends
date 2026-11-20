@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\YouTubeUrl;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
@@ -14,6 +15,13 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property string|null $video_path
  * @property string|null $video_visibility
  * @property string|null $video_uploaded_at
+ * @property string|null $youtube_url
  * @property string|null $notes
  */
-class ProgramSongTitlePivot extends Pivot {}
+class ProgramSongTitlePivot extends Pivot
+{
+    public function youTube(): ?YouTubeUrl
+    {
+        return YouTubeUrl::parse($this->youtube_url);
+    }
+}

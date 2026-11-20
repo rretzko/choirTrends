@@ -239,6 +239,22 @@
         </section>
     @endif
 
+    {{-- ── Concert video (public YouTube link) ── --}}
+    @if($concertYouTube)
+        <section class="no-print mb-10 rounded-xl p-6"
+            style="background: var(--dp-surface); border: 1px solid var(--dp-border);">
+            <h2 class="mb-3 text-xs font-bold uppercase tracking-widest"
+                style="color: var(--dp-section-lbl);">
+                {{ __('Watch the Concert') }}
+            </h2>
+            <div class="aspect-video w-full overflow-hidden rounded-lg">
+                <iframe class="h-full w-full" src="{{ $concertYouTube->embedUrl() }}" title="{{ __('Concert video') }}" loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+        </section>
+    @endif
+
     {{-- ── Ensemble groups ── --}}
     @foreach($ensembleGroups as $group)
         @php
@@ -309,6 +325,22 @@
                                 style="color: var(--dp-text-muted);">
                                 {{ $notesBySongId[$song->id] }}
                             </p>
+                        @endif
+
+                        {{-- Performance video (public YouTube link) --}}
+                        @if(isset($youTubeBySongId[$song->id]))
+                            <details class="no-print mt-2 ml-9">
+                                <summary class="inline-flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium"
+                                    style="color: var(--dp-accent);">
+                                    <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M2 10a8 8 0 1 1 16 0 8 8 0 0 1-16 0Zm6.39-2.908a.75.75 0 0 1 .766.027l3.5 2.25a.75.75 0 0 1 0 1.262l-3.5 2.25A.75.75 0 0 1 8 12.25v-4.5a.75.75 0 0 1 .39-.658Z" clip-rule="evenodd" /></svg>
+                                    {{ __('Watch performance') }}
+                                </summary>
+                                <div class="mt-3 aspect-video w-full overflow-hidden rounded-lg">
+                                    <iframe class="h-full w-full" src="{{ $youTubeBySongId[$song->id]->embedUrl() }}" title="{{ $song->song_title }}" loading="lazy"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                                </div>
+                            </details>
                         @endif
 
                         {{-- Lyrics (if enabled and available) --}}
