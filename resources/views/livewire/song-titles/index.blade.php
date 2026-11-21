@@ -546,6 +546,12 @@
 
                 @if ($aiResult)
                     <x-repertoire.results :result="$aiResult" />
+
+                    @if (! empty($aiResult->response['results'] ?? []))
+                        <div class="flex justify-end">
+                            <x-repertoire.download-menu />
+                        </div>
+                    @endif
                 @endif
             </div>
         </flux:tab.panel>

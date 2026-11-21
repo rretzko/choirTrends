@@ -79,10 +79,13 @@
         @if ($aiResult)
             <x-repertoire.results :result="$aiResult" />
 
-            <div class="flex justify-center">
+            <div class="flex justify-center gap-2">
                 <flux:button type="button" variant="ghost" wire:click="resetAiSearch">
                     {{ __('New search') }}
                 </flux:button>
+                @if (! empty($aiResult->response['results'] ?? []))
+                    <x-repertoire.download-menu />
+                @endif
             </div>
         @endif
     </div>

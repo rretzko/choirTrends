@@ -11,6 +11,7 @@ use App\Enums\VideoVisibility;
 use App\Enums\VoicePart;
 use App\Jobs\ProcessRepertoireSearch;
 use App\Livewire\Concerns\ChecksProgramCompliance;
+use App\Livewire\Concerns\DownloadsRepertoireResults;
 use App\Models\RepertoireQuery;
 use App\Models\SongTitle;
 use App\Services\RepertoireSearchService;
@@ -27,6 +28,7 @@ use Livewire\WithPagination;
 class Index extends Component
 {
     use ChecksProgramCompliance;
+    use DownloadsRepertoireResults;
     use WithPagination;
 
     public string $mode = 'browse';

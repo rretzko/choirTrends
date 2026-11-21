@@ -6,6 +6,7 @@ namespace App\Livewire\Guest;
 
 use App\Enums\RepertoireQuerySource;
 use App\Jobs\ProcessRepertoireSearch;
+use App\Livewire\Concerns\DownloadsRepertoireResults;
 use App\Models\RepertoireQuery;
 use App\Services\RepertoireSearchService;
 use App\Services\TurnstileVerificationService;
@@ -17,6 +18,8 @@ use Livewire\Component;
 
 class RepertoireFinder extends Component
 {
+    use DownloadsRepertoireResults;
+
     public string $query = '';
 
     public ?string $turnstileToken = null;
