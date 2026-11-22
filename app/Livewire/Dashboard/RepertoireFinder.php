@@ -7,7 +7,7 @@ namespace App\Livewire\Dashboard;
 use App\Enums\RepertoireQuerySource;
 use App\Jobs\ProcessRepertoireSearch;
 use App\Livewire\Concerns\ChecksProgramCompliance;
-use App\Livewire\Concerns\DownloadsRepertoireResults;
+use App\Livewire\Concerns\ManagesRepertoireResults;
 use App\Models\RepertoireQuery;
 use App\Services\ProgramComplianceService;
 use App\Services\RepertoireSearchService;
@@ -20,7 +20,7 @@ use Livewire\Component;
 class RepertoireFinder extends Component
 {
     use ChecksProgramCompliance;
-    use DownloadsRepertoireResults;
+    use ManagesRepertoireResults;
 
     public string $query = '';
 
@@ -115,7 +115,7 @@ class RepertoireFinder extends Component
 
     public function render(): View
     {
-        $aiResult = $this->aiResultQueryId ? RepertoireQuery::find($this->aiResultQueryId) : null;
+        $aiResult = $this->ownedAiResult();
         $recentUpload = app(ProgramComplianceService::class)->checkRecentUpload(Auth::user());
 
         return view('livewire.dashboard.repertoire-finder', [

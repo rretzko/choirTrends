@@ -10,21 +10,36 @@ use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Lets the searcher download the current AI repertoire search results as TXT, CSV, or PDF.
+ * Shows and downloads (TXT, CSV, or PDF) the current AI repertoire search results,
+ * limited to the person who ran the search.
  *
  * Requires the using component to expose a public `?int $aiResultQueryId` property.
  */
-trait DownloadsRepertoireResults
+trait ManagesRepertoireResults
 {
-    public function downloadResults(string $format, RepertoireResultsExporter $exporter): ?StreamedResponse
+    /**
+     * The current search result, or null when there is none or it belongs to someone else.
+     */
+    public function ownedAiResult(): ?RepertoireQuery
     {
-        if (! in_array($format, RepertoireResultsExporter::FORMATS, true) || ! $this->aiResultQueryId) {
+        if (! $this->aiResultQueryId) {
             return null;
         }
 
         $repertoireQuery = RepertoireQuery::find($this->aiResultQueryId);
 
-        if (! $repertoireQuery || ! $this->ownsRepertoireQuery($repertoireQuery)) {
+        return $repertoireQuery && $this->ownsRepertoireQuery($repertoireQuery) ? $repertoireQuery : null;
+    }
+
+    public function downloadResults(string $format, RepertoireResultsExporter $exporter): ?StreamedResponse
+    {
+        if (! in_array($format, RepertoireResultsExporter::FORMATS, true)) {
+            return null;
+        }
+
+        $repertoireQuery = $this->ownedAiResult();
+
+        if (! $repertoireQuery) {
             return null;
         }
 

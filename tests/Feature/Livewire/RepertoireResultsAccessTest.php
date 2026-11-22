@@ -207,3 +207,66 @@ test('exports tolerate a missing response and a query with no sluggable text', f
         ->and($exporter->toText($repertoireQuery))->toContain('No matches found.')
         ->and($exporter->toPdf($repertoireQuery))->toStartWith('%PDF');
 });
+
+test('guest does not see results from a different ip address', function () {
+    $repertoireQuery = RepertoireQuery::factory()->create([
+        'ip_address' => '10.0.0.99',
+        'response' => downloadableResponse(),
+    ]);
+
+    Livewire::test(GuestRepertoireFinder::class)
+        ->set('aiResultQueryId', $repertoireQuery->id)
+        ->assertViewHas('aiResult', null)
+        ->assertDontSee('Three Sea Shanties');
+});
+
+test('guest does not see a signed-in user search', function () {
+    $repertoireQuery = RepertoireQuery::factory()->forUser()->create([
+        'ip_address' => '127.0.0.1',
+        'response' => downloadableResponse(),
+    ]);
+
+    Livewire::test(GuestRepertoireFinder::class)
+        ->set('aiResultQueryId', $repertoireQuery->id)
+        ->assertDontSee('Three Sea Shanties');
+});
+
+test('signed-in user does not see another user search', function (string $component) {
+    $this->actingAs(User::factory()->withoutTwoFactor()->create());
+
+    $repertoireQuery = RepertoireQuery::factory()->forUser()->create([
+        'response' => downloadableResponse(),
+    ]);
+
+    Livewire::test($component)
+        ->set('aiResultQueryId', $repertoireQuery->id)
+        ->assertViewHas('aiResult', null)
+        ->assertDontSee('Three Sea Shanties');
+})->with([
+    'dashboard' => [DashboardRepertoireFinder::class],
+    'song titles' => [SongTitlesIndex::class],
+]);
+
+test('signed-in user does not see a guest search', function () {
+    $this->actingAs(User::factory()->withoutTwoFactor()->create());
+
+    $repertoireQuery = RepertoireQuery::factory()->create([
+        'ip_address' => '127.0.0.1',
+        'response' => downloadableResponse(),
+    ]);
+
+    Livewire::test(DashboardRepertoireFinder::class)
+        ->set('aiResultQueryId', $repertoireQuery->id)
+        ->assertDontSee('Three Sea Shanties');
+});
+
+test('searcher sees their own results', function () {
+    $repertoireQuery = RepertoireQuery::factory()->create([
+        'ip_address' => '127.0.0.1',
+        'response' => downloadableResponse(),
+    ]);
+
+    Livewire::test(GuestRepertoireFinder::class)
+        ->set('aiResultQueryId', $repertoireQuery->id)
+        ->assertSee('Three Sea Shanties');
+});

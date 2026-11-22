@@ -11,8 +11,7 @@ use App\Enums\VideoVisibility;
 use App\Enums\VoicePart;
 use App\Jobs\ProcessRepertoireSearch;
 use App\Livewire\Concerns\ChecksProgramCompliance;
-use App\Livewire\Concerns\DownloadsRepertoireResults;
-use App\Models\RepertoireQuery;
+use App\Livewire\Concerns\ManagesRepertoireResults;
 use App\Models\SongTitle;
 use App\Services\RepertoireSearchService;
 use App\Services\YouTubeUrl;
@@ -28,7 +27,7 @@ use Livewire\WithPagination;
 class Index extends Component
 {
     use ChecksProgramCompliance;
-    use DownloadsRepertoireResults;
+    use ManagesRepertoireResults;
     use WithPagination;
 
     public string $mode = 'browse';
@@ -505,7 +504,7 @@ class Index extends Component
             $difficultyMap = $this->getDifficultyMap($songTitleIds);
         }
 
-        $aiResult = $this->aiResultQueryId ? RepertoireQuery::find($this->aiResultQueryId) : null;
+        $aiResult = $this->ownedAiResult();
 
         $availableTags = DB::table('song_title_tags')
             ->select('tag')

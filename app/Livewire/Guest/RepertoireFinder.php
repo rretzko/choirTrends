@@ -6,7 +6,7 @@ namespace App\Livewire\Guest;
 
 use App\Enums\RepertoireQuerySource;
 use App\Jobs\ProcessRepertoireSearch;
-use App\Livewire\Concerns\DownloadsRepertoireResults;
+use App\Livewire\Concerns\ManagesRepertoireResults;
 use App\Models\RepertoireQuery;
 use App\Services\RepertoireSearchService;
 use App\Services\TurnstileVerificationService;
@@ -18,7 +18,7 @@ use Livewire\Component;
 
 class RepertoireFinder extends Component
 {
-    use DownloadsRepertoireResults;
+    use ManagesRepertoireResults;
 
     public string $query = '';
 
@@ -120,7 +120,7 @@ class RepertoireFinder extends Component
 
     public function render(): View
     {
-        $aiResult = $this->aiResultQueryId ? RepertoireQuery::find($this->aiResultQueryId) : null;
+        $aiResult = $this->ownedAiResult();
 
         return view('livewire.guest.repertoire-finder', [
             'aiResult' => $aiResult,
